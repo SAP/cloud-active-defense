@@ -1,0 +1,20 @@
+version: '3'
+services:
+
+  myapp:
+    build: myapp
+    image: myapp
+    
+  config:
+    container_name: configmanager
+    build: configmanager
+    image: configmanager
+
+  proxy:
+    build: proxy
+    container_name: proxy
+    ports:
+    - "8000:8000"
+    depends_on:
+    - myapp
+
