@@ -91,7 +91,7 @@ Visit `http://localhost:8000` from a web browser. You should be granted by a 'we
 
 `docker-compose up --build`
 
-5. visit `http://localhost:8000\.git`. This should give you an error message `Cannot GET ./git`. Check that an alert was sent to the console with LOW severity.
+5. visit `http://localhost:8000/forbidden`. This should give you an error message `Cannot GET /forbidden`. Check that an alert was sent to the console with LOW severity.
 
 ## Architecture and Philosophy
 
