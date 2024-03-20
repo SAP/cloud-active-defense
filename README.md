@@ -130,8 +130,8 @@ Envoy will send a GET request to configmanager a few times per minute and update
 ### Envoy
 Envoy is an open-source reverse proxy. Upon start, it reads the envoy.yaml config file, which loads the cloud-active-defense.wasm plugin. This plugin reads the content of cad-default.json and applies it upon receiving HTTP requests from the browser and HTTP responses from myapp.
 
-## Configuration (working with decoys)
-Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki) page.
+## Configuration (working with decoys) and advanced topics
+Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki) page to learn about decoys in details, and about how to modify the source code.
 
 ## Support, Feedback, Contributing
 
