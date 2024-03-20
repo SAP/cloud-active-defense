@@ -272,6 +272,7 @@ func (d *detectBody) relevantVerb() bool {
 }
 
 func (d *detectBody) relevantResponse() (bool, error) {
+  if d.curFilter.Detect.Seek.InResponse == "" { return false, nil }
   regEx, err := regexp.Compile(d.curFilter.Detect.Seek.InResponse)
   if err != nil {
     return false, err
@@ -286,6 +287,7 @@ func (d *detectBody) relevantResponse() (bool, error) {
 }
 
 func (d *detectBody) relevantRequest() (bool, error) {
+  if d.curFilter.Detect.Seek.InRequest == "" { return false, nil }
   regEx, err := regexp.Compile(d.curFilter.Detect.Seek.InRequest)
   if err != nil {
     return false, err
