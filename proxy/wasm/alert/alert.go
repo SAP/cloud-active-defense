@@ -78,7 +78,7 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
   }
 
   jsonAlertContent, _ := json.MarshalIndent(&alertContent, "", " ")
-  proxywasm.LogWarnf("\n!!!!! ALERT !!!!! DECOY TRIGGERED !!!!!\n", string(jsonAlertContent))
+  proxywasm.LogWarnf("\n!!!!! ALERT !!!!! DECOY TRIGGERED !!!!!\n %v", string(jsonAlertContent))
   //proxywasm.LogWarn("Alert called")
   // alertMessage := "["+filter.Detect.Alert.Severity+"]"
   // for _, logPar := range logParameters {
