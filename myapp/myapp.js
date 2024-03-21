@@ -2,10 +2,12 @@ var express = require('express');
 var app = express();
 const bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
+const helmet = require("helmet")
 
 app.use(express.static('files'))
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(helmet.frameguard());
 
 const homepage=`
 <div class="full-width">Welcome</div>
