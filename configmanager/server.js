@@ -1,6 +1,12 @@
 const express = require('express');
 const app = express();
 const fs = require('fs');
+const hsts = require('hsts')
+
+app.use(hsts({
+  maxAge: 31536000,
+  includeSubDomains: true
+}))
 
 // Define a GET route that accepts a namespace and application parameter
 app.get('/:namespace/:application', (req, res) => {
