@@ -79,8 +79,11 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
 
 	  if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter [%v] now", filterInd) } //debug
 
-			i.setInitialHeaderContent()
-			err := i.injectDecoyInResponse()
+			err := i.setInitialHeaderContent()
+			if err != nil {
+				return err, nil
+			}
+			err = i.injectDecoyInResponse()
 			if err != nil {
 				return err, nil
 			}
@@ -260,10 +263,14 @@ func (i *injectHeader) checkConditionsRequest(ind int) (error, bool) {
 func (i *injectHeader) injectDecoyInResponse() error {
 	var err error = nil
 
-	i.setInjectString()
-
-	i.setInitialHeaderContent()
-
+	err = i.setInjectString()
+	if err != nil {
+		return fmt.Errorf("error while injecting decoy with method %s: %s", i.curFilter.Inject.Store.At.Method, err.Error())
+	}
+	err = i.setInitialHeaderContent()
+	if err != nil {
+		return fmt.Errorf("error while injecting decoy with method %s: %s", i.curFilter.Inject.Store.At.Method, err.Error())
+	}
   err = i.callInjectionMethod()
   if err != nil {
     return fmt.Errorf("error while injecting decoy with method %s: %s", i.curFilter.Inject.Store.At.Method, err.Error())
