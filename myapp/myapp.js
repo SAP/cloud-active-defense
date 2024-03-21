@@ -149,7 +149,10 @@ app.post('/login', (req, res) => {
   // Check if the username and password are valid
   if (username === 'bob' && password === 'bob') {
     // Valid credentials, set session cookie
-    res.cookie('SESSION', "c32272b9-99d8-4687-b57e-a606952ae870");
+    res.cookie('SESSION', "c32272b9-99d8-4687-b57e-a606952ae870", {
+      httpOnly: true,
+      secure: true
+    });
     res.redirect('/');
   } else {
     res.send('Invalid username or password');
