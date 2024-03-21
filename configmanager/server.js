@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const fs = require('fs');
 const hsts = require('hsts')
+const path = require('path')
 
 app.use(hsts({
   maxAge: 31536000,
@@ -11,7 +12,7 @@ app.use(hsts({
 // Define a GET route that accepts a namespace and application parameter
 app.get('/:namespace/:application', (req, res) => {
   const { namespace, application } = req.params;
-  const filePath = `/data/cad-${namespace}-${application}.json`;
+  const filePath = path.resolve(`${__dirname}/data/cad-${namespace}-${application}.json`);
   const defaultFilePath = `/data/cad-default.json`;
 
   // Check if the file exists
