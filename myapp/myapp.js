@@ -2,12 +2,10 @@ var express = require('express');
 var app = express();
 const bodyParser = require('body-parser');
 var cookieParser = require('cookie-parser')
-const helmet = require("helmet")
 
 app.use(express.static('files'))
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(helmet.frameguard());
 
 const homepage=`
 <div class="full-width">Welcome</div>
@@ -122,6 +120,7 @@ const dashboard = `
 `
 
 app.get('/', function(req, res) {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
  if (req.cookies.SESSION === "c32272b9-99d8-4687-b57e-a606952ae870") {
    res.send("<html><body>"+css+dashboard+"</body></html>");
  } else {
@@ -132,6 +131,8 @@ app.listen(3000);
 console.log("Listening on port 3000...");
 
 app.get('/login', (req, res) => {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("X-Frame-Options", "DENY");
   res.send(`
     <h1>Login</h1>
     <form method="POST">
@@ -143,6 +144,8 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("X-Frame-Options", "DENY");
   // Get the username and password from the request body
   const { username, password } = req.body;
 
