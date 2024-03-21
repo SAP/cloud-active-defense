@@ -11,8 +11,10 @@ app.use(hsts({
 
 // Define a GET route that accepts a namespace and application parameter
 app.get('/:namespace/:application', (req, res) => {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("Content-Security-Policy", "script-src 'self'");
   const { namespace, application } = req.params;
-  const filePath = path.resolve(`${__dirname}/data/cad-${namespace}-${application}.json`);
+  const filePath = path.normalize(`/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, '');
   const defaultFilePath = `/data/cad-default.json`;
 
   // Check if the file exists
