@@ -29,6 +29,7 @@ app.get('/:namespace/:application', (req, res) => {
           // If the file exists, read its contents and return as JSON object
           fs.readFile(defaultFilePath, 'utf8', (err, data) => {
             if (err) throw err;
+            if(!data) return res.json([])
             const json = JSON.parse(data);
             res.json(json);
           });
@@ -38,6 +39,7 @@ app.get('/:namespace/:application', (req, res) => {
       // If the file exists, read its contents and return as JSON object
       fs.readFile(filePath, 'utf8', (err, data) => {
         if (err) throw err;
+        if(!data) return res.json([])
         const json = JSON.parse(data);
         res.json(json);
       });

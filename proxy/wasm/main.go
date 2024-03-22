@@ -47,7 +47,7 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
   ctx.callBackConfRequested = func(numHeaders, bodySize, numTrailers int) {
     configBody, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
     if err != nil && err != types.ErrorStatusNotFound {
-      panic(err.Error())
+      proxywasm.LogWarnf("could not read body of config file: %v", err.Error())
     }
     oldConfig := ctx.decoyConfig
 
