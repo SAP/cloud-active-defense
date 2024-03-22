@@ -14,9 +14,9 @@ app.get('/:namespace/:application', (req, res) => {
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   res.setHeader("Content-Security-Policy", "script-src 'self'");
   const { namespace, application } = req.params;
-  const filePath = path.normalize(`/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, '');
+  const filePath = fs.realpathSync(path.normalize(`${__dirname}/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
   const defaultFilePath = `/data/cad-default.json`;
-
+  
   // Check if the file exists
   fs.access(filePath, fs.constants.F_OK, (err) => {
     if (err) {
