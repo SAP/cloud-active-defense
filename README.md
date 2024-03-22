@@ -14,8 +14,8 @@ Add a layer of active defense to your cloud applications.
 3. [Quickstart](#quickstart)
 4. [Architecture and Philosophy](#Architecture-and-Philosophy)
 5. [Configuration and advanced topics](#Configuration-and-advanced-topics)
-6. [Support, Feedback, Contributing](#Support,-Feedback,-Contributing)
-7. [Security / Disclosure](#Security-/-Disclosure)
+6. [Support, Feedback, Contributing](#support-feedback-contributing)
+7. [Security / Disclosure](#security--disclosure)
 8. [Code of Conduct](#Code-of-Conduct)
 9. [Licensing](#Licensing)
 
