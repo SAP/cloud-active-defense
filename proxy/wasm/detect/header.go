@@ -283,7 +283,7 @@ func (d *detectHeader) detectCookie(alertInfos *map[string]string) (error, bool)
     return nil, false
   } 
   cookie = key+"="+cookie // for matching combined / modified
-  (*alertInfos)["injected"] = cookie
+  (*alertInfos)["injected"] = d.cookies[key]
   err, keyMatch, combinedMatch := shared.KeyCombinedMatch(d.curFilter, &cookie)
   if err != nil {
     return fmt.Errorf("could not match: %v", err.Error()), false
@@ -326,7 +326,7 @@ func (d *detectHeader) detectHeader(alertInfos *map[string]string) (error, bool)
     return nil, false
   } 
   header = key+"="+header
-  (*alertInfos)["decoy"] = header
+  (*alertInfos)["injected"] = d.headers[key]
   err, keyMatch, combinedMatch := shared.KeyCombinedMatch(d.curFilter, &header)
   if config_proxy.Debug { proxywasm.LogWarnf("detect in header matches key %v, combined %v", keyMatch, combinedMatch ) } //debug
   if err != nil {
@@ -370,7 +370,7 @@ func (d *detectHeader) detectUrl(alertInfos *map[string]string) (error, bool) {
   } else if queryStart := strings.IndexByte(fullPath, '?'); queryStart >= 0 {
     fullPath = fullPath[:queryStart]  // cut query params of
   }
-  (*alertInfos)["decoy"] = fullPath
+  (*alertInfos)["injected"] = fullPath
   err, keyMatch, combinedMatch := shared.KeyCombinedMatch(d.curFilter, &fullPath)
   if err != nil {
     return fmt.Errorf("could not match: %v", err.Error()), false
@@ -415,7 +415,6 @@ func (d *detectHeader) detectGetParam(alertInfos *map[string]string) (error, boo
   } else if queryStart := strings.IndexByte(query, '?'); queryStart >= 0 {
     query = query[queryStart:]  // cut path of
   }
-  (*alertInfos)["decoy"] = query
 
   // if key / value are regex, use them & find matches else use stringmatches
   var keyMatch, combinedMatch bool 
@@ -446,6 +445,18 @@ func (d *detectHeader) detectGetParam(alertInfos *map[string]string) (error, boo
       return fmt.Errorf("invalid regex: %v", err.Error()), false
     }
   }
+
+  rEValue, err := regexp.Compile(`(\?|&)` + key + `[^&]*`)
+  if err != nil {
+    return fmt.Errorf("failed to retrieve getParam value of decoy: " , err.Error()), false
+  }
+  matchesValue := rEValue.FindAllString(query, -1)
+  injected := strings.Join(matchesValue, ", ")
+  keyRm, err := regexp.Compile(`(&|\?)` + key + "=")
+  if err != nil {
+    return fmt.Errorf("failed to retrieve getParam value of decoy: " , err.Error()), false
+  }
+  (*alertInfos)["injected"] = keyRm.ReplaceAllString(injected, "")
 
   if d.curFilter.Detect.Alert.WhenSeen && key != "" {
     if keyMatch { 
