@@ -14,7 +14,7 @@ app.get('/:namespace/:application', (req, res) => {
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   res.setHeader("Content-Security-Policy", "script-src 'self'");
   const { namespace, application } = req.params;
-  const filePath = path.normalize(`${__dirname}/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, '');
+  const filePath = path.resolve(path.normalize(`${__dirname}/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
   const defaultFilePath = `/data/cad-default.json`;
   if(!filePath.startsWith(__dirname)){
     return res.end()
