@@ -16,12 +16,13 @@ Add a layer of active defense to your cloud applications.
 5. [Configuration and advanced topics](#Configuration-and-advanced-topics)
 6. [Support, Feedback, Contributing](#support-feedback-contributing)
 7. [Security / Disclosure](#security--disclosure)
-8. [Code of Conduct](#Code-of-Conduct)
-9. [Licensing](#Licensing)
+8. [On the TODO list](#on-the-todo-list)
+9. [Code of Conduct](#Code-of-Conduct)
+10. [Licensing](#Licensing)
 
 # About this project
 Cloud active defense lets you deploy decoys right into your cloud applications, putting adversaries into a dilemma: to hack or not to hack?
-  * If they interact with any of your decoys, they are instantly detected and blocked.
+  * If they interact with any of your decoys, they are instantly detected.
   * If they refrain, they reduce their ability to attack, making your applications safer.
 
 You win in either case.
@@ -218,7 +219,7 @@ We're not the first one to think about deploying deceptive element into applicat
 
 Our approach was thus to let applications be protected by introducing a reverse-proxy, reading instructions from a versatile configuration file. No risk to introduce bugs to the application, and easy maintenance.
 
-For the reverse-proxy, we chose [Envoy](https://www.envoyproxy.io/). At its heart, cloud active defense is simply a plugin for Envoy. We chose Envoy because it's open source, fast, extensible, and because it's a popular choice as a Service Mesh solution. This means is that cloud active defense can easily be deployed as a side-car if you use a platform such as [SAP Kyma](https://kyma-project.io/). We are doing our best to provide a working solution, but consider testing it heavily before using it productively (and please report any issues you discover!)
+For the reverse-proxy, we chose [Envoy](https://www.envoyproxy.io/). At its heart, cloud active defense is simply a plugin for Envoy. We chose Envoy because it's open source, fast, extensible, and because it's a popular choice as a Service Mesh solution. What this means is that cloud active defense can easily be deployed as a side-car if you use a kubernetes platform such as [SAP Kyma](https://kyma-project.io/). We are doing our best to provide a working solution, but consider testing it heavily before using it productively (and please report any issues you discover!)
 
 Architecture-wise, cloud active defense is a WASM file deployed within Envoy in its own container. As WASM cannot read files from the filesystem, we instead expose the config file in its own **configmanager** service and retrieve it from Envoy via HTTP. The default config file is named **cad-default.json**, by default this is what Envoy will fetch. When deployed in Kubernetes, each service can have its own config file, this is described in its own section.
 
@@ -264,6 +265,12 @@ For more information about how to contribute, the project structure, as well as 
 
 # Security / Disclosure
 If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/SAP/cloud-active-defense/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.
+
+# On the TODO list
+Features we plan to eventually release:
+  * adding a configuration specifying where to find information about the user's session. We want to use this to add session / logged in user information in the alert.
+  * show how to ingest alerts into fluentd for further processing (currently alerts are simply shown on the console)
+  * show how to deploy into SAP Kyma as an extension of the mesh service
 
 # Code of Conduct
 
