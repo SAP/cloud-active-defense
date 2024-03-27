@@ -178,9 +178,9 @@ func (d *detectBody) detectDecoyInRequest() error {
     }
   }
   if sendAlert {
-    authenticated, username  := FindSession(map[string]map[string]string{"header": d.headers, "cookie": d.cookies, "payload": { "payload": d.body }}, nil, d.conf.Session)
-    if authenticated != nil {
-      alertInfos["authenticated"] = *authenticated
+    session, username  := FindSession(map[string]map[string]string{"header": d.headers, "cookie": d.cookies, "payload": { "payload": d.body }}, nil, d.conf.Session)
+    if session != nil {
+      alertInfos["session"] = d.conf.Session.Session.Key + ":" + *session
     }
     if username != nil {
       alertInfos["username"] = *username
@@ -263,9 +263,9 @@ func (d *detectBody) detectDecoyInResponse() error {
   }
 
   if sendAlert {
-    authenticated, username  := FindSession(map[string]map[string]string{ "header": d.request.Headers, "cookie": d.request.Cookies, "payload": { "payload": *d.request.Body }}, &map[string]map[string]string{ "header": d.headers, "cookie": d.cookies, "body": { "body": d.body }}, d.conf.Session)
-    if authenticated != nil {
-      alertInfos["authenticated"] = *authenticated
+    session, username  := FindSession(map[string]map[string]string{ "header": d.request.Headers, "cookie": d.request.Cookies, "payload": { "payload": *d.request.Body }}, &map[string]map[string]string{ "header": d.headers, "cookie": d.cookies, "body": { "body": d.body }}, d.conf.Session)
+    if session != nil {
+      alertInfos["session"] = d.conf.Session.Session.Key + ":" + *session
     }
     if username != nil {
       alertInfos["username"] = *username
