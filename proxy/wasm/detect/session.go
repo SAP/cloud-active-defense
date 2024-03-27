@@ -64,6 +64,8 @@ func getUsername(headers map[string]map[string]string, config config_parser.Sess
 		foundValue := rEKey.FindStringSubmatch(headers["payload"]["payload"])
 		if len(foundValue) > 1 {
 			return foundValue[1]
+		} else if len(foundValue) == 0 {
+			return ""
 		} else {
 			return foundValue[0]
 		}
