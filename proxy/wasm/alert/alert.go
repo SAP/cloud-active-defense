@@ -21,6 +21,8 @@ type Alert struct {
 	Server string
 	// attributes for external attribution
 	SourceIP string
+  Authenticated bool //Is the user autenticated
+  Session string // username of the user
 	Useragent string
 	// request details
 	Path string
@@ -75,6 +77,14 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
     DecoyExpectedValue:     decoyValue,
     DecoyInjectedValue:     logParameters["injected"],
     Severity:               filter.Detect.Alert.Severity,
+  }
+  if logParameters["authenticated"] != "" {
+    alertContent.Authenticated = true
+  } else if _, exists := logParameters["authenticated"]; exists {
+    alertContent.Authenticated = false
+  }
+  if logParameters["username"] != "" {
+    alertContent.Session = logParameters["username"]
   }
 
   jsonAlertContent, _ := json.MarshalIndent(&alertContent, "", " ")

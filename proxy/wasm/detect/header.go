@@ -33,13 +33,11 @@ func (d *detectHeader) Alert(logParameters map[string]string, headers map[string
 
 func OnHttpRequestHeaders(request *shared.HttpRequest, config *config_parser.Config) error {
   d := &detectHeader{ config, nil, request.Headers, request.Cookies, nil}
-
-  noFilters := len(d.conf.Filters)
+  noFilters := len(d.conf.Decoys.Filters)
   if config_proxy.Debug { proxywasm.LogWarnf("*** detect request headers *** %v filters", noFilters) } //debug
 
   for ind := 0; ind < noFilters; ind++ {
-    d.curFilter = &d.conf.Filters[ind]
-
+    d.curFilter = &d.conf.Decoys.Filters[ind]
     err, skip := d.checkConditionsRequest(ind)
     if err != nil {
       return err
@@ -62,8 +60,8 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
   var err error
 
   if config_proxy.Debug { proxywasm.LogWarn("*** detect response headers ***") } //debug
-  for ind := 0; ind < len(d.conf.Filters); ind++ {
-    d.curFilter = &d.conf.Filters[ind]
+  for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
+    d.curFilter = &d.conf.Decoys.Filters[ind]
 
     //proxywasm.LogWarnf("try filter[%v]: %v", ind, d.curFilter) //debug
 
@@ -161,6 +159,13 @@ func (d *detectHeader) detectDecoyInRequest() error {
     return err
   }
   if sendAlert {
+    authenticated, username  := FindSession(map[string]map[string]string{ "header": d.headers, "cookie": d.cookies, "body": nil}, nil, d.conf.Session)
+    if authenticated != nil {
+      alertInfos["authenticated"] = *authenticated
+    }
+    if username != nil {
+      alertInfos["username"] = *username
+    }
     err := d.Alert(alertInfos, d.headers)
     if err != nil {
       return err
@@ -211,6 +216,13 @@ func (d *detectHeader) detectDecoyInResponse() error {
   }
 
   if sendAlert {
+    authenticated, username  := FindSession(map[string]map[string]string{"header": d.headers, "cookie": d.cookies}, &map[string]map[string]string{"header": d.request.Headers, "cookie": d.request.Cookies, "body": nil}, d.conf.Session)
+    if authenticated != nil {
+      alertInfos["authenticated"] = *authenticated
+    }
+    if username != nil {
+      alertInfos["username"] = *username
+    }
     err := d.Alert(alertInfos, d.request.Headers)
     if err != nil {
       return err

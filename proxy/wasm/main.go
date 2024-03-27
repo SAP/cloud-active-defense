@@ -23,7 +23,7 @@ type vmContext struct {
 }
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-  return &pluginContext{contextID: contextID, decoyConfig: &config_parser.Config{Filters: []config_parser.FilterType{}}}
+  return &pluginContext{contextID: contextID, config: &config_parser.Config{Session: config_parser.SessionConfig{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
 }
 
 type pluginContext struct {
@@ -31,7 +31,7 @@ type pluginContext struct {
   // so that we don't need to reimplement all the methods.
   types.DefaultPluginContext
   contextID             uint32
-  decoyConfig           *config_parser.Config
+  config           *config_parser.Config
   configChecksum        [32]byte
   callBackConfRequested func(numHeaders, bodySize, numTrailers int)
 }
@@ -49,20 +49,19 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
     if err != nil && err != types.ErrorStatusNotFound {
       proxywasm.LogWarnf("could not read body of config file: %v", err.Error())
     }
-    oldConfig := ctx.decoyConfig
-
-    err, ctx.decoyConfig = config_parser.ParseString(configBody)
+    oldConfig := ctx.config
+    err, ctx.config = config_parser.ParseString(configBody)
     if err != nil {//&& err != types.ErrorStatusNotFound {
       proxywasm.LogErrorf("could not read config: %s\n continue with old config", err)
-      ctx.decoyConfig = oldConfig
+      ctx.config = oldConfig
       return
     }
-    if (ctx.decoyConfig == nil) {
+    if (ctx.config == nil) {
       emptyConf := config_parser.EmptyConfig()
-      ctx.decoyConfig = &emptyConf
+      ctx.config = &emptyConf
       return
     }
-    if (ctx.decoyConfig.MakeChecksum() != oldConfig.MakeChecksum()) {
+    if (ctx.config.Decoys.MakeChecksum() != oldConfig.Decoys.MakeChecksum()) {
       proxywasm.LogWarnf("read new config: ")//%v", *ctx.decoyConfig) 
     }
 }
@@ -81,7 +80,7 @@ func (ctx *pluginContext) OnTick() {
 }
 
 func (ctx *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
-  return &httpContext{contextID: contextID, config: ctx.decoyConfig, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}}
+  return &httpContext{contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}}
 }
 
 type httpContext struct {
@@ -182,7 +181,7 @@ func (ctx *httpContext) OnHttpRequestBody(bodySize int, endOfStream bool) types.
   //proxywasm.LogWarnf("\nRequest body: \n%v", ctx.request.Body) //debug
 
   if config_proxy.Debug { proxywasm.LogWarnf("detecting in req body now") } //debug
-  err = detect.OnHttpRequestBody(*ctx.request.Body, ctx.request.Headers, ctx.config)
+  err = detect.OnHttpRequestBody(*ctx.request.Body, ctx.request.Headers, ctx.request.Cookies, ctx.config)
   if err != nil {
     proxywasm.LogErrorf("could not detect: %v", err.Error())
   }
@@ -274,7 +273,7 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
   }
   //proxywasm.LogWarnf("this is the originial body: %v", originalBody) //debug
 
-  err = detect.OnHttpResponseBody(string(originalBody), ctx.headers, ctx.config, ctx.request)
+  err = detect.OnHttpResponseBody(string(originalBody), ctx.headers, ctx.cookies, ctx.config, ctx.request)
 
   // proxywasm.LogWarnf("this is the original body: \n %s", originalBody)
   err, injectedResponse := inject.OnHttpResponseBody( ctx.request, originalBody, ctx.config)

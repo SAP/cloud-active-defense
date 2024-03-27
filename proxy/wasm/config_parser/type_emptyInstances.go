@@ -5,7 +5,7 @@ import (
 )
 
 func EmptyConfig() Config {
-  return Config{ []FilterType{} }
+  return Config{ DecoyConfig{}, SessionConfig{} }
 }
 
 func EmptyCondition() ConditionType{
@@ -22,6 +22,18 @@ func EmptyFilter() FilterType {
 
 func EmptyDecoy() DecoyType {
   return DecoyType{"", "", "", "", "", ""}
+}
+
+func EmptySessionConfig() SessionConfig {
+  return SessionConfig{ EmptySession(), EmptyUsername() }
+}
+
+func EmptySession() SessionType {
+  return SessionType{"", "", ""}
+}
+
+func EmptyUsername() UsernameType {
+  return UsernameType{"", "", ""}
 }
 
 func EmptyInject() InjectType {

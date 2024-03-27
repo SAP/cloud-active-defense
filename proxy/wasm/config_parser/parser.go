@@ -31,7 +31,7 @@ type Parser struct {
 
 func newParser(confContent []byte) *Parser {
 	return &Parser{
-		Config:     &Config{Filters: []FilterType{}},
+		Config:     &Config{Decoys: DecoyConfig{}, Session: SessionConfig{}},
 		ConfigFile: confContent,
 	}
 }
@@ -51,11 +51,24 @@ func (p *Parser) jsonToStruct(content []byte) error {
 	if err != nil {
 		return err
 	}
-
-	filtersJs := json.GetArray("filters")
+	if json.Exists("session") {
+		p.Config.Session = SessionConfig{
+			Session: SessionType{
+				Key: string(json.GetStringBytes("session", "session", "key")),
+				In: string(json.GetStringBytes("session", "session", "in")),
+				Separator: string(json.GetStringBytes("session", "session", "separator")),
+			},
+			Username: UsernameType{
+				In: string(json.GetStringBytes("session", "username", "in")),
+				Value: string(json.GetStringBytes("session", "username", "value")),
+				Key: string(json.GetStringBytes("session", "username", "key")),
+			},
+		}
+	}
+	filtersJs := json.GetArray("decoy", "filters")
 	for _, filterJs := range filtersJs {
 		filter := p.filterJsonToStruct(filterJs)
-		p.Config.Filters = append(p.Config.Filters, *filter)
+		p.Config.Decoys.Filters = append(p.Config.Decoys.Filters, *filter)
 	}
 	return nil
 }

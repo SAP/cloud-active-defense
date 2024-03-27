@@ -18,6 +18,7 @@ type detectBody struct {
   curFilter    *config_parser.FilterType
   body string
   headers map[string]string
+  cookies map[string]string
   request *shared.HttpRequest
 }
 
@@ -29,14 +30,14 @@ func (d *detectBody) Alert(logParameters map[string]string, headers map[string]s
   return nil
 }
 
-func OnHttpRequestBody(reqBody string, reqHeaders map[string]string, config *config_parser.Config) error {
-  d := &detectBody{ config, nil, reqBody, reqHeaders, nil }
+func OnHttpRequestBody(reqBody string, reqHeaders map[string]string, cookies map[string]string, config *config_parser.Config) error {
+  d := &detectBody{ config, nil, reqBody, reqHeaders, cookies, nil }
 
   var err error
 
   if config_proxy.Debug { proxywasm.LogWarn("*** detect request body ***") } //debug
-  for ind := 0; ind < len(d.conf.Filters); ind++ {
-    d.curFilter = &d.conf.Filters[ind]
+  for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
+    d.curFilter = &d.conf.Decoys.Filters[ind]
     //proxywasm.LogWarnf("try filter[%v]: %v", ind, d.curFilter) //debug
 
   if isRelReq, err := d.relevantRequest(); err != nil {
@@ -60,14 +61,14 @@ func OnHttpRequestBody(reqBody string, reqHeaders map[string]string, config *con
   return err
 }
 
-func OnHttpResponseBody(body string, headers map[string]string, config *config_parser.Config, request *shared.HttpRequest) error {
-  d := &detectBody{ config, nil, body, headers, request }
+func OnHttpResponseBody(body string, headers map[string]string, cookies map[string]string, config *config_parser.Config, request *shared.HttpRequest) error {
+  d := &detectBody{ config, nil, body, headers, cookies, request }
 
   var err error
 
   if config_proxy.Debug { proxywasm.LogWarn("*** detect reponse body ***") } //debug
-  for ind := 0; ind < len(d.conf.Filters); ind++ {
-    d.curFilter = &d.conf.Filters[ind]
+  for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
+    d.curFilter = &d.conf.Decoys.Filters[ind]
     //proxywasm.LogWarnf("try filter[%v]: %v", ind, d.curFilter) //debug
 
     err, skip := d.checkConditionsResponse(ind)
@@ -177,6 +178,13 @@ func (d *detectBody) detectDecoyInRequest() error {
     }
   }
   if sendAlert {
+    authenticated, username  := FindSession(map[string]map[string]string{"header": d.headers, "cookie": d.cookies, "payload": { "payload": d.body }}, nil, d.conf.Session)
+    if authenticated != nil {
+      alertInfos["authenticated"] = *authenticated
+    }
+    if username != nil {
+      alertInfos["username"] = *username
+    }
     err = d.Alert(alertInfos, d.headers)
     if err != nil {
       return err
@@ -255,6 +263,13 @@ func (d *detectBody) detectDecoyInResponse() error {
   }
 
   if sendAlert {
+    authenticated, username  := FindSession(map[string]map[string]string{ "header": d.request.Headers, "cookie": d.request.Cookies, "payload": { "payload": *d.request.Body }}, &map[string]map[string]string{ "header": d.headers, "cookie": d.cookies, "body": { "body": d.body }}, d.conf.Session)
+    if authenticated != nil {
+      alertInfos["authenticated"] = *authenticated
+    }
+    if username != nil {
+      alertInfos["username"] = *username
+    }
     err := d.Alert(alertInfos, d.request.Headers)
     if err != nil {
       return err

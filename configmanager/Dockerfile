@@ -5,5 +5,6 @@ RUN npm install hsts
 COPY ./server.js /app/server.js
 RUN mkdir /data
 COPY ./cad-default.json /data/cad-default.json
+COPY ./session.json /data/session.json
 USER nobody
 CMD ["node", "server.js"]

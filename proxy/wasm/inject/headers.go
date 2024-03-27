@@ -65,8 +65,8 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
 	}
 	// insert cookies, headers
 	if config_proxy.Debug { proxywasm.LogWarn("*** inject response headers ***") } //debug
-	for filterInd := 0; filterInd < len(conf.Filters); filterInd++ {
-		i.curFilter = &conf.Filters[filterInd]
+	for filterInd := 0; filterInd < len(conf.Decoys.Filters); filterInd++ {
+		i.curFilter = &conf.Decoys.Filters[filterInd]
     //proxywasm.LogWarnf("try filter[%v]", filterInd) //debug
 		if i.curFilter.Inject.Store.As != "body" {
 
@@ -116,8 +116,8 @@ func OnHttpRequestHeaders(request *shared.HttpRequest, conf *config_parser.Confi
 	}
 	// insert cookies, headers
 	if config_proxy.Debug { proxywasm.LogWarn("*** inject request headers ***") } //debug
-	for filterInd := 0; filterInd < len(conf.Filters); filterInd++ {
-		i.curFilter = &conf.Filters[filterInd]
+	for filterInd := 0; filterInd < len(conf.Decoys.Filters); filterInd++ {
+		i.curFilter = &conf.Decoys.Filters[filterInd]
     //proxywasm.LogWarnf("try filter[%v]", filterInd) //debug
       //check whenTrue/False Conditions
       if err, conditionsApply := i.checkConditionsRequest(filterInd); err != nil {

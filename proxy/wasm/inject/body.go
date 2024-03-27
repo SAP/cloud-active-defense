@@ -25,8 +25,8 @@ func OnHttpRequestBody(request *shared.HttpRequest, originalBody []byte, conf *c
 	i := injecterBody{conf, nil, nil, string(originalBody), "", request}
 
 	if config_proxy.Debug { proxywasm.LogWarn("*** inject request body ***") } //debug
-	for ind := 0; ind < len(i.conf.Filters); ind++ {
-		i.curFilter = &i.conf.Filters[ind]
+	for ind := 0; ind < len(i.conf.Decoys.Filters); ind++ {
+		i.curFilter = &i.conf.Decoys.Filters[ind]
 
     err, conditionsApply := i.checkConditionsRequest()
     if err != nil {
@@ -52,8 +52,8 @@ func OnHttpResponseBody(request *shared.HttpRequest, originalBody []byte, conf *
 	i := injecterBody{conf, nil, nil, string(originalBody), "", request}
 
 	if config_proxy.Debug { proxywasm.LogWarn("*** inject reponse body ***") } //debug
-	for ind := 0; ind < len(i.conf.Filters); ind++ {
-		i.curFilter = &i.conf.Filters[ind]
+	for ind := 0; ind < len(i.conf.Decoys.Filters); ind++ {
+		i.curFilter = &i.conf.Decoys.Filters[ind]
 
     err, conditionsApply := i.checkConditionsResponse()
     if err != nil {

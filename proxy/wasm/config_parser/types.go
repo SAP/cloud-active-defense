@@ -7,6 +7,27 @@ import (
 )
 
 type Config struct {
+	Decoys DecoyConfig 		`json:"decoys"`
+	Session SessionConfig 	`json:"session"`
+}
+type SessionConfig struct {
+	Session SessionType 	`json:"session"`
+	Username UsernameType 	`json:"username"`
+}
+
+type SessionType struct {
+	Key string 			`json:"key"`
+	In string 			`json:"in"`
+	Separator string 	`json:"separator"`
+}
+
+type UsernameType struct {
+	In string 			`json:"in"`
+	Key string 			`json:"key"`
+	Value string 		`json:"value"`
+}
+
+type DecoyConfig struct {
 	Filters []FilterType `json:"filters"`
 }
 
@@ -70,7 +91,7 @@ type AlertType struct {
 	WhenAbsent   bool   `json:"whenAbsent"`
 }
 
-func (c *Config) MakeChecksum() [20]byte{
+func (c *DecoyConfig) MakeChecksum() [20]byte{
   confStr := ""
 	for _, filter := range c.Filters {
 		confStr +=  filter.Decoy.Key
@@ -107,7 +128,7 @@ func (c *Config) MakeChecksum() [20]byte{
   return sha1.Sum([]byte(confStr))
 }
 
-func (c *Config) MakeString() string{
+func (c *DecoyConfig) MakeString() string{
   confStr := ""
 	for filterind, filter := range c.Filters {
 		confStr += fmt.Sprintf("filters[%d].decoy.key: %s \n", filterind, filter.Decoy.Key)
@@ -149,6 +170,6 @@ func (c *Config) MakeString() string{
   return confStr
 }
 
-func (c *Config) Print() {
+func (c *DecoyConfig) Print() {
   fmt.Print(c.MakeString()) 
 }

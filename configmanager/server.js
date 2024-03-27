@@ -16,6 +16,7 @@ app.get('/:namespace/:application', (req, res) => {
   const { namespace, application } = req.params;
   const filePath = path.resolve(path.normalize(`${__dirname}/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
   const defaultFilePath = `/data/cad-default.json`;
+  const sessionFilePath = `/data/session.json`;
   if(!filePath.startsWith(__dirname)){
     return res.end()
   }
@@ -30,27 +31,53 @@ app.get('/:namespace/:application', (req, res) => {
           res.json({});
         } else {
           // If the file exists, read its contents and return as JSON object
-          fs.readFile(defaultFilePath, 'utf8', (err, data) => {
+          fs.readFile(defaultFilePath, 'utf8', (err, decoys) => {
             if (err) {
               console.warn("Default decoy config file is missing !");
               return res.json([]);
             }
-            if(!data) return res.json([])
-            const json = JSON.parse(data);
-            res.json(json);
+            if(!decoys) return res.json([])
+            const decoysJson = JSON.parse(decoys);
+            // Check if the file exists
+            fs.access(sessionFilePath, fs.constants.F_OK, err => {
+              if(err) return res.json({ decoys: decoysJson });
+
+              // If the file exists, read its contents and return as JSON object
+              fs.readFile(sessionFilePath, 'utf8', (err, session) => {
+                if(err) return res.json({ decoys: decoysJson });
+                if (session) {
+                  const sessionJson = JSON.parse(session);
+                  return res.json({ decoy: decoysJson, session: sessionJson });
+                }
+                return res.json({ decoy: decoysJson })
+              })
+            })
           });
         }
       });
     } else {
       // If the file exists, read its contents and return as JSON object
-      fs.readFile(filePath, 'utf8', (err, data) => {
+      fs.readFile(filePath, 'utf8', (err, decoys) => {
         if (err) {
           console.warn("Decoy config file is missing !");
           return res.json([]);
         }
-        if(!data) return res.json([])
-        const json = JSON.parse(data);
-        res.json(json);
+        if(!decoys) return res.json([])
+        const decoysJson = JSON.parse(decoys);
+        // Check if the file exists
+        fs.access(sessionFilePath, fs.constants.F_OK, err => {
+          if(err) return res.json({ decoys: decoysJson });
+          
+          // If the file exists, read its contents and return as JSON object
+          fs.readFile(sessionFilePath, 'utf8', (err, session) => {
+            if(err) return res.json({ decoys: decoysJson });
+            if (session) {
+              const sessionJson = JSON.parse(session);
+              return res.json({ decoy: decoysJson, session: sessionJson });
+            }
+            return res.json({ decoy: decoysJson })
+          })
+        })
       });
     }
   });

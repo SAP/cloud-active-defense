@@ -47,7 +47,7 @@ func (v *validator) printErrors() {
 }
 
 func (v *validator) Validate(config *Config) error {
-	v.validateFilters(config.Filters)
+	v.validateFilters(config.Decoys.Filters)
 	v.printErrors()
 	if len(v.errArr) == 0 {
 		return nil
@@ -70,6 +70,41 @@ func (v *validator) validateFilters(filters []FilterType) {
 			v.validateInject(filter.Inject)
 			v.validateDetect(filter.Detect)
 		}
+	}
+}
+
+func (v *validator) validateSessionConf(session SessionConfig) {
+	v.validateSession(session.Session)
+	v.validateUsername(session.Username)
+}
+
+func (v *validator) validateSession(session SessionType) {
+	if session == EmptySession() {
+		return
+	}
+	if breaksRequired(session.Key)  {
+		v.addError("session.key ", "can not be empty ")
+	}
+	if validInSession(session.In) {
+		v.addError("session.in", "needs to be cookie or header")
+	}
+}
+
+func (v *validator) validateUsername(username UsernameType) {
+	if username == EmptyUsername() {
+		return
+	}
+	if breaksRequired(username.Key) && (username.In == "cookie" || username.In == "header") {
+		v.addError("username.key", "can not be empty for cookier or header")
+	}
+	if validInUsername(username.In) {
+		v.addError("username.in", "needs to be cookie, header or payload")
+	}
+	if breaksRequired(username.Value) && username.In == "payload" {
+		v.addError("username.value", "can not be empty for payload")
+	}
+	if invalidRegex(username.Value) {
+		v.addError("username.dynamicKey", "needs to be a valid regex")
 	}
 }
 
@@ -273,5 +308,23 @@ func invalidRegex(s string) bool {
 		_, err := regexp.Compile(s)
 		return err != nil && s != ""
 	*/
+	return false
+}
+
+func validInSession(s string) bool {
+	e := InSession(s)
+	switch e {
+	case cookie_inS, header_inS:
+		return true
+	}
+	return false
+}
+
+func validInUsername(s string) bool {
+	e := InUsername(s)
+	switch e {
+	case cookie_inU, header_inU, payload_inU:
+		return true
+	}
 	return false
 }

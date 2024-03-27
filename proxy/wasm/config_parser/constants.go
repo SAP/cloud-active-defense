@@ -50,4 +50,16 @@ const (
 	LOW             = "LOW"
 )
 
+type InSession string
+const (
+	cookie_inS InSession = "cookie"
+	header_inS 			 = "header"
+)
+
+type InUsername string
+const (
+	cookie_inU InUsername = "cookie"
+	header_inU 			  = "header"
+	payload_inU 		  = "payload"
+)
 /* **** */
