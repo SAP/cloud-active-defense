@@ -16,7 +16,7 @@ app.get('/:namespace/:application', (req, res) => {
   const { namespace, application } = req.params;
   const filePath = path.resolve(path.normalize(`${__dirname}/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
   const defaultFilePath = `/data/cad-default.json`;
-  const sessionFilePath = `/data/session.json`;
+  const sessionFilePath = `/data/session-default.json`;
   if(!filePath.startsWith(__dirname)){
     return res.end()
   }
