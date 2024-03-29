@@ -11,6 +11,11 @@ import (
   "encoding/json"
 )
 
+type AlertParam struct {
+  Filter config_parser.FilterType
+  LogParameters map[string]string
+}
+
 type Alert struct {
   Time int64
 	// attributes for correlation

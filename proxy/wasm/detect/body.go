@@ -30,18 +30,19 @@ func (d *detectBody) Alert(logParameters map[string]string, headers map[string]s
   return nil
 }
 
-func OnHttpRequestBody(reqBody string, reqHeaders map[string]string, cookies map[string]string, config *config_parser.Config) error {
+func OnHttpRequestBody(reqBody string, reqHeaders map[string]string, cookies map[string]string, config *config_parser.Config) (error, []alert.AlertParam) {
   d := &detectBody{ config, nil, reqBody, reqHeaders, cookies, nil }
 
   var err error
 
   if config_proxy.Debug { proxywasm.LogWarn("*** detect request body ***") } //debug
+  alerts := []alert.AlertParam{}
   for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
     d.curFilter = &d.conf.Decoys.Filters[ind]
     //proxywasm.LogWarnf("try filter[%v]: %v", ind, d.curFilter) //debug
 
   if isRelReq, err := d.relevantRequest(); err != nil {
-      return fmt.Errorf("store.forRequest: can not compile regEx: %v", err.Error())
+      return fmt.Errorf("store.forRequest: can not compile regEx: %v", err.Error()), alerts
     } else if !d.relevantVerb() || !isRelReq {
       if config_proxy.Debug { proxywasm.LogWarnf("skipped [%v] because wrong verb or request", ind) } //debug
       continue
@@ -53,38 +54,45 @@ func OnHttpRequestBody(reqBody string, reqHeaders map[string]string, cookies map
     }
     if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
 
-    err = d.detectDecoyInRequest()
+    err, decoyAlert := d.detectDecoyInRequest()
     if err != nil {
-      return err
+      return err, alerts
+    }
+    if decoyAlert != nil {
+      alerts = append(alerts, *decoyAlert)
     }
   }
-  return err
+  return err, alerts
 }
 
-func OnHttpResponseBody(body string, headers map[string]string, cookies map[string]string, config *config_parser.Config, request *shared.HttpRequest) error {
+func OnHttpResponseBody(body string, headers map[string]string, cookies map[string]string, config *config_parser.Config, request *shared.HttpRequest) (error, []alert.AlertParam) {
   d := &detectBody{ config, nil, body, headers, cookies, request }
 
   var err error
 
   if config_proxy.Debug { proxywasm.LogWarn("*** detect reponse body ***") } //debug
+  alerts := []alert.AlertParam{}
   for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
     d.curFilter = &d.conf.Decoys.Filters[ind]
     //proxywasm.LogWarnf("try filter[%v]: %v", ind, d.curFilter) //debug
 
     err, skip := d.checkConditionsResponse(ind)
     if err != nil {
-      return err
+      return err, alerts
     } else if skip {
       continue
     } 
     if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
 
-    err = d.detectDecoyInResponse()
+    err, decoyAlert := d.detectDecoyInResponse()
     if err != nil {
-      return err
+      return err, alerts
+    }
+    if decoyAlert != nil {
+      alerts = append(alerts, *decoyAlert)
     }
   }
-  return err
+  return err, alerts
 }
 
 func (d *detectBody) checkConditionsResponse(ind int) (error, bool) {
@@ -103,7 +111,7 @@ func (d *detectBody) checkConditionsResponse(ind int) (error, bool) {
   return nil, !skip
 }
 
-func (d *detectBody) detectDecoyInRequest() error {
+func (d *detectBody) detectDecoyInRequest() (error, *alert.AlertParam) {
   var err error = nil
 
   key := d.curFilter.Decoy.DynamicKey
@@ -131,13 +139,13 @@ func (d *detectBody) detectDecoyInRequest() error {
     if d.curFilter.Detect.Seek.In == "postParam" && keyMatches {
       rEValue, err := regexp.Compile("(&)" + key + separator + "[^&]*")
       if err != nil {
-        return fmt.Errorf("failed to retrieve postParam value of decoy:" , err.Error())
+        return fmt.Errorf("failed to retrieve postParam value of decoy:" , err.Error()), nil
       }
       matchesValue := rEValue.FindAllString(d.body, -1)
       injected := strings.Join(matchesValue, ", ")
       keyRm, err := regexp.Compile("^(&" + key + separator + "|" + key + separator + ")")
       if err != nil {
-        return fmt.Errorf("failed to retrieve postParam value of decoy:" , err.Error())
+        return fmt.Errorf("failed to retrieve postParam value of decoy:" , err.Error()), nil
       }
       alertInfos["injected"] = keyRm.ReplaceAllString(injected, "")
     }
@@ -178,22 +186,12 @@ func (d *detectBody) detectDecoyInRequest() error {
     }
   }
   if sendAlert {
-    session, username  := FindSession(map[string]map[string]string{"header": d.headers, "cookie": d.cookies, "payload": { "payload": d.body }}, nil, d.conf.Session)
-    if session != nil {
-      alertInfos["session"] = *session
-    }
-    if username != nil {
-      alertInfos["username"] = *username
-    }
-    err = d.Alert(alertInfos, d.headers)
-    if err != nil {
-      return err
-    }
+    return nil, &alert.AlertParam{ *d.curFilter, alertInfos }
   }
-  return nil
+  return nil, nil
 }
 
-func (d *detectBody) detectDecoyInResponse() error {
+func (d *detectBody) detectDecoyInResponse() (error, *alert.AlertParam) {
   var err error = nil
   key := d.curFilter.Decoy.DynamicKey
   if key == "" {
@@ -210,14 +208,14 @@ func (d *detectBody) detectDecoyInResponse() error {
 
   rECombinedstring, err := regexp.Compile(key+separator+value)
   if err != nil {
-    return fmt.Errorf("decoy. Key+Separator+Value: \"%s\" is not a valid regex: %s", key+separator+value, err.Error())
+    return fmt.Errorf("decoy. Key+Separator+Value: \"%s\" is not a valid regex: %s", key+separator+value, err.Error()), nil
   }
   matchesCombined := rECombinedstring.FindAllStringIndex(d.body, -1)
   //proxywasm.LogWarnf("length of match array with n=0: %v", len(matchesCombined)) //debug
 
   rEKey, err := regexp.Compile(key+separator)
   if err != nil {
-    return fmt.Errorf("decoy.key: \"%s\" is not a valid regex: %s", separator, err.Error())
+    return fmt.Errorf("decoy.key: \"%s\" is not a valid regex: %s", separator, err.Error()), nil
   }
   matchesKey := rEKey.FindAllStringIndex(d.body, -1)
 
@@ -263,20 +261,10 @@ func (d *detectBody) detectDecoyInResponse() error {
   }
 
   if sendAlert {
-    session, username  := FindSession(map[string]map[string]string{ "header": d.request.Headers, "cookie": d.request.Cookies, "payload": { "payload": *d.request.Body }}, &map[string]map[string]string{ "header": d.headers, "cookie": d.cookies, "body": { "body": d.body }}, d.conf.Session)
-    if session != nil {
-      alertInfos["session"] = *session
-    }
-    if username != nil {
-      alertInfos["username"] = *username
-    }
-    err := d.Alert(alertInfos, d.request.Headers)
-    if err != nil {
-      return err
-    }
+    return nil, &alert.AlertParam{ *d.curFilter, alertInfos }
   }
   if config_proxy.Debug { proxywasm.LogWarn("done") }
-  return nil
+  return nil, nil
 }
 
 func (d *detectBody) relevantVerb() bool {

@@ -7,7 +7,7 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 )
 
-func FindSession(request map[string]map[string]string, response *map[string]map[string]string, config config_parser.SessionConfig) (*string, *string) {
+func FindSession(request map[string]map[string]string, response map[string]map[string]string, config config_parser.SessionConfig) (*string, *string) {
 	if (config == config_parser.EmptySessionConfig() || config == config_parser.SessionConfig{}) {
 		return nil, nil
 	}
@@ -16,10 +16,10 @@ func FindSession(request map[string]map[string]string, response *map[string]map[
 	usernameValue := ""
 	//Look for a session in response first
 	if response != nil {
-		session := getSession(*response, config)
+		session := getSession(response, config)
 		sessionValue = session
 
-		username := getUsername(*response, config)
+		username := getUsername(response, config)
 		usernameValue = username
 	}
 	if sessionValue == "" {
@@ -79,7 +79,14 @@ func FindInValue(value, str string) string {
 			proxywasm.LogErrorf("username.Value: \"%s\" is not a valid regex: %s", value, err.Error())
 			return str
 		}
-		return rEValue.FindString(str)
+		foundValue := rEValue.FindStringSubmatch(str)
+		if len(foundValue) > 1 {
+			return foundValue[1]
+		} else if len(foundValue) == 0 {
+			return ""
+		} else {
+			return foundValue[0]
+		} 
 	}
 	return str
 }

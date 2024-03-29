@@ -48,6 +48,7 @@ func (v *validator) printErrors() {
 
 func (v *validator) Validate(config *Config) error {
 	v.validateFilters(config.Decoys.Filters)
+	v.validateSessionConf(config.Session)
 	v.printErrors()
 	if len(v.errArr) == 0 {
 		return nil
@@ -85,7 +86,7 @@ func (v *validator) validateSession(session SessionType) {
 	if breaksRequired(session.Key)  {
 		v.addError("session.key ", "can not be empty ")
 	}
-	if validInSession(session.In) {
+	if !validInSession(session.In) {
 		v.addError("session.in", "needs to be cookie or header")
 	}
 }
@@ -95,9 +96,9 @@ func (v *validator) validateUsername(username UsernameType) {
 		return
 	}
 	if breaksRequired(username.Key) && (username.In == "cookie" || username.In == "header") {
-		v.addError("username.key", "can not be empty for cookier or header")
+		v.addError("username.key", "can not be empty for cookie or header")
 	}
-	if validInUsername(username.In) {
+	if !validInUsername(username.In) {
 		v.addError("username.in", "needs to be cookie, header or payload")
 	}
 	if breaksRequired(username.Value) && username.In == "payload" {

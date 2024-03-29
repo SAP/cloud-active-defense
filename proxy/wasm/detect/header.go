@@ -31,35 +31,40 @@ func (d *detectHeader) Alert(logParameters map[string]string, headers map[string
   return nil
 }
 
-func OnHttpRequestHeaders(request *shared.HttpRequest, config *config_parser.Config) error {
+func OnHttpRequestHeaders(request *shared.HttpRequest, config *config_parser.Config) (error, []alert.AlertParam) {
   d := &detectHeader{ config, nil, request.Headers, request.Cookies, nil}
   noFilters := len(d.conf.Decoys.Filters)
   if config_proxy.Debug { proxywasm.LogWarnf("*** detect request headers *** %v filters", noFilters) } //debug
 
+  alerts := []alert.AlertParam{}
   for ind := 0; ind < noFilters; ind++ {
     d.curFilter = &d.conf.Decoys.Filters[ind]
     err, skip := d.checkConditionsRequest(ind)
     if err != nil {
-      return err
+      return err, alerts
     } else if skip {
       continue
     } 
 
     if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
-    err = d.detectDecoyInRequest()
+    err, decoyAlert := d.detectDecoyInRequest()
     if err != nil {
-      return err
+      return err, alerts
+    }
+    if decoyAlert != nil {
+      alerts = append(alerts, *decoyAlert)
     }
   }
-  return nil
+  return nil, alerts
 }
 
-func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[string]string, config *config_parser.Config) error {
+func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[string]string, config *config_parser.Config) (error, []alert.AlertParam) {
   d := &detectHeader{ config, nil, headers, cookies, request}
 
   var err error
 
   if config_proxy.Debug { proxywasm.LogWarn("*** detect response headers ***") } //debug
+  alerts := []alert.AlertParam{}
   for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
     d.curFilter = &d.conf.Decoys.Filters[ind]
 
@@ -67,18 +72,21 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
 
     err, skip := d.checkConditionsResponse(ind)
     if err != nil {
-      return err
+      return err, alerts
     } else if skip {
       continue
     } 
     if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
 
-    err = d.detectDecoyInResponse()
+    err, decoyAlert := d.detectDecoyInResponse()
     if err != nil {
-      return err
+      return err, alerts
+    }
+    if decoyAlert != nil {
+      alerts = append(alerts, *decoyAlert)
     }
   }
-  return err
+  return err, alerts 
 }
 
 
@@ -116,7 +124,7 @@ func (d *detectHeader) checkConditionsResponse(ind int) (error, bool) {
   return nil, skip
 }
 
-func (d *detectHeader) detectDecoyInRequest() error {
+func (d *detectHeader) detectDecoyInRequest() (error, *alert.AlertParam) {
   var err error
   key := d.curFilter.Decoy.DynamicKey
   if key == "" {
@@ -149,32 +157,22 @@ func (d *detectHeader) detectDecoyInRequest() error {
     err, sendAlert  = d.detectGetParam(&alertInfos)
     break;
   case "":
-    return nil 
+    return nil, nil
   default:
     err = fmt.Errorf("detect.seek.in is invalid: %v")
     break;
 }
 
   if err != nil {
-    return err
+    return err, nil
   }
   if sendAlert {
-    session, username  := FindSession(map[string]map[string]string{ "header": d.headers, "cookie": d.cookies, "body": nil}, nil, d.conf.Session)
-    if session != nil {
-      alertInfos["session"] = *session
-    }
-    if username != nil {
-      alertInfos["username"] = *username
-    }
-    err := d.Alert(alertInfos, d.headers)
-    if err != nil {
-      return err
-    }
+    return nil, &alert.AlertParam{ *d.curFilter, alertInfos }
   }
-  return nil
+  return nil, nil
 }
 
-func (d *detectHeader) detectDecoyInResponse() error {
+func (d *detectHeader) detectDecoyInResponse() (error, *alert.AlertParam) {
   var err error = nil
   key := d.curFilter.Decoy.DynamicKey
   if key == "" {
@@ -207,28 +205,18 @@ func (d *detectHeader) detectDecoyInResponse() error {
     err, sendAlert  = d.detectGetParam(&alertInfos)
     break;
   case "":
-    return nil
+    return nil, nil
   default:
     err = fmt.Errorf("detect.seek.in is invalid: %v")
 }
   if err != nil {
-    return err
+    return err, nil
   }
 
   if sendAlert {
-    session, username  := FindSession(map[string]map[string]string{"header": d.headers, "cookie": d.cookies}, &map[string]map[string]string{"header": d.request.Headers, "cookie": d.request.Cookies, "body": nil}, d.conf.Session)
-    if session != nil {
-      alertInfos["session"] = *session
-    }
-    if username != nil {
-      alertInfos["username"] = *username
-    }
-    err := d.Alert(alertInfos, d.request.Headers)
-    if err != nil {
-      return err
-    }
+    return nil, &alert.AlertParam{ *d.curFilter, alertInfos }
   }
-  return nil
+  return nil, nil
 }
 
 func (d *detectHeader) relevantVerbRequest() bool {

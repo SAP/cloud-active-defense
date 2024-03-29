@@ -6,6 +6,7 @@ import ( //"strconv"
 	"sundew/inject"
 	"sundew/shared"
   "sundew/config_proxy"
+  "sundew/alert"
 
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
@@ -80,7 +81,7 @@ func (ctx *pluginContext) OnTick() {
 }
 
 func (ctx *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
-  return &httpContext{contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}}
+  return &httpContext{contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}, alerts: []alert.AlertParam{}}
 }
 
 type httpContext struct {
@@ -90,7 +91,9 @@ type httpContext struct {
   totalResponseBodySize int
   cookies               map[string]string
   headers               map[string]string
-  request *shared.HttpRequest
+  body                  string
+  request               *shared.HttpRequest
+  alerts                []alert.AlertParam
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) types.Action {
@@ -115,12 +118,15 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
 
     empty := ""               // onHttpRequestBody may not be called. set Body to "" to prevent nil panic
     ctx.request.Body = &empty
-
-    err = detect.OnHttpRequestHeaders(ctx.request, ctx.config)
+    err, alerts := detect.OnHttpRequestHeaders(ctx.request, ctx.config)
     if err != nil {
       proxywasm.LogCriticalf("failed to detect request headers: %s", err.Error())
       return types.ActionPause
     }
+    if len(alerts) != 0 {
+      ctx.alerts = append(ctx.alerts, alerts...)
+    }
+
   } else {
     if config_proxy.Debug { proxywasm.LogWarn("no headers in request") } //debug
   }
@@ -181,9 +187,12 @@ func (ctx *httpContext) OnHttpRequestBody(bodySize int, endOfStream bool) types.
   //proxywasm.LogWarnf("\nRequest body: \n%v", ctx.request.Body) //debug
 
   if config_proxy.Debug { proxywasm.LogWarnf("detecting in req body now") } //debug
-  err = detect.OnHttpRequestBody(*ctx.request.Body, ctx.request.Headers, ctx.request.Cookies, ctx.config)
+  err, alerts := detect.OnHttpRequestBody(*ctx.request.Body, ctx.request.Headers, ctx.request.Cookies, ctx.config)
   if err != nil {
     proxywasm.LogErrorf("could not detect: %v", err.Error())
+  }
+  if len(alerts) != 0 {
+    ctx.alerts = append(ctx.alerts, alerts...)
   }
   if config_proxy.Debug { proxywasm.LogWarn("detection in reqbody done") } //debug
 
@@ -224,9 +233,16 @@ func (ctx *httpContext) OnHttpResponseHeaders(numHeaders int, endOfStream bool) 
   if err != nil {
     proxywasm.LogErrorf("could not extract response headers: %v", err.Error())
   }
-  
-  err = detect.OnHttpResponseHeaders(ctx.request, ctx.headers, ctx.cookies, ctx.config)
 
+  err, alerts := detect.OnHttpResponseHeaders(ctx.request, ctx.headers, ctx.cookies, ctx.config)
+  if err != nil {
+    proxywasm.LogCriticalf("failed to detect response headers: %s", err.Error())
+    return types.ActionPause
+  }
+
+  if len(alerts) != 0 {
+    ctx.alerts = append(ctx.alerts, alerts...)
+  }
   err, injectHeaders := inject.OnHttpResponseHeaders(ctx.request, ctx.headers, ctx.cookies, ctx.config)
   if err != nil {
     proxywasm.LogErrorf("could not inject response headers: %v", err.Error())
@@ -267,14 +283,21 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
   }
 
   originalBody, err := proxywasm.GetHttpResponseBody(0, ctx.totalResponseBodySize)
+  ctx.body = string(originalBody)
   if err != nil {
     proxywasm.LogErrorf("failed to get response body: %v", err)
     return types.ActionContinue
   }
   //proxywasm.LogWarnf("this is the originial body: %v", originalBody) //debug
 
-  err = detect.OnHttpResponseBody(string(originalBody), ctx.headers, ctx.cookies, ctx.config, ctx.request)
-
+  err, alerts := detect.OnHttpResponseBody(string(originalBody), ctx.headers, ctx.cookies, ctx.config, ctx.request)
+  if err != nil {
+    proxywasm.LogCriticalf("failed to detect response body: %s", err.Error())
+    return types.ActionPause
+  }
+  if len(alerts) != 0 {
+    ctx.alerts = append(ctx.alerts, alerts...)
+  }
   // proxywasm.LogWarnf("this is the original body: \n %s", originalBody)
   err, injectedResponse := inject.OnHttpResponseBody( ctx.request, originalBody, ctx.config)
   if err != nil {
@@ -293,4 +316,12 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
 }
 
 func (ctx *httpContext) OnHttpStreamDone() {
+  resBody := ctx.body
+  reqBody := *ctx.request.Body
+  session, username := detect.FindSession(map[string]map[string]string{"header": ctx.request.Headers, "cookie": ctx.request.Cookies, "payload": { "payload": reqBody }}, map[string]map[string]string{ "header": ctx.headers, "cookie": ctx.cookies, "payload": { "payload": resBody }}, ctx.config.Session)
+  for i := 0; i < len(ctx.alerts); i++ {
+    ctx.alerts[i].LogParameters["session"] = *session
+    ctx.alerts[i].LogParameters["username"] = *username
+    alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
+  }
 }
