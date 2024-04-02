@@ -370,8 +370,27 @@ func (d *detectHeader) detectUrl(alertInfos *map[string]string) (error, bool) {
   } else if queryStart := strings.IndexByte(fullPath, '?'); queryStart >= 0 {
     fullPath = fullPath[:queryStart]  // cut query params of
   }
-  (*alertInfos)["injected"] = fullPath
   err, keyMatch, combinedMatch := shared.KeyCombinedMatch(d.curFilter, &fullPath)
+  if keyMatch {
+    key := ""
+    if d.curFilter.Decoy.DynamicKey != "" {
+      key = d.curFilter.Decoy.DynamicKey
+    } else {
+      key = d.curFilter.Decoy.Key
+    }
+    rEKey, err := regexp.Compile(key)
+    if err != nil {
+      fmt.Errorf( "invalid regex %v: %v", key, err.Error())
+    }
+    injectedValue := rEKey.FindStringSubmatch(fullPath)
+    if len(injectedValue) > 1 {
+      (*alertInfos)["injected"] = injectedValue[1]
+		} else if len(injectedValue) == 0 {
+			(*alertInfos)["injected"] = fullPath
+		} else {
+			(*alertInfos)["injected"] = injectedValue[0]
+		}
+  }
   if err != nil {
     return fmt.Errorf("could not match: %v", err.Error()), false
   }
