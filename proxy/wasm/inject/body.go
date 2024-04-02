@@ -138,7 +138,7 @@ func (i *injecterBody) checkConditionsResponse() (error, bool) {
   }
 
   for _, condition := range i.curFilter.Inject.WhenTrue {
-    err, applies := WhenTrue(i.request, &condition) 
+    err, applies := WhenTrue(&shared.HttpRequest{Body: &i.responseBody, Headers: i.request.Headers, Cookies: i.request.Cookies}, &condition) 
     if err != nil {
       return err, false
     }
@@ -148,7 +148,7 @@ func (i *injecterBody) checkConditionsResponse() (error, bool) {
     }
   }
   for _, condition := range i.curFilter.Inject.WhenFalse {
-    err, applies := WhenFalse(i.request, &condition) 
+    err, applies := WhenFalse(&shared.HttpRequest{Body: &i.responseBody, Headers: i.request.Headers, Cookies: i.request.Cookies}, &condition) 
     if err != nil {
       return err, false
     }

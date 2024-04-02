@@ -146,7 +146,12 @@ func checkBody(request *shared.HttpRequest, condition *config_parser.ConditionTy
   if request.Body == nil {
     return fmt.Errorf("can not check body conditions in header injection"), false
   }
-  value := condition.Key+"="+condition.Value
+  value := ""
+  if condition.Key != "" {
+    value = condition.Key+"="+condition.Value
+  } else {
+    value = condition.Value
+  }
   if value == "" {
     return nil, false
   }

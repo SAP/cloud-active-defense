@@ -166,8 +166,8 @@ func (v *validator) validateWhenTrue(obj ConditionType) {
   if obj == EmptyCondition() {
     return
   }
-	if breaksRequired(obj.Key) {
-		v.addError(v.currentPlace+".key", "is required and can not be empty")
+	if breaksRequired(obj.Key) && (obj.In == "header" || obj.In == "cookie" || obj.In == "getParam" || obj.In == "postParam") {
+		v.addError(v.currentPlace+".key", "is required and can not be empty for header, cookie, getParam and postParams")
 	}
 	if breaksRequired(obj.Value) {
 		v.addError(v.currentPlace+".value", "is required and can not be empty")
@@ -185,8 +185,8 @@ func (v *validator) validateWhenFalse(obj ConditionType) {
   if obj == EmptyCondition() {
     return
   }
-	if breaksRequired(obj.Key) {
-		v.addError(v.currentPlace+".key", "is required and can not be empty")
+	if breaksRequired(obj.Key) && (obj.In == "header" || obj.In == "cookie" || obj.In == "getParam" || obj.In == "postParam") {
+		v.addError(v.currentPlace+".key", "is required and can not be empty for header, cookie, getParam and postParams")
 	}
 	if breaksRequired(obj.Value) {
 		v.addError(v.currentPlace+".value", "is required and can not be empty")
