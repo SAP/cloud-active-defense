@@ -320,8 +320,8 @@ func (ctx *httpContext) OnHttpStreamDone() {
   reqBody := *ctx.request.Body
   session, username := detect.FindSession(map[string]map[string]string{"header": ctx.request.Headers, "cookie": ctx.request.Cookies, "payload": { "payload": reqBody }}, map[string]map[string]string{ "header": ctx.headers, "cookie": ctx.cookies, "payload": { "payload": resBody }}, ctx.config.Session)
   for i := 0; i < len(ctx.alerts); i++ {
-    ctx.alerts[i].LogParameters["session"] = *session
-    ctx.alerts[i].LogParameters["username"] = *username
+    ctx.alerts[i].LogParameters["session"] = session
+    ctx.alerts[i].LogParameters["username"] = username
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
   }
 }

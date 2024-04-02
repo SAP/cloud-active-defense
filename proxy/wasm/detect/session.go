@@ -7,9 +7,9 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 )
 
-func FindSession(request map[string]map[string]string, response map[string]map[string]string, config config_parser.SessionConfig) (*string, *string) {
+func FindSession(request map[string]map[string]string, response map[string]map[string]string, config config_parser.SessionConfig) (string, string) {
 	if (config == config_parser.EmptySessionConfig() || config == config_parser.SessionConfig{}) {
-		return nil, nil
+		return "", ""
 	}
 	
 	sessionValue := ""
@@ -30,7 +30,7 @@ func FindSession(request map[string]map[string]string, response map[string]map[s
 		username := getUsername(request, config)
 		usernameValue = username
 	}
-	return &sessionValue, &usernameValue
+	return sessionValue, usernameValue
 }
 
 func getSession(headers map[string]map[string]string, config config_parser.SessionConfig) string {
