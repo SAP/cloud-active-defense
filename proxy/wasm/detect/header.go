@@ -407,18 +407,18 @@ func (d *detectHeader) detectUrl(alertInfos *map[string]string) (error, bool) {
   if d.curFilter.Detect.Alert.WhenComplete {
     if combinedMatch {
       sendAlert = true
-      (*alertInfos)["alert"] = "KeyValueComplete "
+      (*alertInfos)["alert"] += "KeyValueComplete "
     }
   }
   if d.curFilter.Detect.Alert.WhenModified {
     if keyMatch && !combinedMatch {
       sendAlert = true
-      (*alertInfos)["alert"] = "ValueModified "
+      (*alertInfos)["alert"] += "ValueModified "
     }
   }
   if d.curFilter.Detect.Alert.WhenAbsent {
     if !keyMatch {
-      (*alertInfos)["alert"] = "KeySeen "
+      (*alertInfos)["alert"] += "KeySeen "
     }
   }
   return nil, sendAlert

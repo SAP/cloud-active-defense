@@ -57,6 +57,9 @@ func KeyCombinedMatch(filter *config_parser.FilterType, query *string) (err erro
   err = nil
   separator := filter.Decoy.Separator
 
+  if separator == "" {
+		separator = "="
+	}
   key := filter.Decoy.DynamicKey 
   if key == "" {
     key = filter.Decoy.Key
@@ -87,4 +90,47 @@ func KeyCombinedMatch(filter *config_parser.FilterType, query *string) (err erro
     }
   }
   return
+}
+
+func FindInjectedValue(filter config_parser.FilterType, query string) (err error, match string) {
+	key := filter.Decoy.DynamicKey
+	value := filter.Decoy.DynamicValue
+	separator := filter.Decoy.Separator
+	if separator == "" {
+		separator = "="
+	}
+	if key == "" {
+		key = filter.Decoy.Key
+	}
+	if value == "" {
+		value = filter.Decoy.Value
+	}
+	// Find injected value with dynamicKey
+	if value == "" {
+		rEKey, err := regexp.Compile(key)
+		if err != nil {
+			return fmt.Errorf("invalid regex: %v", err.Error()), ""
+		}
+		foundValue := rEKey.FindStringSubmatch(query)
+		if len(foundValue) > 1 {
+			return nil, foundValue[1]
+		} else if len(foundValue) == 0 {
+			return nil, ""
+		} else {
+			return nil, foundValue[0]
+		}
+	} else {
+		rEcombined, err := regexp.Compile(key + separator + value)
+		if err != nil {
+			return fmt.Errorf("invalid regex: %v", err.Error()), ""
+		}
+		foundValue := rEcombined.FindStringSubmatch(query)
+		if len(foundValue) > 1 {
+			return nil, foundValue[1]
+		} else if len(foundValue) == 0 {
+			return nil, ""
+		} else {
+			return nil, foundValue[0]
+		}
+	}
 }

@@ -148,6 +148,12 @@ func (d *detectBody) detectDecoyInRequest() (error, *alert.AlertParam) {
         return fmt.Errorf("failed to retrieve postParam value of decoy:" , err.Error()), nil
       }
       alertInfos["injected"] = keyRm.ReplaceAllString(injected, "")
+    } else {
+      err, injected := shared.FindInjectedValue(*d.curFilter, d.body)
+      if err != nil {
+        fmt.Errorf("%v", err)
+      }
+      alertInfos["injected"] = injected
     }
 
     sendAlert := false
@@ -202,59 +208,54 @@ func (d *detectBody) detectDecoyInResponse() (error, *alert.AlertParam) {
     value = d.curFilter.Decoy.Value 
   }
   separator := d.curFilter.Decoy.Separator
-  if d.curFilter.Detect.Seek.In == "postParam" {
+  if separator == "" {
     separator = "="
   }
 
-  rECombinedstring, err := regexp.Compile(key+separator+value)
+  err, keyMatches, combinedMatches := shared.KeyCombinedMatch(d.curFilter, &d.body)
   if err != nil {
-    return fmt.Errorf("decoy. Key+Separator+Value: \"%s\" is not a valid regex: %s", key+separator+value, err.Error()), nil
+    proxywasm.LogErrorf("could not match: %v", err.Error())
   }
-  matchesCombined := rECombinedstring.FindAllStringIndex(d.body, -1)
-  //proxywasm.LogWarnf("length of match array with n=0: %v", len(matchesCombined)) //debug
-
-  rEKey, err := regexp.Compile(key+separator)
-  if err != nil {
-    return fmt.Errorf("decoy.key: \"%s\" is not a valid regex: %s", separator, err.Error()), nil
-  }
-  matchesKey := rEKey.FindAllStringIndex(d.body, -1)
-
   alertInfos := make(map[string]string, 0)
   alertInfos["decoy"] = key+separator+value
   alertInfos["verb"] = d.request.Headers[":method"]
   alertInfos["path"] = d.request.Headers[":path"]
 
+  err, injected := shared.FindInjectedValue(*d.curFilter, d.body)
+  if err != nil {
+    proxywasm.LogErrorf("could not find injected value: %v", err.Error())
+  }
+  alertInfos["injected"] = injected
   sendAlert := false
 
-  if d.curFilter.Detect.Alert.WhenSeen && key != "" {
-    if matchesKey != nil { // key+separator -> seen
+  if d.curFilter.Detect.Alert.WhenSeen {
+    if keyMatches { // key+separator -> seen
       alertInfos["alert"] += "KeySeen "
       sendAlert=true
     } 
   }
-  if d.curFilter.Detect.Alert.WhenComplete && key != "" && value != "" {
-    if matchesCombined != nil {
+  if d.curFilter.Detect.Alert.WhenComplete {
+    if combinedMatches {
       alertInfos["alert"] += "KeyValueComplete "
       sendAlert=true
     }
   }
   if d.curFilter.Detect.Alert.WhenModified {
-    for _, matchKey := range matchesKey {
+    /* for _, matchKey := range matchesKey {
       isFullMatch := false
       for _, matchCombined := range matchesCombined {
         if matchKey[0] == matchCombined[0] {
           isFullMatch = true //key+separator+value found -> not modified
           break
         }
-      }
-      if !isFullMatch && key != "" { // key+separator without value found -> modified
+      } */
+      if keyMatches && !combinedMatches { // key+separator without value found -> modified
         alertInfos["alert"] += "ValueModified "
         sendAlert=true
       }
-    }
   }
   if d.curFilter.Detect.Alert.WhenAbsent {
-    if matchesKey == nil { // key+separator not found -> absent
+    if keyMatches { // key+separator not found -> absent
       alertInfos["alert"] += "KeyAbsent "
       sendAlert=true
     }
