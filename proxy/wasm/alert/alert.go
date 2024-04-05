@@ -73,8 +73,8 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
     RequestID:              headers["x-request-id"],
     DestinationIP:          string(destinationIP[:]),
     Url:                    headers[":authority"],
-    Server:                 string(server[:]),
-    Useragent:              headers["user-agent"],
+    Server:                 truncate(string(server[:])),
+    Useragent:              truncate(headers["user-agent"]),
     SourceIP:               string(sourceIP[:]),
     Path:                   headers[":path"],
     Method:                 headers[":method"],
@@ -103,4 +103,12 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
   // }
   // proxywasm.LogWarn("\n" + alertMessage + ": !!!!!!! ALERT !!!!!!! DECOY TRIGGERED !!!!!!! ALERT !!!!!!! DECOY TRIGGERED !!!!!!! ALERT !!!!!!!")
   return nil
+}
+
+func truncate(s string) string {
+  maxLength := 300
+  if len(s) > maxLength {
+    return s[:maxLength]
+  }
+  return s
 }
