@@ -417,6 +417,7 @@ func (i *injectHeader) setInitialHeaderContent() error {
 		}
 	} else if i.curFilter.Inject.Store.As == "status" {
 		i.headers[":status"] = ""
+		i.curFilter.Inject.Store.At.Method = ""
 	} else {
 		return fmt.Errorf("set initial header content: can not apply body filter to headers")
 	}
