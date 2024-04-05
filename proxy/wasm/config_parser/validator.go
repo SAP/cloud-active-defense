@@ -285,7 +285,7 @@ func validInRequest(s string) bool {
 func validAs(s string) bool {
 	e := StoreAs(s)
 	switch e {
-	case cookie_as, header_as, body_as:
+	case cookie_as, header_as, body_as, status_as:
 		return true
 	}
 	return false

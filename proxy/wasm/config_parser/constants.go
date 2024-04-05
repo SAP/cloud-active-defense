@@ -20,6 +20,7 @@ const (
 	cookie_as StoreAs = "cookie"
 	header_as         = "header"
 	body_as           = "body"
+	status_as		  =	"status"
 )
 
 type InjectMethod string
