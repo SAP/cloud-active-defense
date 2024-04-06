@@ -1,4 +1,4 @@
-# test simple detection in URL (first README.md decoy)
+# TEMPLATE FOR YOUR OWN TESTS
 
 # Configure decoys
 config='
@@ -29,6 +29,7 @@ echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.jso
 # wait a few seconds for the proxy to read the new config
 sleep 5
 
+
 # Start timing
 start_time=$(date +%s.%N)
 
@@ -36,13 +37,10 @@ start_time=$(date +%s.%N)
 tempfile=$(uuidgen -r)
 
 # Do relevant action(s)
-# trigger decoy by visiting /forbidden
-tempfile=`uuidgen -r`
-curl -v http://localhost:8000/forbidden >$tempfile 2>&1
-# give some time for the alert to be sent to the console
+#curl -v http://localhost:8000/ >$tempfile 2>&1
 
-# Check DETECTION (in docker logs)
-status=`docker-compose logs | grep '"DecoyKey": "forbidden",'`
+# Check INJECTION (in $tempfile)
+#status=$(grep "<SOMETHING>" $tempfile)
 
 # Output result & time
 if [ -z "$status" ]; then
@@ -53,6 +51,21 @@ fi
 
 check_1_time=$(date +%s.%N)
 execution_time=$(echo "$check_1_time - $start_time" | bc)
+echo "Execution time: $execution_time seconds"
+
+
+# Check DETECTION (in docker logs)
+#status=`docker-compose logs | grep '<SOMETHING>'`
+
+# Output result & time
+if [ -z "$status" ]; then
+  echo -e "\033[0;31mFAIL\033[0m"
+else
+  echo -e "\033[0;32mPASS\033[0m"
+fi
+
+check_2_time=$(date +%s.%N)
+execution_time=$(echo "$check_2_time - $check_2_time" | bc)
 echo "Execution time: $execution_time seconds"
 
 # Cleanup

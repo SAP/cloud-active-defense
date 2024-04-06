@@ -1,7 +1,5 @@
 #!/bin/bash
 
-consoleoutput=docker-compose-logs.txt
-
 # Build test images
 docker build -f myappDockerfile -t myapptest ../myapp/
 docker build -f configmanagerDockerfile -t configmanagertest ../configmanager/
@@ -40,5 +38,4 @@ echo "ALL TESTS COMPLETED"
 
 # Cleanup
 docker-compose down
-rm $consoleoutput
 

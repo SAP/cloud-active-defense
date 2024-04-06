@@ -1,4 +1,4 @@
-# test simple detection in URL (first README.md decoy)
+# Time taken for 10000 requests, 1 injected decoy (replace)
 
 # Configure decoys
 config='
@@ -6,17 +6,17 @@ config='
   "filters": [
     {
       "decoy": {
-        "key": "forbidden"
+        "key": "admin1234"
       },
-      "detect": {
-        "seek": {
-          "inRequest": ".*",
+      "inject": {
+        "store": {
+          "inResponse": "/robots.txt",
           "withVerb": "GET",
-          "in": "url"
-        },
-        "alert": {
-          "severity": "LOW",
-          "whenSeen": true
+          "as": "body",
+          "at": {
+            "method": "replace",
+            "property": "((.|\n)*)"
+          }
         }
       }
     }
@@ -29,6 +29,7 @@ echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.jso
 # wait a few seconds for the proxy to read the new config
 sleep 5
 
+
 # Start timing
 start_time=$(date +%s.%N)
 
@@ -36,13 +37,14 @@ start_time=$(date +%s.%N)
 tempfile=$(uuidgen -r)
 
 # Do relevant action(s)
-# trigger decoy by visiting /forbidden
-tempfile=`uuidgen -r`
-curl -v http://localhost:8000/forbidden >$tempfile 2>&1
-# give some time for the alert to be sent to the console
+for ((i=1; i<=9999; i++)); do
+  curl -v http://localhost:8000/robots.txt >/dev/null 2>&1
+done
+# Check in the 1000th iteration that the decoy is properly injected
+curl -v http://localhost:8000/robots.txt >$tempfile 2>&1
 
-# Check DETECTION (in docker logs)
-status=`docker-compose logs | grep '"DecoyKey": "forbidden",'`
+# Check INJECTION (in $tempfile)
+status=$(grep "admin1234" $tempfile)
 
 # Output result & time
 if [ -z "$status" ]; then
