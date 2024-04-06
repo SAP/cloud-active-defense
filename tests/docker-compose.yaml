@@ -4,6 +4,8 @@ services:
   myapp:
     container_name: myapp
     image: myapptest
+    ports:
+    - "3000:3000"
     
   config:
     container_name: configmanager
