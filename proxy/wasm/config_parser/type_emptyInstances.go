@@ -5,7 +5,7 @@ import (
 )
 
 func EmptyConfig() Config {
-  return Config{ DecoyConfig{}, SessionConfig{} }
+  return Config{ DecoyConfig{}, ConfigType{} }
 }
 
 func EmptyCondition() ConditionType{
@@ -24,8 +24,12 @@ func EmptyDecoy() DecoyType {
   return DecoyType{"", "", "", "", "", ""}
 }
 
-func EmptySessionConfig() SessionConfig {
-  return SessionConfig{ EmptySession(), EmptyUsername() }
+func EmptyConfigType() ConfigType {
+  return ConfigType{ EmptyAlertConfig(), "" }
+}
+
+func EmptyAlertConfig() AlertConfig {
+  return AlertConfig{ EmptySession(), EmptyUsername() }
 }
 
 func EmptySession() SessionType {

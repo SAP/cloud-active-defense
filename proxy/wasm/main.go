@@ -24,7 +24,7 @@ type vmContext struct {
 }
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-  return &pluginContext{contextID: contextID, config: &config_parser.Config{Session: config_parser.SessionConfig{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
+  return &pluginContext{contextID: contextID, config: &config_parser.Config{Config: config_parser.ConfigType{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
 }
 
 type pluginContext struct {
@@ -318,10 +318,11 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
 func (ctx *httpContext) OnHttpStreamDone() {
   resBody := ctx.body
   reqBody := *ctx.request.Body
-  session, username := detect.FindSession(map[string]map[string]string{"header": ctx.request.Headers, "cookie": ctx.request.Cookies, "payload": { "payload": reqBody }}, map[string]map[string]string{ "header": ctx.headers, "cookie": ctx.cookies, "payload": { "payload": resBody }}, ctx.config.Session)
+  session, username := detect.FindSession(map[string]map[string]string{"header": ctx.request.Headers, "cookie": ctx.request.Cookies, "payload": { "payload": reqBody }}, map[string]map[string]string{ "header": ctx.headers, "cookie": ctx.cookies, "payload": { "payload": resBody }}, ctx.config.Config.Alert)
   for i := 0; i < len(ctx.alerts); i++ {
     ctx.alerts[i].LogParameters["session"] = session
     ctx.alerts[i].LogParameters["username"] = username
+    ctx.alerts[i].LogParameters["server"] = ctx.config.Config.Server
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
   }
 }

@@ -16,7 +16,7 @@ app.get('/:namespace/:application', (req, res) => {
   const { namespace, application } = req.params;
   const filePath = path.resolve(path.normalize(`${__dirname}/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
   const defaultFilePath = `/data/cad-default.json`;
-  const sessionFilePath = `/data/session-default.json`;
+  const configFilePath = `/data/config-default.json`;
   if(!filePath.startsWith(__dirname)){
     return res.end()
   }
@@ -39,15 +39,15 @@ app.get('/:namespace/:application', (req, res) => {
             if(!decoys) return res.json([])
             const decoysJson = JSON.parse(decoys);
             // Check if the file exists
-            fs.access(sessionFilePath, fs.constants.F_OK, err => {
-              if(err) return res.json({ decoys: decoysJson });
+            fs.access(configFilePath, fs.constants.F_OK, err => {
+              if(err) return res.json({ decoy: decoysJson });
 
               // If the file exists, read its contents and return as JSON object
-              fs.readFile(sessionFilePath, 'utf8', (err, session) => {
-                if(err) return res.json({ decoys: decoysJson });
-                if (session) {
-                  const sessionJson = JSON.parse(session);
-                  return res.json({ decoy: decoysJson, session: sessionJson });
+              fs.readFile(configFilePath, 'utf8', (err, config) => {
+                if(err) return res.json({ decoy: decoysJson });
+                if (config) {
+                  const configJson = JSON.parse(config);
+                  return res.json({ decoy: decoysJson, config: configJson });
                 }
                 return res.json({ decoy: decoysJson })
               })
@@ -65,15 +65,15 @@ app.get('/:namespace/:application', (req, res) => {
         if(!decoys) return res.json([])
         const decoysJson = JSON.parse(decoys);
         // Check if the file exists
-        fs.access(sessionFilePath, fs.constants.F_OK, err => {
+        fs.access(configFilePath, fs.constants.F_OK, err => {
           if(err) return res.json({ decoys: decoysJson });
           
           // If the file exists, read its contents and return as JSON object
-          fs.readFile(sessionFilePath, 'utf8', (err, session) => {
+          fs.readFile(configFilePath, 'utf8', (err, config) => {
             if(err) return res.json({ decoys: decoysJson });
-            if (session) {
-              const sessionJson = JSON.parse(session);
-              return res.json({ decoy: decoysJson, session: sessionJson });
+            if (config) {
+              const configJson = JSON.parse(config);
+              return res.json({ decoy: decoysJson, config: configJson });
             }
             return res.json({ decoy: decoysJson })
           })
