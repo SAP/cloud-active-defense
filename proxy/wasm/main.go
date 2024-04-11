@@ -105,6 +105,14 @@ type httpContext struct {
   request               *shared.HttpRequest
   alerts                []alert.AlertParam
 }
+func (ctx *httpContext) bodyCallBack(numHeaders, bodySize, numTrailers int) {
+  response, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+  if err != nil {
+    proxywasm.LogErrorf("error when getting response body: %s", err)
+  }
+  ctx.body = string(response)
+  return
+}
 
 func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) types.Action {
   if numHeaders > 0 {
@@ -119,6 +127,20 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
     if err != nil {
       proxywasm.LogCriticalf("failed to extract request headers: %s", err.Error())
       return types.ActionPause
+    }
+
+    requestHeaders := [][2]string{}
+    for k, v := range ctx.request.Headers {
+      if k == ":authority" {
+        requestHeaders = append(requestHeaders, [2]string{":authority", "web_service"})
+      } else if k == "if-none-match" {
+        continue
+      } else {
+        requestHeaders = append(requestHeaders, [2]string{k, v})
+      }
+    }
+    if _, err := proxywasm.DispatchHttpCall("web_service", requestHeaders, nil, nil, 5000, ctx.bodyCallBack); err != nil {
+      proxywasm.LogErrorf("dispatch httpcall failed: %v", err)
     }
 
     err, ctx.request = inject.OnHttpRequestHeaders(ctx.request, ctx.config)
