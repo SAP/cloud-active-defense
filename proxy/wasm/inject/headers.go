@@ -49,7 +49,7 @@ func ExtractRequestHeaders(headers [][2]string) (err error, headerMap, cookieMap
 	return err, headerMap, cookieMap
 }
 
-func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[string]string, conf *config_parser.Config) (error, [][2]string) {
+func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[string]string, body string, conf *config_parser.Config) (error, [][2]string) {
 	// called in proxywasm.OnHttpResponseHeaders
 	// injects decoys
 	i := injectHeader{
@@ -58,7 +58,8 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
 		curKey:          nil,
 		headers:         headers,
 		cookies:         cookies,
-    request:         request,
+		body:			 body,
+    	request:         request,
 		injectString:    "",
 		headerContent:   "",
 		injectedHeaders: nil,
@@ -141,11 +142,12 @@ func OnHttpRequestHeaders(request *shared.HttpRequest, conf *config_parser.Confi
 type injectHeader struct {
 	conf      *config_parser.Config
 	curFilter *config_parser.FilterType
-  curKey    *string
+  	curKey    *string
 
 	headers         map[string]string
 	cookies         map[string]string
-  request         *shared.HttpRequest
+	body			string
+  	request         *shared.HttpRequest
 	injectString    string
 	headerContent   string
 	injectedHeaders [][2]string
@@ -191,9 +193,9 @@ func (i *injectHeader) checkConditionsResponse(ind int) (error, bool) {
   if i.curFilter.Inject.Store == config_parser.EmptyStore() {
     return nil, false
   }
-
+  response := &shared.HttpRequest{ Body: &i.body, Headers: i.headers, Cookies: i.cookies }
   for _, condition := range i.curFilter.Inject.WhenTrue {
-    err, applies := WhenTrue(i.request, &condition) 
+    err, applies := WhenTrue(response, &condition) 
     if err != nil {
       return err, false
     }
@@ -203,7 +205,7 @@ func (i *injectHeader) checkConditionsResponse(ind int) (error, bool) {
     }
   }
   for _, condition := range i.curFilter.Inject.WhenFalse {
-    err, applies := WhenFalse(i.request, &condition) 
+    err, applies := WhenFalse(response, &condition) 
     if err != nil {
       return err, false
     }

@@ -275,7 +275,7 @@ func (ctx *httpContext) OnHttpResponseHeaders(numHeaders int, endOfStream bool) 
   if len(alerts) != 0 {
     ctx.alerts = append(ctx.alerts, alerts...)
   }
-  err, injectHeaders := inject.OnHttpResponseHeaders(ctx.request, ctx.headers, ctx.cookies, ctx.config)
+  err, injectHeaders := inject.OnHttpResponseHeaders(ctx.request, ctx.headers, ctx.cookies, ctx.body, ctx.config)
   if err != nil {
     proxywasm.LogErrorf("could not inject response headers: %v", err.Error())
   }
