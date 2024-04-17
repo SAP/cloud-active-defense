@@ -53,7 +53,7 @@ sleep 5
 start_time=$(date +%s.%N)
 
 # Temporary file for curl output
-tempfile=$(uuidgen -r)
+tempfile=$(bash ./uuidgen.sh)
 
 # Do relevant action(s)
 # Query each decoy 100 times
@@ -75,7 +75,7 @@ for ((i=1; i<=100; i++)); do
 done
 
 check_1_time=$(date +%s.%N)
-execution_time=$(echo "$check_1_time - $start_time" | bc)
+execution_time=$(echo "$check_1_time $start_time" | awk '{print $1 - $2}')
 echo "Execution time: $execution_time seconds"
 
 # Cleanup

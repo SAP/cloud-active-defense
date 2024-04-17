@@ -65,7 +65,7 @@ else
 fi
 
 check_2_time=$(date +%s.%N)
-execution_time=$(echo "$check_2_time - $check_2_time" | bc)
+execution_time=$(echo "$check_1_time $start_time" | awk '{print $1 - $2}')
 echo "Execution time: $execution_time seconds"
 
 # Cleanup
