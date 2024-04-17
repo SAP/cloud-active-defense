@@ -33,11 +33,11 @@ sleep 5
 start_time=$(date +%s.%N)
 
 # Temporary file for curl output
-tempfile=$(uuidgen -r)
+tempfile=$(sh ./uuidgen.sh -r)
 
 # Do relevant action(s)
 # trigger decoy by visiting /forbidden
-tempfile=`uuidgen -r`
+tempfile=`sh ./uuidgen.sh -r`
 curl -v http://localhost:8000/forbidden >$tempfile 2>&1
 # give some time for the alert to be sent to the console
 
@@ -52,7 +52,7 @@ else
 fi
 
 check_1_time=$(date +%s.%N)
-execution_time=$(echo "$check_1_time - $start_time" | bc)
+execution_time=$(echo "$check_1_time $start_time" | awk '{print $1 - $2}')
 echo "Execution time: $execution_time seconds"
 
 # Cleanup
