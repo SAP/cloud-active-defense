@@ -105,12 +105,20 @@ type httpContext struct {
   request               *shared.HttpRequest
   alerts                []alert.AlertParam
 }
-func (ctx *httpContext) bodyCallBack(numHeaders, bodySize, numTrailers int) {
-  response, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+func (ctx *httpContext) responseCallBack(numHeaders, bodySize, numTrailers int) {
+  body, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
   if err != nil {
     proxywasm.LogErrorf("error when getting response body: %s", err)
   }
-  ctx.body = string(response)
+  headers, err := proxywasm.GetHttpCallResponseHeaders()
+  if err != nil {
+    proxywasm.LogErrorf("error when getting response headers: %s", err)
+  }
+  ctx.body = string(body)
+  err, ctx.headers, ctx.cookies = inject.ExtractResponseHeaders(headers)
+  if err != nil {
+    proxywasm.LogErrorf("could not extract response headers: %v", err.Error())
+  }
   return
 }
 
@@ -139,7 +147,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
         requestHeaders = append(requestHeaders, [2]string{k, v})
       }
     }
-    if _, err := proxywasm.DispatchHttpCall("web_service", requestHeaders, nil, nil, 5000, ctx.bodyCallBack); err != nil {
+    if _, err := proxywasm.DispatchHttpCall("web_service", requestHeaders, nil, nil, 5000, ctx.responseCallBack); err != nil {
       proxywasm.LogErrorf("dispatch httpcall failed: %v", err)
     }
 
@@ -167,6 +175,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
     err := proxywasm.RemoveHttpRequestHeader(header)
     if err != nil {
       proxywasm.LogErrorf("could not remove request header (%s): %s", header, err.Error())
+    }
+    // Only removing this header
+    if header == ":authority" {
+      continue
     }
  
     err = proxywasm.AddHttpRequestHeader(header, value)
@@ -248,10 +260,6 @@ func (ctx *httpContext) OnHttpResponseHeaders(numHeaders int, endOfStream bool) 
   removeContentLengthHeader("response")
   if config_proxy.Debug { proxywasm.LogWarn("calling OnHttpResponseHeaders") } // debug
 
-  headers, err := proxywasm.GetHttpResponseHeaders()
-  if err != nil {
-    proxywasm.LogErrorf("could not get response headers: %v", err.Error())
-  }
 
   /*
   proxywasm.LogWarnf("/nresponse headers:") //debug
@@ -261,10 +269,6 @@ func (ctx *httpContext) OnHttpResponseHeaders(numHeaders int, endOfStream bool) 
   }
   */
 
-  err, ctx.headers, ctx.cookies = inject.ExtractResponseHeaders(headers)
-  if err != nil {
-    proxywasm.LogErrorf("could not extract response headers: %v", err.Error())
-  }
 
   err, alerts := detect.OnHttpResponseHeaders(ctx.request, ctx.headers, ctx.cookies, ctx.config)
   if err != nil {
@@ -314,15 +318,9 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
     return types.ActionPause
   }
 
-  originalBody, err := proxywasm.GetHttpResponseBody(0, ctx.totalResponseBodySize)
-  ctx.body = string(originalBody)
-  if err != nil {
-    proxywasm.LogErrorf("failed to get response body: %v", err)
-    return types.ActionContinue
-  }
   //proxywasm.LogWarnf("this is the originial body: %v", originalBody) //debug
 
-  err, alerts := detect.OnHttpResponseBody(string(originalBody), ctx.headers, ctx.cookies, ctx.config, ctx.request)
+  err, alerts := detect.OnHttpResponseBody(ctx.body, ctx.headers, ctx.cookies, ctx.config, ctx.request)
   if err != nil {
     proxywasm.LogCriticalf("failed to detect response body: %s", err.Error())
     return types.ActionPause
@@ -331,7 +329,7 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
     ctx.alerts = append(ctx.alerts, alerts...)
   }
   // proxywasm.LogWarnf("this is the original body: \n %s", originalBody)
-  err, injectedResponse := inject.OnHttpResponseBody( ctx.request, originalBody, ctx.config)
+  err, injectedResponse := inject.OnHttpResponseBody( ctx.request, []byte(ctx.body), ctx.config)
   if err != nil {
     proxywasm.LogErrorf("failed to inject decoy: %v", err)
     return types.ActionContinue
