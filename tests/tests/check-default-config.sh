@@ -31,7 +31,7 @@ sleep 5
 start_time=$(date +%s.%N)
 
 # Temporary file for curl output
-tempfile=$(sh ./uuidgen.sh)
+tempfile=$(bash ./uuidgen.sh)
 
 # Do relevant action(s)
 curl -v http://localhost:8000 >$tempfile 2>&1

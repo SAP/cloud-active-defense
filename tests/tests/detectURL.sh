@@ -33,11 +33,11 @@ sleep 5
 start_time=$(date +%s.%N)
 
 # Temporary file for curl output
-tempfile=$(sh ./uuidgen.sh -r)
+tempfile=$(bash ./uuidgen.sh)
 
 # Do relevant action(s)
 # trigger decoy by visiting /forbidden
-tempfile=`sh ./uuidgen.sh -r`
+tempfile=`bash ./uuidgen.sh`
 curl -v http://localhost:8000/forbidden >$tempfile 2>&1
 # give some time for the alert to be sent to the console
 
