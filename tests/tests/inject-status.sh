@@ -1,4 +1,4 @@
-# TEMPLATE FOR YOUR OWN TESTS
+# test for injection in status code
 
 # Configure decoys
 config='
@@ -48,7 +48,6 @@ check_1_time=$(date +%s.%N)
 execution_time=$(echo "$check_1_time $start_time" | awk '{print $1 - $2}')
 echo "Execution time: $execution_time seconds"
 
-sleep 5
 # Cleanup
 rm $tempfile
 
