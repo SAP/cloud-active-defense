@@ -124,7 +124,7 @@ func (ctx *httpContext) responseCallBack(numHeaders, bodySize, numTrailers int) 
 
 func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) types.Action {
   if numHeaders > 0 {
-    removeContentLengthHeader("request")
+    ctx.removeContentLengthHeader("request")
     headers, err := proxywasm.GetHttpRequestHeaders()
     if err != nil {
       proxywasm.LogCriticalf("failed to get request headers: %s", err.Error())
@@ -243,12 +243,13 @@ func (ctx *httpContext) OnHttpRequestBody(bodySize int, endOfStream bool) types.
   return types.ActionContinue
 }
 
-func removeContentLengthHeader(httpType string) {
+func (ctx httpContext) removeContentLengthHeader(httpType string) {
   var err error
   if httpType == "request" {
     err = proxywasm.RemoveHttpRequestHeader("content-length");
   } else if httpType == "response" {
-    err = proxywasm.RemoveHttpResponseHeader("content-length");
+    // err = proxywasm.RemoveHttpResponseHeader("content-length");
+    delete(ctx.headers, "content-length")
   }
   
   if err != nil {
@@ -257,7 +258,7 @@ func removeContentLengthHeader(httpType string) {
 }
 
 func (ctx *httpContext) OnHttpResponseHeaders(numHeaders int, endOfStream bool) types.Action {
-  removeContentLengthHeader("response")
+  ctx.removeContentLengthHeader("response")
   if config_proxy.Debug { proxywasm.LogWarn("calling OnHttpResponseHeaders") } // debug
 
 
