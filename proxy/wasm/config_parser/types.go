@@ -8,9 +8,15 @@ import (
 
 type Config struct {
 	Decoys DecoyConfig 		`json:"decoys"`
-	Session SessionConfig 	`json:"session"`
+	Config ConfigType 		`json:"session"`
 }
-type SessionConfig struct {
+
+type ConfigType struct {
+	Alert AlertConfig	`json:"config"`
+	Server string		`json:"server"`
+}
+
+type AlertConfig struct {
 	Session SessionType 	`json:"session"`
 	Username UsernameType 	`json:"username"`
 }

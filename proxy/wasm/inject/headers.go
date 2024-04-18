@@ -122,7 +122,7 @@ func OnHttpRequestHeaders(request *shared.HttpRequest, conf *config_parser.Confi
     //proxywasm.LogWarnf("try filter[%v]", filterInd) //debug
       //check whenTrue/False Conditions
       if err, conditionsApply := i.checkConditionsRequest(filterInd); err != nil {
-        return err, nil
+        return err, request
       } else if conditionsApply == false {
         continue
       }
@@ -131,7 +131,7 @@ func OnHttpRequestHeaders(request *shared.HttpRequest, conf *config_parser.Confi
 
     err := i.injectDecoyInRequest()
 			if err != nil {
-				return err, nil
+				return err, request
 			}
 		}
 	

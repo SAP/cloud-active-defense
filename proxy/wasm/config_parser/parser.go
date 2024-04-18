@@ -32,7 +32,7 @@ type Parser struct {
 
 func newParser(confContent []byte) *Parser {
 	return &Parser{
-		Config:     &Config{Decoys: DecoyConfig{}, Session: SessionConfig{}},
+		Config:     &Config{Decoys: DecoyConfig{}, Config: ConfigType{}},
 		ConfigFile: confContent,
 	}
 }
@@ -52,18 +52,21 @@ func (p *Parser) jsonToStruct(content []byte) error {
 	if err != nil {
 		return err
 	}
-	if json.Exists("session") {
-		p.Config.Session = SessionConfig{
-			Session: SessionType{
-				Key: string(json.GetStringBytes("session", "session", "key")),
-				In: string(json.GetStringBytes("session", "session", "in")),
-				Separator: string(json.GetStringBytes("session", "session", "separator")),
-			},
-			Username: UsernameType{
-				In: string(json.GetStringBytes("session", "username", "in")),
-				Value: string(json.GetStringBytes("session", "username", "value")),
-				Key: string(json.GetStringBytes("session", "username", "key")),
-			},
+	if json.Exists("config") {
+		p.Config.Config = ConfigType{
+			Alert: AlertConfig{
+				Session: SessionType{
+					Key: string(json.GetStringBytes("config", "alert", "session", "key")),
+					In: string(json.GetStringBytes("config", "alert", "session", "in")),
+					Separator: string(json.GetStringBytes("config", "alert", "session", "separator")),
+				},
+				Username: UsernameType{
+					In: string(json.GetStringBytes("config", "alert", "username", "in")),
+					Value: string(json.GetStringBytes("config", "alert", "username", "value")),
+					Key: string(json.GetStringBytes("config", "alert", "username", "key")),
+				},
+			}, 
+			Server: string(json.GetStringBytes("config", "server")),
 		}
 	}
 	filtersJs := json.GetArray("decoy", "filters")

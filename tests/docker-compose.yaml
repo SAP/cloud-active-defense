@@ -3,18 +3,17 @@ services:
 
   myapp:
     container_name: myapp
-    build: myapp
-    image: myapp
+    image: myapptest
+    ports:
+    - "3000:3000"
     
   config:
     container_name: configmanager
-    build: configmanager
-    image: configmanager
+    image: configmanagertest
 
   proxy:
     container_name: proxy
-    build: proxy
-    image: proxy
+    image: proxytest
     ports:
     - "8000:8000"
     depends_on:

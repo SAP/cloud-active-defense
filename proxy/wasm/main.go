@@ -1,12 +1,13 @@
 package main
 
 import ( //"strconv"
+	"errors"
 	"sundew/config_parser"
 	"sundew/detect"
 	"sundew/inject"
 	"sundew/shared"
   "sundew/config_proxy"
-  "sundew/alert"
+	"sundew/alert"
 
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
@@ -24,7 +25,7 @@ type vmContext struct {
 }
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-  return &pluginContext{contextID: contextID, config: &config_parser.Config{Session: config_parser.SessionConfig{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
+  return &pluginContext{contextID: contextID, config: &config_parser.Config{Config: config_parser.ConfigType{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
 }
 
 type pluginContext struct {
@@ -46,11 +47,21 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
   if config_proxy.Debug { proxywasm.LogWarnf("set tick period milliseconds: %d", tickMilliseconds) }
 
   ctx.callBackConfRequested = func(numHeaders, bodySize, numTrailers int) {
+    emptyConf := config_parser.EmptyConfig()
     configBody, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
     if err != nil && err != types.ErrorStatusNotFound {
       proxywasm.LogWarnf("could not read body of config file: %v", err.Error())
     }
-    oldConfig := ctx.config
+
+    data, cas, _ := proxywasm.GetSharedData("oldConfig")
+    err, oldConfig := config_parser.ParseString(data)
+    if err != nil {
+      oldConfig = &emptyConf
+    }
+    err = proxywasm.SetSharedData("oldConfig", configBody, cas)
+    if err != nil && !errors.Is(err, types.ErrorStatusCasMismatch){
+      proxywasm.LogErrorf("error setting old config: %s", err.Error())
+    }
     err, ctx.config = config_parser.ParseString(configBody)
     if err != nil {//&& err != types.ErrorStatusNotFound {
       proxywasm.LogErrorf("could not read config: %s\n continue with old config", err)
@@ -58,12 +69,11 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
       return
     }
     if (ctx.config == nil) {
-      emptyConf := config_parser.EmptyConfig()
       ctx.config = &emptyConf
       return
     }
     if (ctx.config.Decoys.MakeChecksum() != oldConfig.Decoys.MakeChecksum()) {
-      proxywasm.LogWarnf("read new config: ")//%v", *ctx.decoyConfig) 
+      proxywasm.LogWarnf("read new config")//%v", *ctx.decoyConfig) 
     }
 }
   return types.OnPluginStartStatusOK
@@ -318,10 +328,11 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
 func (ctx *httpContext) OnHttpStreamDone() {
   resBody := ctx.body
   reqBody := *ctx.request.Body
-  session, username := detect.FindSession(map[string]map[string]string{"header": ctx.request.Headers, "cookie": ctx.request.Cookies, "payload": { "payload": reqBody }}, map[string]map[string]string{ "header": ctx.headers, "cookie": ctx.cookies, "payload": { "payload": resBody }}, ctx.config.Session)
+  session, username := detect.FindSession(map[string]map[string]string{"header": ctx.request.Headers, "cookie": ctx.request.Cookies, "payload": { "payload": reqBody }}, map[string]map[string]string{ "header": ctx.headers, "cookie": ctx.cookies, "payload": { "payload": resBody }}, ctx.config.Config.Alert)
   for i := 0; i < len(ctx.alerts); i++ {
     ctx.alerts[i].LogParameters["session"] = session
     ctx.alerts[i].LogParameters["username"] = username
+    ctx.alerts[i].LogParameters["server"] = ctx.config.Config.Server
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
   }
 }

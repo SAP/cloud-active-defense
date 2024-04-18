@@ -51,6 +51,9 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
 	if (err != nil) {
 		proxywasm.LogCriticalf("failed to fetch property: %v", err)
 	}
+  if string(server[:]) == "" {
+    server = []byte(logParameters["server"])
+  }
   sourceIP, err := proxywasm.GetProperty([]string{"source", "address"})
 	if (err != nil) {
 		proxywasm.LogCriticalf("failed to fetch property: %v", err)
@@ -72,11 +75,11 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
     Time:                   time.Now().Unix(),
     RequestID:              headers["x-request-id"],
     DestinationIP:          string(destinationIP[:]),
-    Url:                    headers[":authority"],
-    Server:                 string(server[:]),
-    Useragent:              headers["user-agent"],
+    Url:                    truncate(headers[":authority"]),
+    Server:                 truncate(string(server[:])),
+    Useragent:              truncate(headers["user-agent"]),
     SourceIP:               string(sourceIP[:]),
-    Path:                   headers[":path"],
+    Path:                   truncate(headers[":path"]),
     Method:                 headers[":method"],
     DecoyType:              logParameters["alert"],
     DecoyKey:               decoyKey,
@@ -103,4 +106,12 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
   // }
   // proxywasm.LogWarn("\n" + alertMessage + ": !!!!!!! ALERT !!!!!!! DECOY TRIGGERED !!!!!!! ALERT !!!!!!! DECOY TRIGGERED !!!!!!! ALERT !!!!!!!")
   return nil
+}
+
+func truncate(s string) string {
+  maxLength := 300
+  if len(s) > maxLength {
+    return s[:maxLength]
+  }
+  return s
 }

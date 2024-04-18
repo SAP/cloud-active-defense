@@ -48,7 +48,7 @@ func (v *validator) printErrors() {
 
 func (v *validator) Validate(config *Config) error {
 	v.validateFilters(config.Decoys.Filters)
-	v.validateSessionConf(config.Session)
+	v.validateAlertConf(config.Config.Alert)
 	v.printErrors()
 	if len(v.errArr) == 0 {
 		return nil
@@ -74,7 +74,7 @@ func (v *validator) validateFilters(filters []FilterType) {
 	}
 }
 
-func (v *validator) validateSessionConf(session SessionConfig) {
+func (v *validator) validateAlertConf(session AlertConfig) {
 	v.validateSession(session.Session)
 	v.validateUsername(session.Username)
 }

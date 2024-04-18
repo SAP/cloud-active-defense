@@ -7,8 +7,8 @@ import (
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 )
 
-func FindSession(request map[string]map[string]string, response map[string]map[string]string, config config_parser.SessionConfig) (string, string) {
-	if (config == config_parser.EmptySessionConfig() || config == config_parser.SessionConfig{}) {
+func FindSession(request map[string]map[string]string, response map[string]map[string]string, config config_parser.AlertConfig) (string, string) {
+	if (config == config_parser.EmptyAlertConfig() || config == config_parser.AlertConfig{}) {
 		return "", ""
 	}
 	
@@ -33,7 +33,7 @@ func FindSession(request map[string]map[string]string, response map[string]map[s
 	return sessionValue, usernameValue
 }
 
-func getSession(headers map[string]map[string]string, config config_parser.SessionConfig) string {
+func getSession(headers map[string]map[string]string, config config_parser.AlertConfig) string {
 	if config.Session.In == "header" {
 		if val, exists := headers["header"][config.Session.Key]; exists {
 			return val
@@ -46,7 +46,7 @@ func getSession(headers map[string]map[string]string, config config_parser.Sessi
 	return ""
 }
 
-func getUsername(headers map[string]map[string]string, config config_parser.SessionConfig) string {
+func getUsername(headers map[string]map[string]string, config config_parser.AlertConfig) string {
 	if config.Username.In == "header" {
 		if val, exists := headers["header"][config.Username.Key]; exists {
 			return FindInValue(config.Username.Value, val)
