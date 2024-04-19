@@ -1,4 +1,4 @@
-# test header injection with whenTrue condition in payload
+# test body injection with whenTrue condition in cookie
 
 # Configure decoys
 config='
@@ -6,18 +6,22 @@ config='
   "filters": [
     {
       "decoy": {
-        "key": "x-cloud-active-defense",
-        "separator": "=",
-        "value": "ACTIVE"
+        "key": "dummy",
+        "string": "<!-- <a href='\''/admin'\''>Admin panel</a> -->"
       },
       "inject": {
         "store": {
           "inResponse": ".*",
-          "as": "header",
+          "as": "body",
+          "at": {
+            "method": "before",
+            "property": "</body>"
+          },
           "whenTrue": [
             {
-              "value": "Welcome",
-              "in": "payload"
+              "key": "SESSION",
+              "value": ".*",
+              "in": "cookie"
             }
           ]
         }
@@ -40,10 +44,10 @@ start_time=$(date +%s.%N)
 tempfile=$(bash ./uuidgen.sh)
 
 # Do relevant action(s)
-curl -v http://localhost:8000/ >$tempfile 2>&1
+curl -v --cookie "SESSION=c32272b9-99d8-4687-b57e-a606952ae870" http://localhost:8000/ >$tempfile 2>&1
 
 # Check INJECTION (in $tempfile)
-status=$(grep "< x-cloud-active-defense: ACTIVE" $tempfile)
+status=$(grep "<!-- <a href='/admin'>Admin panel</a> -->" $tempfile)
 
 # Output result & time
 if [ -z "$status" ]; then
