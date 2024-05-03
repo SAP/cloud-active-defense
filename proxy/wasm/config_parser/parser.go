@@ -146,6 +146,8 @@ func BlacklistJsonToStruct(content []byte) (error, []BlacklistType) {
 	for _, elem := range list {
 		bl := BlacklistType{
 			Ip:          	string(elem.GetStringBytes("ip")),
+			Session: 		string(elem.GetStringBytes("session")),
+			Useragent: 		string(elem.GetStringBytes("userAgent")),
 			Behavior:   	string(elem.GetStringBytes("behavior")),
 			Delay:			string(elem.GetStringBytes("delay")),
 			Duration:     	string(elem.GetStringBytes("duration")),
