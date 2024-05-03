@@ -117,7 +117,7 @@ func truncate(s string) string {
 }
 
 func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string) map[string]string {
-  updateBlacklist := map[string]string{}
+  updateBlacklist := map[string]string{ "delay": "now" ,"duration": "forever" }
   session := ""
   for _, v := range alerts {
     session = v.LogParameters["session"]
@@ -131,8 +131,12 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     }
     updateBlacklist[sourceKey] = sourceValue
     updateBlacklist["behavior"] = v.Filter.Detect.Respond.Behavior
-    updateBlacklist["delay"] = v.Filter.Detect.Respond.Delay
-    updateBlacklist["duration"] = v.Filter.Detect.Respond.Duration
+    if v.Filter.Detect.Respond.Delay != "" {
+      updateBlacklist["delay"] = v.Filter.Detect.Respond.Delay
+    }
+    if v.Filter.Detect.Respond.Duration != "" {
+      updateBlacklist["duration"] = v.Filter.Detect.Respond.Duration
+    }
     updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   }
   if config.Respond != config_parser.EmptyRespond() {
@@ -142,8 +146,12 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     }
     updateBlacklist[sourceKey] = sourceValue
     updateBlacklist["behavior"] = config.Respond.Behavior
-    updateBlacklist["delay"] = config.Respond.Delay
-    updateBlacklist["duration"] = config.Respond.Duration
+    if config.Respond.Delay != "" {
+      updateBlacklist["delay"] = config.Respond.Delay
+    }
+    if config.Respond.Duration != "" {
+      updateBlacklist["duration"] = config.Respond.Duration
+    }
     updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   }
   return updateBlacklist

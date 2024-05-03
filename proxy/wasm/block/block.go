@@ -52,6 +52,9 @@ func behaviorAction(bl config_parser.BlacklistType) string {
 }
 
 func isTimeout(bl config_parser.BlacklistType) bool {
+	if bl.Delay == "" || bl.Delay == "now" {
+		return true
+	}
 	parsedDate, err := time.Parse("01-02-2006 15:04:05", bl.TimeDetected)
 	if err != nil {
 		proxywasm.LogErrorf("error parsing blacklist element '%s' when parsing time: %s", bl, err)

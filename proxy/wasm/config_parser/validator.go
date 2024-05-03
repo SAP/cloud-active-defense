@@ -49,6 +49,7 @@ func (v *validator) printErrors() {
 func (v *validator) Validate(config *Config) error {
 	v.validateFilters(config.Decoys.Filters)
 	v.validateAlertConf(config.Config.Alert)
+	v.validateRespond(config.Config.Respond)
 	v.printErrors()
 	if len(v.errArr) == 0 {
 		return nil
@@ -242,6 +243,9 @@ func (v *validator) validateRespond(obj RespondType) {
 	v.currentPlace = "filter[" + strconv.Itoa(v.currentFilterInd) + "].detect.respond"
 	if obj == EmptyRespond() {
 		return
+	}	
+	if breaksRequired(obj.Source) || breaksRequired(obj.Behavior) {
+		v.addError(v.currentPlace + ".source and behavior", "can not be empty")
 	}
 	if !validSource(obj.Source) {
 		v.addError(v.currentPlace + ".source", "needs to be ip, user agent or session")
@@ -249,10 +253,10 @@ func (v *validator) validateRespond(obj RespondType) {
 	if !validBehavior(obj.Behavior) {
 		v.addError(v.currentPlace + ".behavior", "needs to be drop, error or divert")
 	}
-	if !validDelay(obj.Delay) {
+	if !breaksRequired(obj.Delay) && !validDelay(obj.Delay) {
 		v.addError(v.currentPlace + ".delay", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or now")
 	}
-	if !validDuration(obj.Duration) {
+	if !breaksRequired(obj.Duration) && !validDuration(obj.Duration) {
 		v.addError(v.currentPlace + ".duration", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or forever")
 	}
 }
