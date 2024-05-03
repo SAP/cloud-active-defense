@@ -8,6 +8,7 @@ app.use(hsts({
   maxAge: 31536000,
   includeSubDomains: true
 }))
+app.use(express.json())
 
 // Define a GET route that accepts a namespace and application parameter
 app.get('/:namespace/:application', (req, res) => {
@@ -103,7 +104,26 @@ app.get('/:namespace/:application', (req, res) => {
   });
 });
 
+app.get('/blacklist', (req, res) => {
+  fs.access("/data/blacklist/blacklist.json", fs.constants.F_OK, err => {
+    if (err) return res.json({})
+    const blacklist = fs.readFileSync("/data/blacklist/blacklist.json", 'utf8')
+    return res.json(JSON.parse(blacklist))
+  })
+})
+
+app.post('/blacklist', (req, res) => {
+  fs.access("/data/blacklist/blacklist.json", fs.constants.F_OK, err => {
+    if (err) return res.send("Error accessing blacklist")
+    const blacklistFile = JSON.parse(fs.readFileSync("/data/blacklist/blacklist.json", 'utf8'))
+    blacklistFile.list.push(req.body)
+    fs.writeFileSync("/data/blacklist/blacklist.json", JSON.stringify(blacklistFile))
+    return res.send("Done")
+  })
+})
+
 // Start the server
 app.listen(3000, () => {
+  if (!fs.existsSync("/data/blacklist/blacklist.json")) fs.writeFileSync("/data/blacklist/blacklist.json", `{"list":[]}`, 'utf8')
   console.log('Config manager started');
 });

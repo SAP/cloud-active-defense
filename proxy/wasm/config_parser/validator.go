@@ -206,6 +206,7 @@ func (v *validator) validateDetect(obj DetectType) {
   }
 	v.validateSeek(obj.Seek)
 	v.validateAlert(obj.Alert)
+	v.validateRespond(obj.Respond)
 }
 
 func (v *validator) validateSeek(obj SeekType) {
@@ -234,6 +235,25 @@ func (v *validator) validateAlert(obj AlertType) {
   }
 	if !validSeverity(obj.Severity) {
 		v.addError(v.currentPlace+".severity", "needs to be HIGH, MEDIUM or LOW")
+	}
+}
+
+func (v *validator) validateRespond(obj RespondType) {
+	v.currentPlace = "filter[" + strconv.Itoa(v.currentFilterInd) + "].detect.respond"
+	if obj == EmptyRespond() {
+		return
+	}
+	if !validSource(obj.Source) {
+		v.addError(v.currentPlace + ".source", "needs to be ip, user agent or session")
+	}
+	if !validBehavior(obj.Behavior) {
+		v.addError(v.currentPlace + ".behavior", "needs to be drop, error or divert")
+	}
+	if !validDelay(obj.Delay) {
+		v.addError(v.currentPlace + ".delay", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or now")
+	}
+	if !validDuration(obj.Duration) {
+		v.addError(v.currentPlace + ".duration", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or forever")
 	}
 }
 
@@ -325,6 +345,40 @@ func validInUsername(s string) bool {
 	e := InUsername(s)
 	switch e {
 	case cookie_inU, header_inU, payload_inU:
+		return true
+	}
+	return false
+}
+
+func validSource(s string) bool {
+	e := Source(s)
+	switch e {
+	case ip, user_agent, session:
+		return true
+	}
+	return false
+}
+
+func validBehavior(s string) bool {
+	e := Behavior(s)
+	switch e {
+	case drop, server_error, divert:
+		return true
+	}
+	return false
+}
+
+func validDelay(s string) bool {
+	lastChar := string(s[len(s)-1])
+	if lastChar == "s" || lastChar == "m" || lastChar == "h" || s == "now" {
+		return true
+	}
+	return false
+}
+
+func validDuration(s string) bool {
+	lastChar := string(s[len(s)-1])
+	if lastChar == "s" || lastChar == "m" || lastChar == "h" || s == "forever" {
 		return true
 	}
 	return false

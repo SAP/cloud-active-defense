@@ -25,7 +25,7 @@ func EmptyDecoy() DecoyType {
 }
 
 func EmptyConfigType() ConfigType {
-  return ConfigType{ EmptyAlertConfig(), "" }
+  return ConfigType{ EmptyAlertConfig(), "", EmptyRespond() }
 }
 
 func EmptyAlertConfig() AlertConfig {
@@ -53,7 +53,7 @@ func EmptyAt() AtType {
 }
 
 func EmptyDetect() DetectType {
-  return DetectType{ EmptySeek(), EmptyAlert() }
+  return DetectType{ EmptySeek(), EmptyAlert(), EmptyRespond() }
 }
 
 func EmptySeek() SeekType {
@@ -62,4 +62,8 @@ func EmptySeek() SeekType {
 
 func EmptyAlert() AlertType {
   return AlertType{"", false, false, false, false}
+}
+
+func EmptyRespond() RespondType {
+  return RespondType{"", "", "", "" }
 }

@@ -1,8 +1,8 @@
 package alert
 
 import (
-  //"fmt"
-	//"strings"
+  "fmt"
+	"strings"
   "sundew/config_parser"
 
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
@@ -114,4 +114,60 @@ func truncate(s string) string {
     return s[:maxLength]
   }
   return s
+}
+
+func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string) map[string]string {
+  updateBlacklist := map[string]string{}
+  session := ""
+  for _, v := range alerts {
+    session = v.LogParameters["session"]
+    if v.Filter.Detect.Respond == config_parser.EmptyRespond() {
+      break;
+    }
+    sourceKey, sourceValue, err := getSource(v.Filter.Detect.Respond.Source, v.LogParameters["session"], headers["user-agent"])
+    if err != nil {
+      proxywasm.LogErrorf("error while setAlertAction: %s", err)
+      break;
+    }
+    updateBlacklist[sourceKey] = sourceValue
+    updateBlacklist["behavior"] = v.Filter.Detect.Respond.Behavior
+    updateBlacklist["delay"] = v.Filter.Detect.Respond.Delay
+    updateBlacklist["duration"] = v.Filter.Detect.Respond.Duration
+    updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
+  }
+  if config.Respond != config_parser.EmptyRespond() {
+    sourceKey, sourceValue, err := getSource(config.Respond.Source, session, headers["user-agent"])
+    if err != nil {
+      proxywasm.LogErrorf("error while setAlertAction: %s", err)
+    }
+    updateBlacklist[sourceKey] = sourceValue
+    updateBlacklist["behavior"] = config.Respond.Behavior
+    updateBlacklist["delay"] = config.Respond.Delay
+    updateBlacklist["duration"] = config.Respond.Duration
+    updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
+  }
+  return updateBlacklist
+}
+
+func getSource(configSource string, session string, userAgent string) (sourceKey, sourceValue string, err error) {
+  sourceKey, sourceValue = "", ""
+  switch configSource {
+  case "ip":
+    ip, err := proxywasm.GetProperty([]string{"source", "address"})
+    if (err != nil) {
+      err = fmt.Errorf("update blacklist: failed to fetch property: %v", err)
+    }
+    sourceKey, sourceValue = "ip", strings.Split(string(ip), ":")[0]
+  case "session":
+    if session == "" {
+      err = fmt.Errorf("session is empty, please specify session config in config.json")
+    }
+    sourceKey, sourceValue = "session", session
+  case "userAgent":
+    sourceKey, sourceValue = "userAgent", userAgent
+  }
+  if sourceValue == "" {
+    err = fmt.Errorf("source is empty")
+  }
+  return sourceKey, sourceValue, err
 }

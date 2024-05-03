@@ -10,6 +10,8 @@ services:
     container_name: configmanager
     build: configmanager
     image: configmanager
+    volumes:
+      - configvolume:/data/blacklist
 
   proxy:
     container_name: proxy
@@ -19,4 +21,13 @@ services:
     - "8000:8000"
     depends_on:
     - myapp
+    - clone
 
+  clone:
+    container_name: clone
+    build: clone
+    image: clone
+
+
+volumes:
+  configvolume: {}

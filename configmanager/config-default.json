@@ -10,5 +10,11 @@
       "value": ""
     }
   },
-  "server": ""
+  "server": "",
+  "respond": {
+    "source": "",
+    "behavior": "",
+    "delay": "",
+    "duration": ""
+  }
 }

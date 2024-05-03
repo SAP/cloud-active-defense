@@ -63,4 +63,19 @@ const (
 	header_inU 			  = "header"
 	payload_inU 		  = "payload"
 )
+
+type Source string
+const (
+	ip			Source = "ip"
+	user_agent			 = "userAgent"
+	session				 = "session"
+)
+
+type Behavior string
+const (
+	drop	Behavior = "drop"	
+	server_error			 = "error"
+	divert			 = "divert"
+)
+
 /* **** */

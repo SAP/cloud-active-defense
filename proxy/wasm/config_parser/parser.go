@@ -67,6 +67,12 @@ func (p *Parser) jsonToStruct(content []byte) error {
 				},
 			}, 
 			Server: string(json.GetStringBytes("config", "server")),
+			Respond: RespondType{
+				Source: string(json.GetStringBytes("config", "respond", "source")),
+				Behavior: string(json.GetStringBytes("config", "respond", "behavior")),
+				Delay: string(json.GetStringBytes("config", "respond", "delay")),
+				Duration: string(json.GetStringBytes("config", "respond", "duration")),
+			},
 		}
 	}
 	filtersJs := json.GetArray("decoy", "filters")
@@ -119,8 +125,35 @@ func (p *Parser) filterJsonToStruct(filterJs *fastjson.Value) *FilterType {
 				WhenModified: filterJs.Get("detect").Get("alert").GetBool("whenModified"),
 				WhenAbsent:   filterJs.Get("detect").Get("alert").GetBool("whenAbsent"),
 			},
+			Respond: RespondType{
+				Source: p.getString(filterJs, "detect", "respond", "source"),
+				Behavior:p. getString(filterJs, "detect", "respond", "behavior"),
+				Delay: p.getString(filterJs, "detect", "respond", "delay"),
+				Duration: p.getString(filterJs, "detect", "respond", "duration"),
+			},
 		},
 	}
+}
+
+func BlacklistJsonToStruct(content []byte) (error, []BlacklistType) {
+	blacklist := []BlacklistType{}
+	var fjsp fastjson.Parser
+	json, err := fjsp.Parse(string(content))
+	if err != nil {
+		return err, nil
+	}
+	list := json.GetArray("list")
+	for _, elem := range list {
+		bl := BlacklistType{
+			Ip:          	string(elem.GetStringBytes("ip")),
+			Behavior:   	string(elem.GetStringBytes("behavior")),
+			Delay:			string(elem.GetStringBytes("delay")),
+			Duration:     	string(elem.GetStringBytes("duration")),
+			TimeDetected: 	string(elem.GetStringBytes("timeDetected")),
+		}
+		blacklist = append(blacklist, bl)
+	}
+	return nil, blacklist
 }
 
 func (p *Parser) conditionsJsonToStruct(conditionsJs []*fastjson.Value) []ConditionType {

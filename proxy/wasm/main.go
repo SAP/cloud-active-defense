@@ -2,6 +2,9 @@ package main
 
 import ( //"strconv"
 	"errors"
+	"encoding/json"
+
+	"sundew/block"
 	"sundew/config_parser"
 	"sundew/detect"
 	"sundew/inject"
@@ -15,6 +18,9 @@ import ( //"strconv"
 
 // plugin tick period, config is reread every tick
 const tickMilliseconds uint32 = 1000
+var updateBlacklist map[string]string = map[string]string{}
+var blacklist []config_parser.BlacklistType
+var blocked bool = false
 
 func main() {
   proxywasm.SetVMContext(&vmContext{})
@@ -88,6 +94,49 @@ func (ctx *pluginContext) OnTick() {
   if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
     proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
   }
+  // Update blacklist via configmanager
+  if len(updateBlacklist) != 0 {
+    callBackSetBlacklist := func(numHeaders, bodySize, numTrailers int) {
+      responseBody, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+      if err != nil {
+        proxywasm.LogErrorf("could not read body when setting blacklist: %v", err)
+      }
+      if string(responseBody) != "Done" {
+        proxywasm.LogErrorf("error when setting blacklist: %v", string(responseBody))
+      }
+    }
+    jsonUpdateBlacklist, err := json.Marshal(updateBlacklist)
+    if err != nil {
+      proxywasm.LogErrorf("could not convert updateBlacklist to json: %v", err)
+      return
+    }
+    requestHeadersBlacklist := [][2]string{
+      {":method", "POST"}, {":authority", "configmanager"}, {":path", "/blacklist"}, {"accept", "*/*"},
+      {"Content-Type", "application/json"},
+    }
+    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlacklist, jsonUpdateBlacklist, nil, 5000, callBackSetBlacklist); err != nil {
+      proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
+    }
+    updateBlacklist = map[string]string{}
+  }
+  callBackGetBlacklist:= func(numHeaders, bodySize, numTrailers int) {
+    body, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+    if err != nil {
+      proxywasm.LogErrorf("%v", err.Error())
+    }
+    
+    err, blacklist = config_parser.BlacklistJsonToStruct(body)
+    if err != nil {
+      proxywasm.LogErrorf("error when parsing blacklist:", err)
+    }
+  }
+  reqHead := [][2]string{
+      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/blacklist"}, {"accept", "*/*"},
+      {"Content-Type", "application/json"},
+    }
+  if _, err := proxywasm.DispatchHttpCall("configmanager", reqHead, nil, nil, 5000, callBackGetBlacklist); err != nil {
+    proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
+  }
 }
 
 func (ctx *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
@@ -119,6 +168,13 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
     if err != nil {
       proxywasm.LogCriticalf("failed to extract request headers: %s", err.Error())
       return types.ActionPause
+    }
+    var action string
+    blocked, action = block.IsBanned(blacklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
+    if action == "pause" {
+      return types.ActionPause
+    } else if action == "clone" {
+      ctx.request.Headers[":authority"] = "clone"
     }
 
     err, ctx.request = inject.OnHttpRequestHeaders(ctx.request, ctx.config)
@@ -326,6 +382,9 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
 }
 
 func (ctx *httpContext) OnHttpStreamDone() {
+  if blocked {
+    return
+  }
   resBody := ctx.body
   reqBody := *ctx.request.Body
   session, username := detect.FindSession(map[string]map[string]string{"header": ctx.request.Headers, "cookie": ctx.request.Cookies, "payload": { "payload": reqBody }}, map[string]map[string]string{ "header": ctx.headers, "cookie": ctx.cookies, "payload": { "payload": resBody }}, ctx.config.Config.Alert)
@@ -334,5 +393,6 @@ func (ctx *httpContext) OnHttpStreamDone() {
     ctx.alerts[i].LogParameters["username"] = username
     ctx.alerts[i].LogParameters["server"] = ctx.config.Config.Server
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
+    updateBlacklist = alert.SetAlertAction(ctx.alerts, ctx.config.Config, ctx.request.Headers)
   }
 }
