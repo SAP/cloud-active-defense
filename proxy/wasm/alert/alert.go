@@ -119,26 +119,6 @@ func truncate(s string) string {
 func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string) map[string]string {
   updateBlacklist := map[string]string{ "delay": "now" ,"duration": "forever" }
   session := ""
-  for _, v := range alerts {
-    session = v.LogParameters["session"]
-    if v.Filter.Detect.Respond == config_parser.EmptyRespond() {
-      break;
-    }
-    sourceKey, sourceValue, err := getSource(v.Filter.Detect.Respond.Source, v.LogParameters["session"], headers["user-agent"])
-    if err != nil {
-      proxywasm.LogErrorf("error while setAlertAction: %s", err)
-      break;
-    }
-    updateBlacklist[sourceKey] = sourceValue
-    updateBlacklist["behavior"] = v.Filter.Detect.Respond.Behavior
-    if v.Filter.Detect.Respond.Delay != "" {
-      updateBlacklist["delay"] = v.Filter.Detect.Respond.Delay
-    }
-    if v.Filter.Detect.Respond.Duration != "" {
-      updateBlacklist["duration"] = v.Filter.Detect.Respond.Duration
-    }
-    updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
-  }
   if config.Respond != config_parser.EmptyRespond() {
     sourceKey, sourceValue, err := getSource(config.Respond.Source, session, headers["user-agent"])
     if err != nil {
@@ -151,6 +131,27 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     }
     if config.Respond.Duration != "" {
       updateBlacklist["duration"] = config.Respond.Duration
+    }
+    updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
+  }
+  for _, v := range alerts {
+    session = v.LogParameters["session"]
+    if v.Filter.Detect.Respond == config_parser.EmptyRespond() {
+      break;
+    }
+    updateBlacklist = map[string]string{ "delay": "now" ,"duration": "forever" }  
+    sourceKey, sourceValue, err := getSource(v.Filter.Detect.Respond.Source, v.LogParameters["session"], headers["user-agent"])
+    if err != nil {
+      proxywasm.LogErrorf("error while setAlertAction: %s", err)
+      break;
+    }
+    updateBlacklist[sourceKey] = sourceValue
+    updateBlacklist["behavior"] = v.Filter.Detect.Respond.Behavior
+    if v.Filter.Detect.Respond.Delay != "" {
+      updateBlacklist["delay"] = v.Filter.Detect.Respond.Delay
+    }
+    if v.Filter.Detect.Respond.Duration != "" {
+      updateBlacklist["duration"] = v.Filter.Detect.Respond.Duration
     }
     updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   }
