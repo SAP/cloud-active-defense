@@ -4,11 +4,13 @@
 docker build -f myappDockerfile -t myapptest ../myapp/
 docker build -f configmanagerDockerfile -t configmanagertest ../configmanager/
 docker build -f proxyDockerfile -t proxytest ../proxy/
+docker build -f cloneDockerfile -t clonetest ../clone/
 
 # Delete possible container conflicts
 docker rm -f myapp
 docker rm -f configmanager
 docker rm -f proxy
+docker rm -f clone
 
 # Start the application in demo mode
 docker-compose up -d

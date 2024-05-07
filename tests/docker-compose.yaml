@@ -18,4 +18,9 @@ services:
     - "8000:8000"
     depends_on:
     - myapp
+    - clone
+
+  clone:
+    container_name: clone
+    image: clonetest
 
