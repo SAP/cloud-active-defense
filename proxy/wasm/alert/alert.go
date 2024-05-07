@@ -118,7 +118,7 @@ func truncate(s string) string {
 
 func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string) map[string]string {
   updateBlacklist := map[string]string{ "delay": "now" ,"duration": "forever" }
-  session := ""
+  session := alerts[0].LogParameters["session"]
   if config.Respond != config_parser.EmptyRespond() {
     sourceKey, sourceValue, err := getSource(config.Respond.Source, session, headers["user-agent"])
     if err != nil {
@@ -135,7 +135,6 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   }
   for _, v := range alerts {
-    session = v.LogParameters["session"]
     if v.Filter.Detect.Respond == config_parser.EmptyRespond() {
       break;
     }

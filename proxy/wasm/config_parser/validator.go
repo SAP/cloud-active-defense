@@ -247,10 +247,10 @@ func (v *validator) validateRespond(obj RespondType) {
 	if breaksRequired(obj.Source) || breaksRequired(obj.Behavior) {
 		v.addError(v.currentPlace + ".source and behavior", "can not be empty")
 	}
-	if !validSource(obj.Source) {
+	if !breaksRequired(obj.Source) && !validSource(obj.Source) {
 		v.addError(v.currentPlace + ".source", "needs to be ip, user agent or session")
 	}
-	if !validBehavior(obj.Behavior) {
+	if !breaksRequired(obj.Behavior) && !validBehavior(obj.Behavior) {
 		v.addError(v.currentPlace + ".behavior", "needs to be drop, error or divert")
 	}
 	if !breaksRequired(obj.Delay) && !validDelay(obj.Delay) {
