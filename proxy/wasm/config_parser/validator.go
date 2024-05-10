@@ -366,7 +366,7 @@ func validSource(s string) bool {
 func validBehavior(s string) bool {
 	e := Behavior(s)
 	switch e {
-	case drop, server_error, divert:
+	case drop, server_error, divert, throttle:
 		return true
 	}
 	return false

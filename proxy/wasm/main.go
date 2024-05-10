@@ -3,6 +3,7 @@ package main
 import ( //"strconv"
 	"errors"
 	"encoding/json"
+	"math/rand"
 
 	"sundew/block"
 	"sundew/config_parser"
@@ -18,6 +19,8 @@ import ( //"strconv"
 
 // plugin tick period, config is reread every tick
 const tickMilliseconds uint32 = 1000
+var throttleTickMilliseconds uint32 = 0
+var throttleLoop int = 0
 var updateBlacklist map[string]string = map[string]string{}
 var blacklist []config_parser.BlacklistType
 var blocked bool = false
@@ -31,7 +34,7 @@ type vmContext struct {
 }
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-  return &pluginContext{contextID: contextID, config: &config_parser.Config{Config: config_parser.ConfigType{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
+  return &pluginContext{ postponed: make([]uint32, 0, 1024), contextID: contextID, config: &config_parser.Config{Config: config_parser.ConfigType{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
 }
 
 type pluginContext struct {
@@ -42,6 +45,7 @@ type pluginContext struct {
   config           *config_parser.Config
   configChecksum        [32]byte
   callBackConfRequested func(numHeaders, bodySize, numTrailers int)
+  postponed []uint32
 }
 
 func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
@@ -137,10 +141,25 @@ func (ctx *pluginContext) OnTick() {
   if _, err := proxywasm.DispatchHttpCall("configmanager", reqHead, nil, nil, 5000, callBackGetBlacklist); err != nil {
     proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
   }
+
+  // Add delay if 
+  if throttleLoop < int(throttleTickMilliseconds) && throttleTickMilliseconds !=0 {
+    throttleLoop++
+  } else if throttleLoop != 0 {
+    throttleTickMilliseconds = 0
+    throttleLoop = 0
+    httpCtxId, tail := ctx.postponed[0], ctx.postponed[1:]
+		err := proxywasm.SetEffectiveContext(httpCtxId)
+		err = proxywasm.ResumeHttpRequest()
+    if err != nil {
+      proxywasm.LogErrorf("throttle error: error when setting context and resuming: %s", err)
+    }
+		ctx.postponed = tail
+  }
 }
 
 func (ctx *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
-  return &httpContext{contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}, alerts: []alert.AlertParam{}}
+  return &httpContext{pluginCtx: ctx, contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}, alerts: []alert.AlertParam{}}
 }
 
 type httpContext struct {
@@ -153,6 +172,7 @@ type httpContext struct {
   body                  string
   request               *shared.HttpRequest
   alerts                []alert.AlertParam
+  pluginCtx *pluginContext
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) types.Action {
@@ -175,6 +195,10 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
       return types.ActionPause
     } else if action == "clone" {
       ctx.request.Headers[":authority"] = "clone"
+    } else if action == "throttle" {
+      ctx.pluginCtx.postponed = append(ctx.pluginCtx.postponed, ctx.contextID)
+      throttleTickMilliseconds = uint32(rand.Intn(30 + 120) - 30)
+      return types.ActionPause
     }
 
     err, ctx.request = inject.OnHttpRequestHeaders(ctx.request, ctx.config)

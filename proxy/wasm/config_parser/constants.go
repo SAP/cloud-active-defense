@@ -76,6 +76,7 @@ const (
 	drop	Behavior = "drop"	
 	server_error			 = "error"
 	divert			 = "divert"
+	throttle		 = "throttle"
 )
 
 /* **** */

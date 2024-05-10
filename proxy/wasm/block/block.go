@@ -47,6 +47,8 @@ func behaviorAction(bl config_parser.BlacklistType) string {
 		return "pause"
 	} else if bl.Behavior == "divert" {
 		return "clone"
+	} else if bl.Behavior == "throttle" {
+		return "throttle"
 	}
 	return "continue"
 }
