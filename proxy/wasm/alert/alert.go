@@ -135,26 +135,32 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     }
     updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   }
-  for _, v := range alerts {
-    if v.Filter.Detect.Respond == config_parser.EmptyRespond() {
-      break;
-    }
-    updateBlacklist = map[string]string{ "delay": "now" ,"duration": "forever" }  
-    sourceKey, sourceValue, err := getSource(v.Filter.Detect.Respond.Source, v.LogParameters["session"], headers["user-agent"])
-    if err != nil {
-      proxywasm.LogErrorf("error while setAlertAction: %s", err)
+  if len(alerts) == 0 {
+    return map[string]string{}
+  }
+
+  if alerts[0].Filter.Detect.Respond == config_parser.EmptyRespond() {
+    //if not set by global config return empty
+    if updateBlacklist["behavior"] == "" {
       return map[string]string{}
     }
-    updateBlacklist[sourceKey] = sourceValue
-    updateBlacklist["behavior"] = v.Filter.Detect.Respond.Behavior
-    if v.Filter.Detect.Respond.Delay != "" {
-      updateBlacklist["delay"] = v.Filter.Detect.Respond.Delay
-    }
-    if v.Filter.Detect.Respond.Duration != "" {
-      updateBlacklist["duration"] = v.Filter.Detect.Respond.Duration
-    }
-    updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
+    return updateBlacklist
   }
+  updateBlacklist = map[string]string{ "delay": "now" ,"duration": "forever" }  
+  sourceKey, sourceValue, err := getSource(alerts[0].Filter.Detect.Respond.Source, alerts[0].LogParameters["session"], headers["user-agent"])
+  if err != nil {
+    proxywasm.LogErrorf("error while setAlertAction: %s", err)
+    return map[string]string{}
+  }
+  updateBlacklist[sourceKey] = sourceValue
+  updateBlacklist["behavior"] = alerts[0].Filter.Detect.Respond.Behavior
+  if alerts[0].Filter.Detect.Respond.Delay != "" {
+    updateBlacklist["delay"] = alerts[0].Filter.Detect.Respond.Delay
+  }
+  if alerts[0].Filter.Detect.Respond.Duration != "" {
+    updateBlacklist["duration"] = alerts[0].Filter.Detect.Respond.Duration
+  }
+  updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   return updateBlacklist
 }
 
