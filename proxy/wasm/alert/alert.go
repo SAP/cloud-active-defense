@@ -123,6 +123,7 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     sourceKey, sourceValue, err := getSource(config.Respond.Source, session, headers["user-agent"])
     if err != nil {
       proxywasm.LogErrorf("error while setAlertAction: %s", err)
+      return map[string]string{}
     }
     updateBlacklist[sourceKey] = sourceValue
     updateBlacklist["behavior"] = config.Respond.Behavior
@@ -142,7 +143,7 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     sourceKey, sourceValue, err := getSource(v.Filter.Detect.Respond.Source, v.LogParameters["session"], headers["user-agent"])
     if err != nil {
       proxywasm.LogErrorf("error while setAlertAction: %s", err)
-      break;
+      return map[string]string{}
     }
     updateBlacklist[sourceKey] = sourceValue
     updateBlacklist["behavior"] = v.Filter.Detect.Respond.Behavior
@@ -173,9 +174,6 @@ func getSource(configSource string, session string, userAgent string) (sourceKey
     sourceKey, sourceValue = "session", session
   case "userAgent":
     sourceKey, sourceValue = "userAgent", userAgent
-  }
-  if sourceValue == "" {
-    err = fmt.Errorf("source is empty")
   }
   return sourceKey, sourceValue, err
 }
