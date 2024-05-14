@@ -127,6 +127,12 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     }
     updateBlacklist[sourceKey] = sourceValue
     updateBlacklist["behavior"] = config.Respond.Behavior
+    if updateBlacklist["behavior"] == "throttle" {
+      updateBlacklist["property"] = config.Respond.Property
+      if config.Respond.Property == "" {
+        updateBlacklist["property"] = "30-120"
+      }
+    }
     if config.Respond.Delay != "" {
       updateBlacklist["delay"] = config.Respond.Delay
     }
@@ -154,6 +160,12 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
   }
   updateBlacklist[sourceKey] = sourceValue
   updateBlacklist["behavior"] = alerts[0].Filter.Detect.Respond.Behavior
+  if updateBlacklist["behavior"] == "throttle" {
+    updateBlacklist["property"] = alerts[0].Filter.Detect.Respond.Property
+    if alerts[0].Filter.Detect.Respond.Property == ""{
+      updateBlacklist["property"] = "30-120"
+    }
+  }
   if alerts[0].Filter.Detect.Respond.Delay != "" {
     updateBlacklist["delay"] = alerts[0].Filter.Detect.Respond.Delay
   }

@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
+
 )
 
 
@@ -259,6 +261,9 @@ func (v *validator) validateRespond(obj RespondType) {
 	if !breaksRequired(obj.Duration) && !validDuration(obj.Duration) {
 		v.addError(v.currentPlace + ".duration", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or forever")
 	}
+	if obj.Behavior == "throttle" && !breaksRequired(obj.Property) && !validThrottleProperty(obj.Property) {
+		v.addError(v.currentPlace + ".property", "needs to be valid int")
+	}
 }
 
 /* helper functions */
@@ -386,4 +391,20 @@ func validDuration(s string) bool {
 		return true
 	}
 	return false
+}
+
+func validThrottleProperty(s string) bool {
+	splitProperty := strings.Split(s, "-")
+	if len(splitProperty) == 2 {
+		min, err := strconv.Atoi(splitProperty[0])
+		if err != nil { return false }
+		max, err := strconv.Atoi(splitProperty[1])
+		if err != nil { return false }
+		if max >= min { return false }
+		return true
+	} else {
+		_, err := strconv.Atoi(s)
+		if err != nil { return false }
+		return true
+	}
 }

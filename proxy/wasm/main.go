@@ -1,9 +1,11 @@
 package main
 
-import ( //"strconv"
+import ( 
+  "strconv"
 	"errors"
 	"encoding/json"
 	"math/rand"
+	"strings"
 
 	"sundew/block"
 	"sundew/config_parser"
@@ -189,15 +191,26 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
       proxywasm.LogCriticalf("failed to extract request headers: %s", err.Error())
       return types.ActionPause
     }
-    var action string
-    blocked, action = block.IsBanned(blacklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
+    action, property := block.IsBanned(blacklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
+    if action != "continue" {
+      blocked = true
+    }
     if action == "pause" {
       return types.ActionPause
     } else if action == "clone" {
       ctx.request.Headers[":authority"] = "clone"
     } else if action == "throttle" {
       ctx.pluginCtx.postponed = append(ctx.pluginCtx.postponed, ctx.contextID)
-      throttleTickMilliseconds = uint32(rand.Intn(30 + 120) - 30)
+      splitProperty := strings.Split(property, "-")
+      if len(splitProperty) == 2 {
+        min, _ := strconv.Atoi(splitProperty[0])
+        max, _ := strconv.Atoi(splitProperty[1])
+        throttleTickMilliseconds = uint32(rand.Intn(max - min + 1) + min)
+      } else {
+        throttle, _ := strconv.Atoi(property)
+        throttleTickMilliseconds = uint32(throttle)
+      }
+      proxywasm.LogWarnf("----throtlte", throttleTickMilliseconds)
       return types.ActionPause
     }
 

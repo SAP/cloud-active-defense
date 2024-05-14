@@ -104,6 +104,7 @@ type RespondType struct {
 	Behavior	string `json:"behavior"`
 	Delay		string `json:"delay"`
 	Duration	string `json:"duration"`
+	Property	string `json:"property"`
 }
 
 type BlacklistType struct {
@@ -113,6 +114,7 @@ type BlacklistType struct {
 	Behavior      string  `json:"behavior"`
 	Delay         string  `json:"delay"`
 	Duration      string  `json:"duration"`
+	Property	  string  `json:"property"`
 	TimeDetected  string  `json:"timeDetected"`
 }
 func (c *DecoyConfig) MakeChecksum() [20]byte{

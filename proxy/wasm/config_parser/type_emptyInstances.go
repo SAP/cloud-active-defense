@@ -65,5 +65,5 @@ func EmptyAlert() AlertType {
 }
 
 func EmptyRespond() RespondType {
-  return RespondType{"", "", "", "" }
+  return RespondType{"", "", "", "", ""}
 }

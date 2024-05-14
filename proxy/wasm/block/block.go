@@ -12,25 +12,18 @@ import (
 )
 
 
-func IsBanned(blacklist []config_parser.BlacklistType, headers map[string]string, cookies map[string]string, config config_parser.AlertConfig) (bool, string) {
+func IsBanned(blacklist []config_parser.BlacklistType, headers map[string]string, cookies map[string]string, config config_parser.AlertConfig) (string, string) {
 	session, _ := detect.FindSession(map[string]map[string]string{"header": headers, "cookie": cookies, "payload": { "payload": "" }}, nil, config)
 	sourceIP, err := proxywasm.GetProperty([]string{"source", "address"})
     if (err != nil) {
       fmt.Errorf("failed to fetch property: %v", err)
     }
 	for _, bl := range blacklist {
-		if bl.Ip != "" && bl.Ip == strings.Split(string(sourceIP), ":")[0] {
-			action := behaviorAction(bl)
-			return true, action
-		} else if bl.Useragent != "" && bl.Useragent == headers["user-agent"] {
-			action := behaviorAction(bl)
-			return true, action
-		} else if bl.Session != "" && bl.Session == session {
-			action := behaviorAction(bl)
-			return true, action
+		if (bl.Ip != "" && bl.Ip == strings.Split(string(sourceIP), ":")[0]) || (bl.Useragent != "" && bl.Useragent == headers["user-agent"]) || (bl.Session != "" && bl.Session == session) {
+			return behaviorAction(bl), bl.Property
 		}
 	}
-	return false, "continue"
+	return "continue", ""
 }
 
 func behaviorAction(bl config_parser.BlacklistType) string {

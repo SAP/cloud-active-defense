@@ -72,6 +72,7 @@ func (p *Parser) jsonToStruct(content []byte) error {
 				Behavior: string(json.GetStringBytes("config", "respond", "behavior")),
 				Delay: string(json.GetStringBytes("config", "respond", "delay")),
 				Duration: string(json.GetStringBytes("config", "respond", "duration")),
+				Property: string(json.GetStringBytes("config", "respond", "property")),
 			},
 		}
 	}
@@ -130,6 +131,7 @@ func (p *Parser) filterJsonToStruct(filterJs *fastjson.Value) *FilterType {
 				Behavior:p. getString(filterJs, "detect", "respond", "behavior"),
 				Delay: p.getString(filterJs, "detect", "respond", "delay"),
 				Duration: p.getString(filterJs, "detect", "respond", "duration"),
+				Property: p.getString(filterJs, "detect", "respond", "property"),
 			},
 		},
 	}
@@ -151,6 +153,7 @@ func BlacklistJsonToStruct(content []byte) (error, []BlacklistType) {
 			Behavior:   	string(elem.GetStringBytes("behavior")),
 			Delay:			string(elem.GetStringBytes("delay")),
 			Duration:     	string(elem.GetStringBytes("duration")),
+			Property: 		string(elem.GetStringBytes("property")),
 			TimeDetected: 	string(elem.GetStringBytes("timeDetected")),
 		}
 		blacklist = append(blacklist, bl)
