@@ -19,4 +19,16 @@ services:
     - "8000:8000"
     depends_on:
     - myapp
+    - fluent
+    logging:
+      driver: fluentd
+  
+  fluent:
+    image: fluent/fluent-bit
+    volumes:
+      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./parsers.conf:/fluent-bit/etc/custom_parsers.conf
+    ports:
+      - "24224:24224"
+      - "24224:24224/udp"
 

@@ -2,14 +2,18 @@
   "filters": [
     {
       "decoy": {
-        "key": "x-cloud-active-defense",
+        "key": ":status",
         "separator": "=",
-        "value": "ACTIVE"
+        "value": ".*"
       },
-      "inject": {
-        "store": {
-          "inResponse": ".*",
-          "as": "header"
+      "detect": {
+        "seek": {
+          "inResponse":".*",
+          "in": "header"
+        },
+        "alert": {
+          "severity": "HIGH",
+          "whenSeen": true
         }
       }
     }
