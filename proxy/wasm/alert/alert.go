@@ -174,10 +174,9 @@ func getSource(configSource string, session string, userAgent string) (sourceKey
     }
     sourceKey, sourceValue = "ip", strings.Split(string(ip), ":")[0]
   case "session":
-    if session == "" {
-      err = fmt.Errorf("session is empty, please specify session config in config.json")
+    if session != "" {
+      sourceKey, sourceValue = "session", session
     }
-    sourceKey, sourceValue = "session", session
   case "userAgent":
     sourceKey, sourceValue = "userAgent", userAgent
   }
