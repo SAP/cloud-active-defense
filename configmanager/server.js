@@ -107,8 +107,30 @@ app.get('/:namespace/:application', (req, res) => {
 app.get('/blacklist', (req, res) => {
   fs.access("/data/blacklist/blacklist.json", fs.constants.F_OK, err => {
     if (err) return res.json({})
-    const blacklist = fs.readFileSync("/data/blacklist/blacklist.json", 'utf8')
-    return res.json(JSON.parse(blacklist))
+    const blacklist = JSON.parse(fs.readFileSync("/data/blacklist/blacklist.json", 'utf8'))
+    i = 0
+    for (const elem of blacklist.list) {
+      if (elem.duration == 'forever') continue
+      const unbanDate = new Date(elem.timeDetected)
+      switch (elem.duration[elem.duration.length-1]) {
+        case 's':
+          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+        case 'm':
+          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+        case 'h':
+          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+      }
+      if (new Date() >= unbanDate){
+        blacklist.list.splice(i, 1)
+        console.log(blacklist)
+      }
+      i++
+    }
+    fs.writeFileSync("/data/blacklist/blacklist.json", JSON.stringify(blacklist))
+    return res.json(blacklist)
   })
 })
 
