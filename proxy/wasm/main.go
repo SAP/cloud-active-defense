@@ -155,10 +155,7 @@ func (ctx *pluginContext) OnTick() {
         proxywasm.LogErrorf("%v", err.Error())
       }
       
-      err, blacklist = config_parser.BlacklistJsonToStruct(body)
-      if err != nil {
-        proxywasm.LogErrorf("error when parsing blacklist:", err)
-      }
+      proxywasm.SetSharedData("blocklist", body, 0)
     }
     reqHead := [][2]string{
       {":method", "GET"}, {":authority", "configmanager"}, {":path", "/blacklist"}, {"accept", "*/*"},
@@ -171,6 +168,13 @@ func (ctx *pluginContext) OnTick() {
 }
 
 func (ctx *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
+  var err error
+  blocklistjson, _, _ := proxywasm.GetSharedData("blocklist")
+  err, blacklist = config_parser.BlacklistJsonToStruct(blocklistjson)
+
+  if err != nil {
+    proxywasm.LogErrorf("error when parsing blacklist:", err)
+  }
   return &httpContext{pluginCtx: ctx, contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}, alerts: []alert.AlertParam{}}
 }
 
@@ -443,5 +447,7 @@ func (ctx *httpContext) OnHttpStreamDone() {
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
     updateBlacklist = alert.SetAlertAction(ctx.alerts, ctx.config.Config, ctx.request.Headers)
     blacklist = block.AppendBlacklist(blacklist, updateBlacklist)
+    blocklistjson, _ := json.Marshal(blacklist)
+    proxywasm.SetSharedData("blocklist", []byte("{\"list\":" + string(blocklistjson) + "}"), 0)
   }
 }
