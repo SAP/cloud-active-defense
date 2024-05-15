@@ -26,6 +26,8 @@ var throttleLoop int = 0
 var updateBlacklist map[string]string = map[string]string{}
 var blacklist []config_parser.BlacklistType
 var blocked bool = false
+var blacklistTick uint32 = 60 // 1 minute
+var blacklistLoop = 60
 
 func main() {
   proxywasm.SetVMContext(&vmContext{})
@@ -125,26 +127,8 @@ func (ctx *pluginContext) OnTick() {
     }
     updateBlacklist = map[string]string{}
   }
-  callBackGetBlacklist:= func(numHeaders, bodySize, numTrailers int) {
-    body, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
-    if err != nil {
-      proxywasm.LogErrorf("%v", err.Error())
-    }
-    
-    err, blacklist = config_parser.BlacklistJsonToStruct(body)
-    if err != nil {
-      proxywasm.LogErrorf("error when parsing blacklist:", err)
-    }
-  }
-  reqHead := [][2]string{
-      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/blacklist"}, {"accept", "*/*"},
-      {"Content-Type", "application/json"},
-    }
-  if _, err := proxywasm.DispatchHttpCall("configmanager", reqHead, nil, nil, 5000, callBackGetBlacklist); err != nil {
-    proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
-  }
 
-  // Add delay if 
+  // Add delay if
   if throttleLoop < int(throttleTickMilliseconds) && throttleTickMilliseconds !=0 {
     throttleLoop++
   } else if throttleLoop != 0 {
@@ -157,6 +141,32 @@ func (ctx *pluginContext) OnTick() {
       proxywasm.LogErrorf("throttle error: error when setting context and resuming: %s", err)
     }
 		ctx.postponed = tail
+  }
+  if blacklistLoop % 5 == 0 {
+  }
+  //Fetch blacklist every minutes
+  if blacklistLoop < int(blacklistTick){
+    blacklistLoop++
+  } else {
+    blacklistLoop = 0
+    callBackGetBlacklist:= func(numHeaders, bodySize, numTrailers int) {
+      body, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+      if err != nil {
+        proxywasm.LogErrorf("%v", err.Error())
+      }
+      
+      err, blacklist = config_parser.BlacklistJsonToStruct(body)
+      if err != nil {
+        proxywasm.LogErrorf("error when parsing blacklist:", err)
+      }
+    }
+    reqHead := [][2]string{
+      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/blacklist"}, {"accept", "*/*"},
+      {"Content-Type", "application/json"},
+    }
+    if _, err := proxywasm.DispatchHttpCall("configmanager", reqHead, nil, nil, 5000, callBackGetBlacklist); err != nil {
+      proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
+    }
   }
 }
 
@@ -194,6 +204,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
     action, property := block.IsBanned(blacklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
     if action != "continue" {
       blocked = true
+    } else {
+      blocked = false
     }
     if action == "pause" {
       return types.ActionPause
@@ -430,5 +442,6 @@ func (ctx *httpContext) OnHttpStreamDone() {
     ctx.alerts[i].LogParameters["server"] = ctx.config.Config.Server
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
     updateBlacklist = alert.SetAlertAction(ctx.alerts, ctx.config.Config, ctx.request.Headers)
+    blacklist = block.AppendBlacklist(blacklist, updateBlacklist)
   }
 }

@@ -72,3 +72,18 @@ func isTimeout(bl config_parser.BlacklistType) bool {
 	}
 	return false
 }
+
+func AppendBlacklist(blacklist []config_parser.BlacklistType, elem map[string]string) []config_parser.BlacklistType{
+	newElement := config_parser.BlacklistType{ Behavior: elem["behavior"], Duration: elem["duration"], Delay: elem["delay"] }
+	if elem["property"] != "" {
+		newElement.Property = elem["property"]
+	}
+	if elem["ip"] != "" {
+		newElement.Ip = elem["ip"]
+	} else if elem["session"] != "" {
+		newElement.Session = elem["session"]
+	} else if elem["userAgent"] != "" {
+		newElement.Useragent = elem["userAgent"]
+	}
+	return append(blacklist, newElement)
+}
