@@ -31,7 +31,8 @@ globalconfig='
     "source": "userAgent",
     "behavior": "error",
     "delay": "now"
-  }
+  },
+  "blocklistReload": 1
 }
 '
 # reseting banlist

@@ -30,10 +30,19 @@ config='
   ]
 }
 '
+# Configure global config
+globalconfig='
+{
+  "blocklistReload": 1
+}
+'
+
 # reseting banlist
 echo '{"list":[]}' | docker exec -i configmanager sh -c 'cat > /data/blacklist/blacklist.json'
 # connect to configmanager, update /data/cad-default.json and /data/config-default.json
 echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.json'
+echo "$globalconfig" | docker exec -i configmanager sh -c 'cat > /data/config-default.json'
+
 # wait a few seconds for the proxy to read the new config
 sleep 5
 
