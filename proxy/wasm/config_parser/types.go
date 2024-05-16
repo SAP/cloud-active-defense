@@ -15,6 +15,7 @@ type ConfigType struct {
 	Alert AlertConfig	`json:"config"`
 	Server string		`json:"server"`
 	Respond RespondType	`json:"respond"`
+	BlocklistReload int `json:"blocklistReload"`
 }
 
 type AlertConfig struct {

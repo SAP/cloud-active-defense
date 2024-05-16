@@ -82,6 +82,9 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
       ctx.config = oldConfig
       return
     }
+    if ctx.config.Config.BlocklistReload != 0 {
+      blacklistTick = uint32(ctx.config.Config.BlocklistReload)
+    }
     if (ctx.config == nil) {
       ctx.config = &emptyConf
       return
@@ -141,8 +144,6 @@ func (ctx *pluginContext) OnTick() {
       proxywasm.LogErrorf("throttle error: error when setting context and resuming: %s", err)
     }
 		ctx.postponed = tail
-  }
-  if blacklistLoop % 5 == 0 {
   }
   //Fetch blacklist every minutes
   if blacklistLoop < int(blacklistTick){

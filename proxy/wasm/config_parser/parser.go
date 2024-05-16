@@ -74,6 +74,7 @@ func (p *Parser) jsonToStruct(content []byte) error {
 				Duration: string(json.GetStringBytes("config", "respond", "duration")),
 				Property: string(json.GetStringBytes("config", "respond", "property")),
 			},
+			BlocklistReload: int(json.GetInt("config", "blocklistReload")),
 		}
 	}
 	filtersJs := json.GetArray("decoy", "filters")

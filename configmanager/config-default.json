@@ -16,5 +16,6 @@
     "behavior": "",
     "delay": "",
     "duration": ""
-  }
+  },
+  "blocklistReload": 0
 }
