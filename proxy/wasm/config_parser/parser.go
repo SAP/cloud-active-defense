@@ -138,8 +138,8 @@ func (p *Parser) filterJsonToStruct(filterJs *fastjson.Value) *FilterType {
 	}
 }
 
-func BlacklistJsonToStruct(content []byte) (error, []BlacklistType) {
-	blacklist := []BlacklistType{}
+func BlocklistJsonToStruct(content []byte) (error, []BlocklistType) {
+	blocklist := []BlocklistType{}
 	var fjsp fastjson.Parser
 	json, err := fjsp.Parse(string(content))
 	if err != nil {
@@ -147,7 +147,7 @@ func BlacklistJsonToStruct(content []byte) (error, []BlacklistType) {
 	}
 	list := json.GetArray("list")
 	for _, elem := range list {
-		bl := BlacklistType{
+		bl := BlocklistType{
 			Ip:          	string(elem.GetStringBytes("ip")),
 			Session: 		string(elem.GetStringBytes("session")),
 			Useragent: 		string(elem.GetStringBytes("userAgent")),
@@ -157,9 +157,9 @@ func BlacklistJsonToStruct(content []byte) (error, []BlacklistType) {
 			Property: 		string(elem.GetStringBytes("property")),
 			TimeDetected: 	string(elem.GetStringBytes("timeDetected")),
 		}
-		blacklist = append(blacklist, bl)
+		blocklist = append(blocklist, bl)
 	}
-	return nil, blacklist
+	return nil, blocklist
 }
 
 func (p *Parser) conditionsJsonToStruct(conditionsJs []*fastjson.Value) []ConditionType {

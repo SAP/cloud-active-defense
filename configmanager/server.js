@@ -104,12 +104,12 @@ app.get('/:namespace/:application', (req, res) => {
   });
 });
 
-app.get('/blacklist', (req, res) => {
-  fs.access("/data/blacklist/blacklist.json", fs.constants.F_OK, err => {
+app.get('/blocklist', (req, res) => {
+  fs.access("/data/blocklist/blocklist.json", fs.constants.F_OK, err => {
     if (err) return res.json({})
-    const blacklist = JSON.parse(fs.readFileSync("/data/blacklist/blacklist.json", 'utf8'))
+    const blocklist = JSON.parse(fs.readFileSync("/data/blocklist/blocklist.json", 'utf8'))
     i = 0
-    for (const elem of blacklist.list) {
+    for (const elem of blocklist.list) {
       if (elem.duration == 'forever') continue
       const unbanDate = new Date(elem.timeDetected)
       switch (elem.duration[elem.duration.length-1]) {
@@ -124,28 +124,28 @@ app.get('/blacklist', (req, res) => {
           break;
       }
       if (new Date() >= unbanDate){
-        blacklist.list.splice(i, 1)
-        console.log(blacklist)
+        blocklist.list.splice(i, 1)
+        console.log(blocklist)
       }
       i++
     }
-    fs.writeFileSync("/data/blacklist/blacklist.json", JSON.stringify(blacklist))
-    return res.json(blacklist)
+    fs.writeFileSync("/data/blocklist/blocklist.json", JSON.stringify(blocklist))
+    return res.json(blocklist)
   })
 })
 
-app.post('/blacklist', (req, res) => {
-  fs.access("/data/blacklist/blacklist.json", fs.constants.F_OK, err => {
-    if (err) return res.send("Error accessing blacklist")
-    const blacklistFile = JSON.parse(fs.readFileSync("/data/blacklist/blacklist.json", 'utf8'))
-    blacklistFile.list.push(req.body)
-    fs.writeFileSync("/data/blacklist/blacklist.json", JSON.stringify(blacklistFile))
+app.post('/blocklist', (req, res) => {
+  fs.access("/data/blocklist/blocklist.json", fs.constants.F_OK, err => {
+    if (err) return res.send("Error accessing blocklist")
+    const blocklistFile = JSON.parse(fs.readFileSync("/data/blocklist/blocklist.json", 'utf8'))
+    blocklistFile.list.push(req.body)
+    fs.writeFileSync("/data/blocklist/blocklist.json", JSON.stringify(blocklistFile))
     return res.send("Done")
   })
 })
 
 // Start the server
 app.listen(3000, () => {
-  if (!fs.existsSync("/data/blacklist/blacklist.json")) fs.writeFileSync("/data/blacklist/blacklist.json", `{"list":[]}`, 'utf8')
+  if (!fs.existsSync("/data/blocklist/blocklist.json")) fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
   console.log('Config manager started');
 });

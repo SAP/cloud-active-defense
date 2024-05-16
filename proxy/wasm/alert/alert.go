@@ -117,7 +117,7 @@ func truncate(s string) string {
 }
 
 func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string) map[string]string {
-  updateBlacklist := map[string]string{ "delay": "now" ,"duration": "forever" }
+  updateBlocklist := map[string]string{ "delay": "now" ,"duration": "forever" }
   session := alerts[0].LogParameters["session"]
   if config.Respond != config_parser.EmptyRespond() {
     sourceKey, sourceValue, err := getSource(config.Respond.Source, session, headers["user-agent"])
@@ -125,21 +125,21 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
       proxywasm.LogErrorf("error while setAlertAction: %s", err)
       return map[string]string{}
     }
-    updateBlacklist[sourceKey] = sourceValue
-    updateBlacklist["behavior"] = config.Respond.Behavior
-    if updateBlacklist["behavior"] == "throttle" {
-      updateBlacklist["property"] = config.Respond.Property
+    updateBlocklist[sourceKey] = sourceValue
+    updateBlocklist["behavior"] = config.Respond.Behavior
+    if updateBlocklist["behavior"] == "throttle" {
+      updateBlocklist["property"] = config.Respond.Property
       if config.Respond.Property == "" {
-        updateBlacklist["property"] = "30-120"
+        updateBlocklist["property"] = "30-120"
       }
     }
     if config.Respond.Delay != "" {
-      updateBlacklist["delay"] = config.Respond.Delay
+      updateBlocklist["delay"] = config.Respond.Delay
     }
     if config.Respond.Duration != "" {
-      updateBlacklist["duration"] = config.Respond.Duration
+      updateBlocklist["duration"] = config.Respond.Duration
     }
-    updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
+    updateBlocklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   }
   if len(alerts) == 0 {
     return map[string]string{}
@@ -147,33 +147,33 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
 
   if alerts[0].Filter.Detect.Respond == config_parser.EmptyRespond() {
     //if not set by global config return empty
-    if updateBlacklist["behavior"] == "" {
+    if updateBlocklist["behavior"] == "" {
       return map[string]string{}
     }
-    return updateBlacklist
+    return updateBlocklist
   }
-  updateBlacklist = map[string]string{ "delay": "now" ,"duration": "forever" }  
+  updateBlocklist = map[string]string{ "delay": "now" ,"duration": "forever" }  
   sourceKey, sourceValue, err := getSource(alerts[0].Filter.Detect.Respond.Source, alerts[0].LogParameters["session"], headers["user-agent"])
   if err != nil {
     proxywasm.LogErrorf("error while setAlertAction: %s", err)
     return map[string]string{}
   }
-  updateBlacklist[sourceKey] = sourceValue
-  updateBlacklist["behavior"] = alerts[0].Filter.Detect.Respond.Behavior
-  if updateBlacklist["behavior"] == "throttle" {
-    updateBlacklist["property"] = alerts[0].Filter.Detect.Respond.Property
+  updateBlocklist[sourceKey] = sourceValue
+  updateBlocklist["behavior"] = alerts[0].Filter.Detect.Respond.Behavior
+  if updateBlocklist["behavior"] == "throttle" {
+    updateBlocklist["property"] = alerts[0].Filter.Detect.Respond.Property
     if alerts[0].Filter.Detect.Respond.Property == ""{
-      updateBlacklist["property"] = "30-120"
+      updateBlocklist["property"] = "30-120"
     }
   }
   if alerts[0].Filter.Detect.Respond.Delay != "" {
-    updateBlacklist["delay"] = alerts[0].Filter.Detect.Respond.Delay
+    updateBlocklist["delay"] = alerts[0].Filter.Detect.Respond.Delay
   }
   if alerts[0].Filter.Detect.Respond.Duration != "" {
-    updateBlacklist["duration"] = alerts[0].Filter.Detect.Respond.Duration
+    updateBlocklist["duration"] = alerts[0].Filter.Detect.Respond.Duration
   }
-  updateBlacklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
-  return updateBlacklist
+  updateBlocklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
+  return updateBlocklist
 }
 
 func getSource(configSource string, session string, userAgent string) (sourceKey, sourceValue string, err error) {
@@ -182,7 +182,7 @@ func getSource(configSource string, session string, userAgent string) (sourceKey
   case "ip":
     ip, err := proxywasm.GetProperty([]string{"source", "address"})
     if (err != nil) {
-      err = fmt.Errorf("update blacklist: failed to fetch property: %v", err)
+      err = fmt.Errorf("update blocklist: failed to fetch property: %v", err)
     }
     sourceKey, sourceValue = "ip", strings.Split(string(ip), ":")[0]
   case "session":

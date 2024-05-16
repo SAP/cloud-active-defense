@@ -23,11 +23,11 @@ import (
 const tickMilliseconds uint32 = 1000
 var throttleTickMilliseconds uint32 = 0
 var throttleLoop int = 0
-var updateBlacklist map[string]string = map[string]string{}
-var blacklist []config_parser.BlacklistType
+var updateBlocklist map[string]string = map[string]string{}
+var blocklist []config_parser.BlocklistType
 var blocked bool = false
-var blacklistTick uint32 = 60 // 1 minute
-var blacklistLoop = 60
+var blocklistTick uint32 = 60 // 1 minute
+var blocklistLoop = 60
 
 func main() {
   proxywasm.SetVMContext(&vmContext{})
@@ -83,7 +83,7 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
       return
     }
     if ctx.config.Config.BlocklistReload != 0 {
-      blacklistTick = uint32(ctx.config.Config.BlocklistReload)
+      blocklistTick = uint32(ctx.config.Config.BlocklistReload)
     }
     if (ctx.config == nil) {
       ctx.config = &emptyConf
@@ -105,30 +105,30 @@ func (ctx *pluginContext) OnTick() {
   if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
     proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
   }
-  // Update blacklist via configmanager
-  if len(updateBlacklist) != 0 {
-    callBackSetBlacklist := func(numHeaders, bodySize, numTrailers int) {
+  // Update blocklist via configmanager
+  if len(updateBlocklist) != 0 {
+    callBackSetBlocklist := func(numHeaders, bodySize, numTrailers int) {
       responseBody, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
       if err != nil {
-        proxywasm.LogErrorf("could not read body when setting blacklist: %v", err)
+        proxywasm.LogErrorf("could not read body when setting blocklist: %v", err)
       }
       if string(responseBody) != "Done" {
-        proxywasm.LogErrorf("error when setting blacklist: %v", string(responseBody))
+        proxywasm.LogErrorf("error when setting blocklist: %v", string(responseBody))
       }
     }
-    jsonUpdateBlacklist, err := json.Marshal(updateBlacklist)
+    jsonUpdateBlocklist, err := json.Marshal(updateBlocklist)
     if err != nil {
-      proxywasm.LogErrorf("could not convert updateBlacklist to json: %v", err)
+      proxywasm.LogErrorf("could not convert updateBlocklist to json: %v", err)
       return
     }
-    requestHeadersBlacklist := [][2]string{
-      {":method", "POST"}, {":authority", "configmanager"}, {":path", "/blacklist"}, {"accept", "*/*"},
+    requestHeadersBlocklist := [][2]string{
+      {":method", "POST"}, {":authority", "configmanager"}, {":path", "/blocklist"}, {"accept", "*/*"},
       {"Content-Type", "application/json"},
     }
-    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlacklist, jsonUpdateBlacklist, nil, 5000, callBackSetBlacklist); err != nil {
+    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlocklist, jsonUpdateBlocklist, nil, 5000, callBackSetBlocklist); err != nil {
       proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
     }
-    updateBlacklist = map[string]string{}
+    updateBlocklist = map[string]string{}
   }
 
   // Add delay if
@@ -145,12 +145,12 @@ func (ctx *pluginContext) OnTick() {
     }
 		ctx.postponed = tail
   }
-  //Fetch blacklist every minutes
-  if blacklistLoop < int(blacklistTick){
-    blacklistLoop++
+  //Fetch blocklist every minutes
+  if blocklistLoop < int(blocklistTick){
+    blocklistLoop++
   } else {
-    blacklistLoop = 0
-    callBackGetBlacklist:= func(numHeaders, bodySize, numTrailers int) {
+    blocklistLoop = 0
+    callBackGetBlocklist:= func(numHeaders, bodySize, numTrailers int) {
       body, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
       if err != nil {
         proxywasm.LogErrorf("%v", err.Error())
@@ -159,10 +159,10 @@ func (ctx *pluginContext) OnTick() {
       proxywasm.SetSharedData("blocklist", body, 0)
     }
     reqHead := [][2]string{
-      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/blacklist"}, {"accept", "*/*"},
+      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/blocklist"}, {"accept", "*/*"},
       {"Content-Type", "application/json"},
     }
-    if _, err := proxywasm.DispatchHttpCall("configmanager", reqHead, nil, nil, 5000, callBackGetBlacklist); err != nil {
+    if _, err := proxywasm.DispatchHttpCall("configmanager", reqHead, nil, nil, 5000, callBackGetBlocklist); err != nil {
       proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
     }
   }
@@ -171,10 +171,10 @@ func (ctx *pluginContext) OnTick() {
 func (ctx *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
   var err error
   blocklistjson, _, _ := proxywasm.GetSharedData("blocklist")
-  err, blacklist = config_parser.BlacklistJsonToStruct(blocklistjson)
+  err, blocklist = config_parser.BlocklistJsonToStruct(blocklistjson)
 
   if err != nil {
-    proxywasm.LogErrorf("error when parsing blacklist:", err)
+    proxywasm.LogErrorf("error when parsing blocklist:", err)
   }
   return &httpContext{pluginCtx: ctx, contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}, alerts: []alert.AlertParam{}}
 }
@@ -206,7 +206,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
       proxywasm.LogCriticalf("failed to extract request headers: %s", err.Error())
       return types.ActionPause
     }
-    action, property := block.IsBanned(blacklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
+    action, property := block.IsBanned(blocklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
     if action != "continue" {
       blocked = true
     } else {
@@ -446,9 +446,9 @@ func (ctx *httpContext) OnHttpStreamDone() {
     ctx.alerts[i].LogParameters["username"] = username
     ctx.alerts[i].LogParameters["server"] = ctx.config.Config.Server
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
-    updateBlacklist = alert.SetAlertAction(ctx.alerts, ctx.config.Config, ctx.request.Headers)
-    blacklist = block.AppendBlacklist(blacklist, updateBlacklist)
-    blocklistjson, _ := json.Marshal(blacklist)
+    updateBlocklist = alert.SetAlertAction(ctx.alerts, ctx.config.Config, ctx.request.Headers)
+    blocklist = block.AppendBlocklist(blocklist, updateBlocklist)
+    blocklistjson, _ := json.Marshal(blocklist)
     proxywasm.SetSharedData("blocklist", []byte("{\"list\":" + string(blocklistjson) + "}"), 0)
   }
 }

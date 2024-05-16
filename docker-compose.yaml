@@ -11,7 +11,7 @@ services:
     build: configmanager
     image: configmanager
     volumes:
-      - configvolume:/data/blacklist
+      - configvolume:/data/blocklist
 
   proxy:
     container_name: proxy

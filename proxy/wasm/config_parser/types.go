@@ -108,7 +108,7 @@ type RespondType struct {
 	Property	string `json:"property"`
 }
 
-type BlacklistType struct {
+type BlocklistType struct {
 	Ip            string  `json:"ip"`
 	Useragent	  string  `json:"userAgent"`
 	Session		  string  `json:"session"`
