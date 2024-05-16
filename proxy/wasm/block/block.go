@@ -28,7 +28,7 @@ func IsBanned(blacklist []config_parser.BlacklistType, headers map[string]string
 
 func behaviorAction(bl config_parser.BlacklistType) string {
 	if !isTimeout(bl){
-		return "continue"
+		return "block"
 	}
 	if bl.Behavior == "drop" {
 		return "pause"
@@ -74,7 +74,7 @@ func isTimeout(bl config_parser.BlacklistType) bool {
 }
 
 func AppendBlacklist(blacklist []config_parser.BlacklistType, elem map[string]string) []config_parser.BlacklistType{
-	newElement := config_parser.BlacklistType{ Behavior: elem["behavior"], Duration: elem["duration"], Delay: elem["delay"] }
+	newElement := config_parser.BlacklistType{ Behavior: elem["behavior"], Duration: elem["duration"], Delay: elem["delay"], TimeDetected: elem["timeDetected"] }
 	if elem["property"] != "" {
 		newElement.Property = elem["property"]
 	}
