@@ -125,6 +125,9 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
       proxywasm.LogErrorf("error while setAlertAction: %s", err)
       return map[string]string{}
     }
+    if sourceKey == "" && sourceValue == "" {
+      return map[string]string{}
+    }
     updateBlocklist[sourceKey] = sourceValue
     updateBlocklist["behavior"] = config.Respond.Behavior
     if updateBlocklist["behavior"] == "throttle" {
@@ -156,6 +159,9 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
   sourceKey, sourceValue, err := getSource(alerts[0].Filter.Detect.Respond.Source, alerts[0].LogParameters["session"], headers["user-agent"])
   if err != nil {
     proxywasm.LogErrorf("error while setAlertAction: %s", err)
+    return map[string]string{}
+  }
+  if sourceKey == "" && sourceValue == "" {
     return map[string]string{}
   }
   updateBlocklist[sourceKey] = sourceValue
