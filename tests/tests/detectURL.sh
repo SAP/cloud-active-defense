@@ -42,7 +42,7 @@ curl -v http://localhost:8000/forbidden >$tempfile 2>&1
 # give some time for the alert to be sent to the console
 
 # Check DETECTION (in docker logs)
-status=`docker-compose logs | grep '"DecoyKey": "forbidden",'`
+status=`docker-compose logs | grep '"DecoyKey":"forbidden",'`
 
 # Output result & time
 if [ -z "$status" ]; then
