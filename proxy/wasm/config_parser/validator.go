@@ -360,9 +360,7 @@ func validInUsername(s string) bool {
 }
 
 func validSource(s string) bool {
-	e := Source(s)
-	switch e {
-	case ip, user_agent, session:
+	if strings.Contains(s, ip) || strings.Contains(s, session) || strings.Contains(s, user_agent){
 		return true
 	}
 	return false

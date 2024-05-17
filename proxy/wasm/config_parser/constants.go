@@ -66,7 +66,7 @@ const (
 
 type Source string
 const (
-	ip			Source = "ip"
+	ip					 = "ip"
 	user_agent			 = "userAgent"
 	session				 = "session"
 )

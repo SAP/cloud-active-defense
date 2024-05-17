@@ -19,7 +19,7 @@ func IsBanned(blocklist []config_parser.BlocklistType, headers map[string]string
       fmt.Errorf("failed to fetch property: %v", err)
     }
 	for _, bl := range blocklist {
-		if (bl.Ip != "" && bl.Ip == strings.Split(string(sourceIP), ":")[0]) || (bl.Useragent != "" && bl.Useragent == headers["user-agent"]) || (bl.Session != "" && bl.Session == session) {
+		if checkSource(bl, headers["user-agent"], session, strings.Split(string(sourceIP), ":")[0]) {
 			return behaviorAction(bl), bl.Property
 		}
 	}
@@ -86,4 +86,35 @@ func AppendBlocklist(blocklist []config_parser.BlocklistType, elem map[string]st
 		newElement.Useragent = elem["userAgent"]
 	}
 	return append(blocklist, newElement)
+}
+
+func checkSource(blocklist config_parser.BlocklistType, userAgent string, session string, ip string) bool {
+	if blocklist.Ip != "" && blocklist.Session != "" && blocklist.Useragent != "" {
+		if blocklist.Ip == ip && blocklist.Session == session && blocklist.Useragent == userAgent {
+			return true
+		} else {
+			return false
+		}
+	} else if blocklist.Ip != "" && blocklist.Session != "" {
+		if blocklist.Ip == ip && blocklist.Session == session {
+			return true
+		} else {
+			return false
+		}
+	} else if blocklist.Ip != "" && blocklist.Useragent != "" {
+		if blocklist.Ip == ip && blocklist.Useragent == userAgent {
+			return true
+		} else {
+			return false
+		}
+	} else if blocklist.Session != "" && blocklist.Useragent != "" {
+		if blocklist.Session == session && blocklist.Useragent == userAgent {
+			return true
+		} else {
+			return false
+		}
+	} else if (blocklist.Ip != "" && blocklist.Ip == ip) || (blocklist.Useragent != "" && blocklist.Useragent == userAgent) || (blocklist.Session != "" && blocklist.Session == session) {
+		return true
+	}
+	return false
 }

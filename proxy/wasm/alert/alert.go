@@ -120,15 +120,17 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
   updateBlocklist := map[string]string{ "delay": "now" ,"duration": "forever" }
   session := alerts[0].LogParameters["session"]
   if config.Respond != config_parser.EmptyRespond() {
-    sourceKey, sourceValue, err := getSource(config.Respond.Source, session, headers["user-agent"])
+    sources, err := getSource(config.Respond.Source, session, headers["user-agent"])
     if err != nil {
       proxywasm.LogErrorf("error while setAlertAction: %s", err)
       return map[string]string{}
     }
-    if sourceKey == "" && sourceValue == "" {
+    if len(sources) == 0 {
       return map[string]string{}
     }
-    updateBlocklist[sourceKey] = sourceValue
+    for _, source := range sources {
+      updateBlocklist[source[0]] = source[1]
+    }
     updateBlocklist["behavior"] = config.Respond.Behavior
     if updateBlocklist["behavior"] == "throttle" {
       updateBlocklist["property"] = config.Respond.Property
@@ -156,15 +158,17 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     return updateBlocklist
   }
   updateBlocklist = map[string]string{ "delay": "now" ,"duration": "forever" }  
-  sourceKey, sourceValue, err := getSource(alerts[0].Filter.Detect.Respond.Source, alerts[0].LogParameters["session"], headers["user-agent"])
+  sources, err := getSource(alerts[0].Filter.Detect.Respond.Source, alerts[0].LogParameters["session"], headers["user-agent"])
   if err != nil {
-    proxywasm.LogErrorf("error while setAlertAction: %s", err)
+    proxywasm.LogErrorf("%s", err)
     return map[string]string{}
   }
-  if sourceKey == "" && sourceValue == "" {
+  if len(sources) == 0 {
     return map[string]string{}
   }
-  updateBlocklist[sourceKey] = sourceValue
+  for _, source := range sources {
+    updateBlocklist[source[0]] = source[1]
+  }
   updateBlocklist["behavior"] = alerts[0].Filter.Detect.Respond.Behavior
   if updateBlocklist["behavior"] == "throttle" {
     updateBlocklist["property"] = alerts[0].Filter.Detect.Respond.Property
@@ -182,21 +186,30 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
   return updateBlocklist
 }
 
-func getSource(configSource string, session string, userAgent string) (sourceKey, sourceValue string, err error) {
-  sourceKey, sourceValue = "", ""
-  switch configSource {
-  case "ip":
-    ip, err := proxywasm.GetProperty([]string{"source", "address"})
-    if (err != nil) {
-      err = fmt.Errorf("update blocklist: failed to fetch property: %v", err)
+func getSource(configSource string, session string, userAgent string) (sourceResponse [][2]string, err error) {
+  sourceResponse = [][2]string{}
+  for _, source := range strings.Split(configSource, ",") {
+    switch strings.ReplaceAll(source, " ", "") {
+    case "ip":
+      ip, err := proxywasm.GetProperty([]string{"source", "address"})
+      if (err != nil) {
+        err = fmt.Errorf("error while setAlertAction: update blocklist: failed to fetch property: %v", err)
+      }
+      if len(ip) == 0 {
+        err = fmt.Errorf("cannot ban with this decoy because ip is missing")
+      }
+      sourceResponse = append(sourceResponse, [2]string{ "ip", strings.Split(string(ip), ":")[0] }) 
+    case "session":
+      if session == "" {
+        err = fmt.Errorf("cannot ban with this decoy because session is not configured or is missing")
+      }
+      sourceResponse = append(sourceResponse, [2]string{ "session", session })
+    case "userAgent":
+      if userAgent == "" {
+        err = fmt.Errorf("cannot ban with this decoy because user-agent is missing")
+      }
+      sourceResponse = append(sourceResponse, [2]string{ "userAgent", userAgent })
     }
-    sourceKey, sourceValue = "ip", strings.Split(string(ip), ":")[0]
-  case "session":
-    if session != "" {
-      sourceKey, sourceValue = "session", session
-    }
-  case "userAgent":
-    sourceKey, sourceValue = "userAgent", userAgent
   }
-  return sourceKey, sourceValue, err
+    return sourceResponse, err
 }
