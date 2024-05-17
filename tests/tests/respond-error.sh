@@ -35,8 +35,6 @@ globalconfig='
   "blocklistReload": 1
 }
 '
-# reseting banlist
-echo '{"list":[]}' | docker exec -i configmanager sh -c 'cat > /data/blocklist/blocklist.json'
 # connect to configmanager, update /data/cad-default.json and /data/config-default.json
 echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.json'
 echo "$globalconfig" | docker exec -i configmanager sh -c 'cat > /data/config-default.json'
@@ -74,4 +72,8 @@ echo "Execution time: $execution_time seconds"
 
 # Cleanup
 rm $tempfile
+# reseting banlist
+echo '{"list":[]}' | docker exec -i configmanager sh -c 'cat > /data/blocklist/blocklist.json'
+#reseting global config
+echo "{}" | docker exec -i configmanager sh -c 'cat > /data/config-default.json'
 
