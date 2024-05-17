@@ -24,7 +24,7 @@ services:
       driver: fluentd
   
   fluent:
-    image: fluent/fluent-bit
+    image: fluent/fluent-bit:3.0
     volumes:
       - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
       - ./parsers.conf:/fluent-bit/etc/custom_parsers.conf
