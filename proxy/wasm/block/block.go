@@ -90,7 +90,7 @@ func AppendBlocklist(blocklist []config_parser.BlocklistType, elem map[string]st
 
 func checkSource(blocklist config_parser.BlocklistType, userAgent string, session string, ip string) bool {
 	if blocklist.Ip != "" && blocklist.Session != "" && blocklist.Useragent != "" {
-		if blocklist.Ip == ip && blocklist.Session == session && blocklist.Useragent == userAgent {
+		if blocklist.Ip == ip && blocklist.Session == session && (blocklist.Useragent == userAgent || blocklist.Useragent == "empty") {
 			return true
 		} else {
 			return false
@@ -102,18 +102,18 @@ func checkSource(blocklist config_parser.BlocklistType, userAgent string, sessio
 			return false
 		}
 	} else if blocklist.Ip != "" && blocklist.Useragent != "" {
-		if blocklist.Ip == ip && blocklist.Useragent == userAgent {
+		if blocklist.Ip == ip && (blocklist.Useragent == userAgent || blocklist.Useragent == "empty") {
 			return true
 		} else {
 			return false
 		}
 	} else if blocklist.Session != "" && blocklist.Useragent != "" {
-		if blocklist.Session == session && blocklist.Useragent == userAgent {
+		if blocklist.Session == session && (blocklist.Useragent == userAgent || blocklist.Useragent == "empty") {
 			return true
 		} else {
 			return false
 		}
-	} else if (blocklist.Ip != "" && blocklist.Ip == ip) || (blocklist.Useragent != "" && blocklist.Useragent == userAgent) || (blocklist.Session != "" && blocklist.Session == session) {
+	} else if (blocklist.Ip != "" && blocklist.Ip == ip) || (blocklist.Useragent != "" && (blocklist.Useragent == userAgent || blocklist.Useragent == "empty")) || (blocklist.Session != "" && blocklist.Session == session) {
 		return true
 	}
 	return false

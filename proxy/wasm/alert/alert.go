@@ -206,7 +206,8 @@ func getSource(configSource string, session string, userAgent string) (sourceRes
       sourceResponse = append(sourceResponse, [2]string{ "session", session })
     case "userAgent":
       if userAgent == "" {
-        err = fmt.Errorf("cannot ban with this decoy because user-agent is missing")
+        sourceResponse = append(sourceResponse, [2]string{ "userAgent", "empty" })
+        break;
       }
       sourceResponse = append(sourceResponse, [2]string{ "userAgent", userAgent })
     }
