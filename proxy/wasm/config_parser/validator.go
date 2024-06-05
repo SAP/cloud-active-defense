@@ -3,6 +3,7 @@ package config_parser
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
 	"strings"
 
@@ -204,7 +205,7 @@ func (v *validator) validateWhenFalse(obj ConditionType) {
 
 func (v *validator) validateDetect(obj DetectType) {
 	v.currentPlace = "filters[" + strconv.Itoa(v.currentFilterInd) + "].detect"
-  if obj == EmptyDetect() {
+  if reflect.ValueOf(obj) == reflect.ValueOf(EmptyDetect()) {
     return
   }
 	v.validateSeek(obj.Seek)
@@ -241,8 +242,19 @@ func (v *validator) validateAlert(obj AlertType) {
 	}
 }
 
-func (v *validator) validateRespond(obj RespondType) {
+func (v *validator) validateRespond(obj []RespondType) {
 	v.currentPlace = "filter[" + strconv.Itoa(v.currentFilterInd) + "].detect.respond"
+	if len(obj) == 0 {
+		return
+	} else {
+		for _, respond := range obj {
+			v.validateRespondItem(respond)
+		}
+	}
+	
+}
+
+func (v *validator) validateRespondItem(obj RespondType) {
 	if obj == EmptyRespond() {
 		return
 	}	

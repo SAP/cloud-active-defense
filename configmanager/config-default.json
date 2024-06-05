@@ -11,11 +11,13 @@
     }
   },
   "server": "",
-  "respond": {
-    "source": "",
-    "behavior": "",
-    "delay": "",
-    "duration": ""
-  },
+  "respond": [
+    {
+      "source": "",
+      "behavior": "",
+      "delay": "",
+      "duration": ""
+    }
+  ],
   "blocklistReload": 0
 }

@@ -14,7 +14,7 @@ type Config struct {
 type ConfigType struct {
 	Alert AlertConfig	`json:"config"`
 	Server string		`json:"server"`
-	Respond RespondType	`json:"respond"`
+	Respond []RespondType	`json:"respond"`
 	BlocklistReload int `json:"blocklistReload"`
 }
 
@@ -82,7 +82,7 @@ type AtType struct {
 type DetectType struct {
 	Seek  SeekType  `json:"seek"`
 	Alert AlertType `json:"alert"`
-	Respond RespondType	`json:"respond"`
+	Respond []RespondType	`json:"respond"`
 }
 
 type SeekType struct {

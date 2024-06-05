@@ -2,6 +2,7 @@ package alert
 
 import (
   "fmt"
+	"slices"
 	"strings"
   "sundew/config_parser"
 
@@ -119,8 +120,13 @@ func truncate(s string) string {
 func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string) map[string]string {
   updateBlocklist := map[string]string{ "delay": "now" ,"duration": "forever" }
   session := alerts[0].LogParameters["session"]
-  if config.Respond != config_parser.EmptyRespond() {
-    sources, err := getSource(config.Respond.Source, session, headers["user-agent"])
+  if config.Respond != nil && len(config.Respond) != 0 {
+    respond, err := getRespondPriority(config.Respond, session, headers["user-agent"])
+    if err != nil {
+      proxywasm.LogErrorf("error while setAlertAction: %s", err)
+      return map[string]string{}
+    }
+    sources, err := getSource(respond.Source, session, headers["user-agent"])
     if err != nil {
       proxywasm.LogErrorf("error while setAlertAction: %s", err)
       return map[string]string{}
@@ -131,18 +137,18 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     for _, source := range sources {
       updateBlocklist[source[0]] = source[1]
     }
-    updateBlocklist["behavior"] = config.Respond.Behavior
+    updateBlocklist["behavior"] = respond.Behavior
     if updateBlocklist["behavior"] == "throttle" {
-      updateBlocklist["property"] = config.Respond.Property
-      if config.Respond.Property == "" {
+      updateBlocklist["property"] = respond.Property
+      if respond.Property == "" {
         updateBlocklist["property"] = "30-120"
       }
     }
-    if config.Respond.Delay != "" {
-      updateBlocklist["delay"] = config.Respond.Delay
+    if respond.Delay != "" {
+      updateBlocklist["delay"] = respond.Delay
     }
-    if config.Respond.Duration != "" {
-      updateBlocklist["duration"] = config.Respond.Duration
+    if respond.Duration != "" {
+      updateBlocklist["duration"] = respond.Duration
     }
     updateBlocklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   }
@@ -150,15 +156,21 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
     return map[string]string{}
   }
 
-  if alerts[0].Filter.Detect.Respond == config_parser.EmptyRespond() {
+  if alerts[0].Filter.Detect.Respond == nil || len(alerts[0].Filter.Detect.Respond) == 0 {
     //if not set by global config return empty
     if updateBlocklist["behavior"] == "" {
       return map[string]string{}
     }
     return updateBlocklist
   }
-  updateBlocklist = map[string]string{ "delay": "now" ,"duration": "forever" }  
-  sources, err := getSource(alerts[0].Filter.Detect.Respond.Source, alerts[0].LogParameters["session"], headers["user-agent"])
+  updateBlocklist = map[string]string{ "delay": "now" ,"duration": "forever" }
+  
+  respond, err := getRespondPriority(alerts[0].Filter.Detect.Respond, alerts[0].LogParameters["session"], headers["user-agent"])
+  if err != nil {
+    proxywasm.LogErrorf("error while setAlertAction: %s", err)
+    return map[string]string{}
+  }
+  sources, err := getSource(respond.Source, session, headers["user-agent"])
   if err != nil {
     proxywasm.LogErrorf("%s", err)
     return map[string]string{}
@@ -169,18 +181,18 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
   for _, source := range sources {
     updateBlocklist[source[0]] = source[1]
   }
-  updateBlocklist["behavior"] = alerts[0].Filter.Detect.Respond.Behavior
+  updateBlocklist["behavior"] = respond.Behavior
   if updateBlocklist["behavior"] == "throttle" {
-    updateBlocklist["property"] = alerts[0].Filter.Detect.Respond.Property
-    if alerts[0].Filter.Detect.Respond.Property == ""{
+    updateBlocklist["property"] = respond.Property
+    if respond.Property == ""{
       updateBlocklist["property"] = "30-120"
     }
   }
-  if alerts[0].Filter.Detect.Respond.Delay != "" {
-    updateBlocklist["delay"] = alerts[0].Filter.Detect.Respond.Delay
+  if respond.Delay != "" {
+    updateBlocklist["delay"] = respond.Delay
   }
-  if alerts[0].Filter.Detect.Respond.Duration != "" {
-    updateBlocklist["duration"] = alerts[0].Filter.Detect.Respond.Duration
+  if respond.Duration != "" {
+    updateBlocklist["duration"] = respond.Duration
   }
   updateBlocklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
   return updateBlocklist
@@ -213,4 +225,76 @@ func getSource(configSource string, session string, userAgent string) (sourceRes
     }
   }
     return sourceResponse, err
+}
+
+func getRespondPriority(configRespond []config_parser.RespondType, session string, userAgent string) (config_parser.RespondType, error) { 
+  if len(configRespond) == 1 {
+    return configRespond[0], nil
+  }
+  ip, err := proxywasm.GetProperty([]string{"source", "address"})
+  if (err != nil) {
+    return config_parser.RespondType{}, fmt.Errorf("getRespondPriority: update blocklist: failed to fetch property: %v", err)
+  }
+  var highestRespond config_parser.RespondType
+  if len(configRespond) != 0 {
+    for _, itemRespond := range configRespond {
+      sources := strings.Split(strings.ReplaceAll(itemRespond.Source, " ", ""), ",")
+      if containsSource(sources, "ip", string(ip)) && containsSource(sources, "session", session) && containsSource(sources, "userAgent", userAgent) {
+        return itemRespond, nil
+      }
+      if containsSource(sources, "ip", string(ip)) && containsSource(sources, "session", session) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
+        highestRespond = itemRespond
+      } else if containsSource(sources, "session", session) && containsSource(sources, "userAgent", userAgent) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
+        highestRespond = itemRespond
+      } else if containsSource(sources, "session", session) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
+        highestRespond = itemRespond
+      } else if containsSource(sources, "ip", string(ip)) && containsSource(sources, "userAgent", userAgent) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
+        highestRespond = itemRespond
+      } else if containsSource(sources, "ip", string(ip)) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
+        highestRespond = itemRespond
+      } else if containsSource(sources, "userAgent", userAgent) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
+        highestRespond = itemRespond
+      }
+    }
+  }
+  return highestRespond, nil
+}
+
+func containsSource(slice []string ,key string, value string) bool {
+  return slices.Contains(slice, key) && value != ""
+}
+
+func hasHighestPriority(new, current []string) bool {
+  newPriority := 99
+  currentPriority := 99
+  type priorityType struct {
+    priority int
+    source []string
+  }
+  priorityList := []priorityType{{ 1, []string{"ip", "session"} }, { 2, []string{ "userAgent", "session" } }, { 3, []string{ "session" } },  { 4, []string{ "ip", "userAgent"} }, { 5, []string{ "ip" } }, { 6, []string{ "userAgent" } }}
+  for _, elem := range priorityList {
+    if unorderedEqual(elem.source, new) {
+      newPriority = elem.priority
+    }
+    if unorderedEqual(elem.source, current) {
+      currentPriority = elem.priority
+    }
+  }
+  return newPriority <= currentPriority
+}
+
+func unorderedEqual(first, second []string) bool {
+  if len(first) != len(second) {
+      return false
+  }
+  exists := make(map[string]bool)
+  for _, value := range first {
+      exists[value] = true
+  }
+  for _, value := range second {
+      if !exists[value] {
+          return false
+      }
+  }
+  return true
 }

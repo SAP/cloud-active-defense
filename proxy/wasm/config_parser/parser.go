@@ -67,13 +67,7 @@ func (p *Parser) jsonToStruct(content []byte) error {
 				},
 			}, 
 			Server: string(json.GetStringBytes("config", "server")),
-			Respond: RespondType{
-				Source: string(json.GetStringBytes("config", "respond", "source")),
-				Behavior: string(json.GetStringBytes("config", "respond", "behavior")),
-				Delay: string(json.GetStringBytes("config", "respond", "delay")),
-				Duration: string(json.GetStringBytes("config", "respond", "duration")),
-				Property: string(json.GetStringBytes("config", "respond", "property")),
-			},
+			Respond: *respondJsonToStruct(json.GetArray("config", "respond")),
 			BlocklistReload: int(json.GetInt("config", "blocklistReload")),
 		}
 	}
@@ -127,13 +121,7 @@ func (p *Parser) filterJsonToStruct(filterJs *fastjson.Value) *FilterType {
 				WhenModified: filterJs.Get("detect").Get("alert").GetBool("whenModified"),
 				WhenAbsent:   filterJs.Get("detect").Get("alert").GetBool("whenAbsent"),
 			},
-			Respond: RespondType{
-				Source: p.getString(filterJs, "detect", "respond", "source"),
-				Behavior:p. getString(filterJs, "detect", "respond", "behavior"),
-				Delay: p.getString(filterJs, "detect", "respond", "delay"),
-				Duration: p.getString(filterJs, "detect", "respond", "duration"),
-				Property: p.getString(filterJs, "detect", "respond", "property"),
-			},
+			Respond: *respondJsonToStruct(filterJs.Get("detect").GetArray("respond")),
 		},
 	}
 }
@@ -197,4 +185,21 @@ func unescapeNewlines(str string) string {
     newline = strings.Index(str, "\n") 
   }
   return str
+}
+
+func respondJsonToStruct(respondJs []*fastjson.Value) *[]RespondType {
+	respond := []RespondType{}
+	for _, elem := range respondJs {
+		item := RespondType{
+			Source: string(elem.GetStringBytes("source")),
+			Behavior: string(elem.GetStringBytes("behavior")),
+			Delay: string(elem.GetStringBytes("delay")),
+			Duration: string(elem.GetStringBytes("duration")),
+			Property: string(elem.GetStringBytes("property")),
+		}
+		if item != EmptyRespond() {
+			respond = append(respond, item)
+		}
+	}
+	return &respond
 }
