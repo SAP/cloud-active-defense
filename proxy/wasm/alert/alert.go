@@ -2,7 +2,9 @@ package alert
 
 import (
   "fmt"
+	"math/rand"
 	"slices"
+	"strconv"
 	"strings"
   "sundew/config_parser"
 
@@ -145,7 +147,14 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
       }
     }
     if respond.Delay != "" {
-      updateBlocklist["delay"] = respond.Delay
+      splitDelay := strings.Split(respond.Delay, "-")
+      if len(splitDelay) == 2 {
+        min, _ := strconv.Atoi(splitDelay[0][:len(splitDelay[0])-1])
+        max, _ := strconv.Atoi(splitDelay[1][:len(splitDelay[1])-1])
+        updateBlocklist["delay"] = strconv.Itoa(rand.Intn(max - min + 1) + min) + string(respond.Delay[len(respond.Delay)-1])
+      } else {
+        updateBlocklist["delay"] = respond.Delay
+      }
     }
     if respond.Duration != "" {
       updateBlocklist["duration"] = respond.Duration

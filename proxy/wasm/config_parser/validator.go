@@ -388,9 +388,18 @@ func validBehavior(s string) bool {
 }
 
 func validDelay(s string) bool {
-	lastChar := string(s[len(s)-1])
-	if lastChar == "s" || lastChar == "m" || lastChar == "h" || s == "now" {
-		return true
+	splitDelay := strings.Split(s, "-")
+	if len(splitDelay) == 2 {
+		lastCharFirst := string(splitDelay[0][len(splitDelay[0])-1])
+		lastCharSecond := string(splitDelay[1][len(splitDelay[1])-1])
+		if (lastCharFirst == "s" || lastCharFirst == "m" || lastCharFirst == "h") && (lastCharSecond == "s" || lastCharSecond == "m" || lastCharSecond == "h") && lastCharFirst == lastCharSecond {
+			return true
+		} 
+	} else {
+		lastChar := string(s[len(s)-1])
+		if lastChar == "s" || lastChar == "m" || lastChar == "h" || s == "now" {
+			return true
+		}
 	}
 	return false
 }
