@@ -125,7 +125,6 @@ app.get('/blocklist', (req, res) => {
       }
       if (new Date() >= unbanDate){
         blocklist.list.splice(i, 1)
-        console.log(blocklist)
       }
       i++
     }
