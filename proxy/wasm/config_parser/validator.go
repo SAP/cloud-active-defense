@@ -268,7 +268,7 @@ func (v *validator) validateRespondItem(obj RespondType) {
 		v.addError(v.currentPlace + ".behavior", "needs to be drop, error or divert")
 	}
 	if !breaksRequired(obj.Delay) && !validDelay(obj.Delay) {
-		v.addError(v.currentPlace + ".delay", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or now")
+		v.addError(v.currentPlace + ".delay", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or now, and must be in a correct format (ex: 10s-20s or 10s)")
 	}
 	if !breaksRequired(obj.Duration) && !validDuration(obj.Duration) {
 		v.addError(v.currentPlace + ".duration", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or forever")
@@ -393,7 +393,9 @@ func validDelay(s string) bool {
 		lastCharFirst := string(splitDelay[0][len(splitDelay[0])-1])
 		lastCharSecond := string(splitDelay[1][len(splitDelay[1])-1])
 		if (lastCharFirst == "s" || lastCharFirst == "m" || lastCharFirst == "h") && (lastCharSecond == "s" || lastCharSecond == "m" || lastCharSecond == "h") && lastCharFirst == lastCharSecond {
-			return true
+			firstNumber := splitDelay[0][:len(splitDelay[0])-1]
+			secondNumber := splitDelay[1][:len(splitDelay[1])-1]
+			return firstNumber < secondNumber
 		} 
 	} else {
 		lastChar := string(s[len(s)-1])
