@@ -421,7 +421,7 @@ func validThrottleProperty(s string) bool {
 		if err != nil { return false }
 		max, err := strconv.Atoi(splitProperty[1])
 		if err != nil { return false }
-		if max >= min { return false }
+		if max <= min { return false }
 		return true
 	} else {
 		_, err := strconv.Atoi(s)
