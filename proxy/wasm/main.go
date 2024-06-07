@@ -193,6 +193,7 @@ type httpContext struct {
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) types.Action {
+  var action, property string
   if numHeaders > 0 {
     removeContentLengthHeader("request")
     headers, err := proxywasm.GetHttpRequestHeaders()
@@ -205,6 +206,18 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
     if err != nil {
       proxywasm.LogCriticalf("failed to extract request headers: %s", err.Error())
       return types.ActionPause
+    }
+
+    action, property = block.IsBanned(blocklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
+    if action != "continue" {
+      blocked = true
+    } else {
+      blocked = false
+    }
+    if action == "pause" {
+      return types.ActionPause
+    } else if action == "clone" {
+      ctx.request.Headers[":authority"] = "clone"
     }
 
     err, ctx.request = inject.OnHttpRequestHeaders(ctx.request, ctx.config)
@@ -251,17 +264,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
     proxywasm.LogErrorf("could not add request header (%s= %s): %s", "Cookie", strCookie, err.Error())
   }
 
-  action, property := block.IsBanned(blocklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
-  if action != "continue" {
-    blocked = true
-  } else {
-    blocked = false
-  }
-  if action == "pause" {
-    return types.ActionPause
-  } else if action == "clone" {
-    ctx.request.Headers[":authority"] = "clone"
-  } else if action == "throttle" {
+  if action == "throttle" {
     ctx.pluginCtx.postponed = append(ctx.pluginCtx.postponed, ctx.contextID)
     splitProperty := strings.Split(property, "-")
     if len(splitProperty) == 2 {
