@@ -272,7 +272,6 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
       throttle, _ := strconv.Atoi(property)
       throttleTickMilliseconds = uint32(throttle)
     }
-    proxywasm.LogWarn("----pause")
     return types.ActionPause
   }
   
