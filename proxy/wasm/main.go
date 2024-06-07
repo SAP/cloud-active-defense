@@ -206,29 +206,6 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
       proxywasm.LogCriticalf("failed to extract request headers: %s", err.Error())
       return types.ActionPause
     }
-    action, property := block.IsBanned(blocklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
-    if action != "continue" {
-      blocked = true
-    } else {
-      blocked = false
-    }
-    if action == "pause" {
-      return types.ActionPause
-    } else if action == "clone" {
-      ctx.request.Headers[":authority"] = "clone"
-    } else if action == "throttle" {
-      ctx.pluginCtx.postponed = append(ctx.pluginCtx.postponed, ctx.contextID)
-      splitProperty := strings.Split(property, "-")
-      if len(splitProperty) == 2 {
-        min, _ := strconv.Atoi(splitProperty[0])
-        max, _ := strconv.Atoi(splitProperty[1])
-        throttleTickMilliseconds = uint32(rand.Intn(max - min + 1) + min)
-      } else {
-        throttle, _ := strconv.Atoi(property)
-        throttleTickMilliseconds = uint32(throttle)
-      }
-      return types.ActionPause
-    }
 
     err, ctx.request = inject.OnHttpRequestHeaders(ctx.request, ctx.config)
     if err != nil {
@@ -273,6 +250,32 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
   if err != nil {
     proxywasm.LogErrorf("could not add request header (%s= %s): %s", "Cookie", strCookie, err.Error())
   }
+
+  action, property := block.IsBanned(blocklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
+  if action != "continue" {
+    blocked = true
+  } else {
+    blocked = false
+  }
+  if action == "pause" {
+    return types.ActionPause
+  } else if action == "clone" {
+    ctx.request.Headers[":authority"] = "clone"
+  } else if action == "throttle" {
+    ctx.pluginCtx.postponed = append(ctx.pluginCtx.postponed, ctx.contextID)
+    splitProperty := strings.Split(property, "-")
+    if len(splitProperty) == 2 {
+      min, _ := strconv.Atoi(splitProperty[0])
+      max, _ := strconv.Atoi(splitProperty[1])
+      throttleTickMilliseconds = uint32(rand.Intn(max - min + 1) + min)
+    } else {
+      throttle, _ := strconv.Atoi(property)
+      throttleTickMilliseconds = uint32(throttle)
+    }
+    proxywasm.LogWarn("----pause")
+    return types.ActionPause
+  }
+  
   return types.ActionContinue
 }
 
