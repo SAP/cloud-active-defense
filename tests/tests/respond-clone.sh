@@ -19,12 +19,12 @@ config='
           "severity": "HIGH",
           "whenComplete": true
         },
-        "respond": {
+        "respond": [{
           "source": "ip",
           "behavior": "divert",
           "delay": "5s",
           "duration": "forever"
-        }
+        }]
       }
     }
   ]

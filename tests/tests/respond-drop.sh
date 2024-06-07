@@ -19,12 +19,12 @@ config='
           "severity": "HIGH",
           "whenComplete": true
         },
-        "respond": {
+        "respond": [{
           "source": "ip, session",
           "behavior": "drop",
           "duration": "1h",
           "delay": "now"
-        }
+        }]
       }
     }
   ]

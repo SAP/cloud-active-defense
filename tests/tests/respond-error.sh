@@ -27,11 +27,11 @@ config='
 # Configure global config
 globalconfig='
 {
-  "respond": {
+  "respond": [{
     "source": "userAgent",
     "behavior": "error",
     "delay": "now"
-  },
+  }],
   "blocklistReload": 1
 }
 '

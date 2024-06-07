@@ -27,11 +27,11 @@ config='
 # Configure global config
 globalconfig='
 {
-  "respond": {
+  "respond": [{
     "source": "ip, userAgent",
     "behavior": "throttle",
     "property": "10"
-  },
+  }],
   "blocklistReload": 1
 }
 '
