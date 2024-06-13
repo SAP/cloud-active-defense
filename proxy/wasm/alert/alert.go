@@ -3,14 +3,14 @@ package alert
 import (
   "fmt"
 	"math/rand"
-	"slices"
+	"reflect"
 	"strconv"
 	"strings"
   "sundew/config_parser"
 
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	//"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
-	"time"
+  "time"
   "encoding/json"
 )
 
@@ -119,92 +119,102 @@ func truncate(s string) string {
   return s
 }
 
-func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string) map[string]string {
-  updateBlocklist := map[string]string{ "delay": "now" ,"duration": "forever" }
+func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string, blocklist, throttlelist []config_parser.BlocklistType) ([]map[string]string, []map[string]string) {
+  var updateBlocklist []map[string]string
+  var updateThrottleList []map[string]string
   session := alerts[0].LogParameters["session"]
   if config.Respond != nil && len(config.Respond) != 0 {
-    respond, err := getRespondPriority(config.Respond, session, headers["user-agent"])
-    if err != nil {
-      proxywasm.LogErrorf("error while setAlertAction: %s", err)
-      return map[string]string{}
-    }
-    sources, err := getSource(respond.Source, session, headers["user-agent"])
-    if err != nil {
-      proxywasm.LogErrorf("error while setAlertAction: %s", err)
-      return map[string]string{}
-    }
-    if len(sources) == 0 {
-      return map[string]string{}
-    }
-    for _, source := range sources {
-      updateBlocklist[source[0]] = source[1]
-    }
-    updateBlocklist["behavior"] = respond.Behavior
-    if updateBlocklist["behavior"] == "throttle" {
-      updateBlocklist["property"] = respond.Property
-      if respond.Property == "" {
-        updateBlocklist["property"] = "30-120"
+    for _, respondItem := range config.Respond {
+      updateBlocklistItem := map[string]string{ "delay": "now" ,"duration": "forever" }
+      sources, err := getSource(respondItem.Source, session, headers["user-agent"])
+      if err != nil {
+        respondJson, _ := json.Marshal(respondItem)
+        proxywasm.LogErrorf("error while setAlertAction: %s: %s", err, respondJson)
+        continue;
       }
-    }
-    if respond.Delay != "" {
-      splitDelay := strings.Split(respond.Delay, "-")
-      if len(splitDelay) == 2 {
-        min, _ := strconv.Atoi(splitDelay[0][:len(splitDelay[0])-1])
-        max, _ := strconv.Atoi(splitDelay[1][:len(splitDelay[1])-1])
-        updateBlocklist["delay"] = strconv.Itoa(rand.Intn(max - min + 1) + min) + string(respond.Delay[len(respond.Delay)-1])
-      } else {
-        updateBlocklist["delay"] = respond.Delay
+      if len(sources) == 0 || len(strings.Split(respondItem.Source, ",")) != len(sources) {
+        continue;
       }
-    }
-    if respond.Duration != "" {
-      updateBlocklist["duration"] = respond.Duration
-    }
-    updateBlocklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
-  }
-  if len(alerts) == 0 {
-    return map[string]string{}
-  }
+      for _, source := range sources {
+        updateBlocklistItem[source[0]] = source[1]
+      }
+      updateBlocklistItem["behavior"] = respondItem.Behavior
+      if respondItem.Delay != "" {
+        splitDelay := strings.Split(respondItem.Delay, "-")
+        if len(splitDelay) == 2 {
+          min, _ := strconv.Atoi(splitDelay[0][:len(splitDelay[0])-1])
+          max, _ := strconv.Atoi(splitDelay[1][:len(splitDelay[1])-1])
+          updateBlocklistItem["delay"] = strconv.Itoa(rand.Intn(max - min + 1) + min) + string(respondItem.Delay[len(respondItem.Delay)-1])
+        } else {
+          updateBlocklistItem["delay"] = respondItem.Delay
+        }
+      }
+      if respondItem.Duration != "" {
+        updateBlocklistItem["duration"] = respondItem.Duration
+      }
+      updateBlocklistItem["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
 
-  if alerts[0].Filter.Detect.Respond == nil || len(alerts[0].Filter.Detect.Respond) == 0 {
-    //if not set by global config return empty
-    if updateBlocklist["behavior"] == "" {
-      return map[string]string{}
-    }
-    return updateBlocklist
-  }
-  updateBlocklist = map[string]string{ "delay": "now" ,"duration": "forever" }
-  
-  respond, err := getRespondPriority(alerts[0].Filter.Detect.Respond, alerts[0].LogParameters["session"], headers["user-agent"])
-  if err != nil {
-    proxywasm.LogErrorf("error while setAlertAction: %s", err)
-    return map[string]string{}
-  }
-  sources, err := getSource(respond.Source, session, headers["user-agent"])
-  if err != nil {
-    proxywasm.LogErrorf("%s", err)
-    return map[string]string{}
-  }
-  if len(sources) == 0 {
-    return map[string]string{}
-  }
-  for _, source := range sources {
-    updateBlocklist[source[0]] = source[1]
-  }
-  updateBlocklist["behavior"] = respond.Behavior
-  if updateBlocklist["behavior"] == "throttle" {
-    updateBlocklist["property"] = respond.Property
-    if respond.Property == ""{
-      updateBlocklist["property"] = "30-120"
+      if updateBlocklistItem["behavior"] == "throttle" {
+        updateBlocklistItem["property"] = respondItem.Property
+        if respondItem.Property == "" {
+          updateBlocklistItem["property"] = "30-120"
+        }
+        if doesNotContains(throttlelist, updateBlocklistItem) {
+          updateThrottleList = append(updateThrottleList, updateBlocklistItem)
+          continue;
+        }
+      }
+      if doesNotContains(blocklist, updateBlocklistItem) {
+        updateBlocklist = append(updateBlocklist, updateBlocklistItem)
+      }
     }
   }
-  if respond.Delay != "" {
-    updateBlocklist["delay"] = respond.Delay
+  if alerts[0].Filter.Detect.Respond != nil && len(alerts[0].Filter.Detect.Respond) != 0 {
+    for _, respondItem := range alerts[0].Filter.Detect.Respond {
+      updateBlocklistItem := map[string]string{ "delay": "now" ,"duration": "forever" }
+      sources, err := getSource(respondItem.Source, session, headers["user-agent"])
+      if err != nil {
+        respondJson, _ := json.Marshal(respondItem)
+        proxywasm.LogErrorf("error while setAlertAction: %s: %s", err, string(respondJson))
+        continue;
+      }
+      if len(sources) == 0 || len(strings.Split(respondItem.Source, ",")) != len(sources) {
+        continue;
+      }
+      for _, source := range sources {
+        updateBlocklistItem[source[0]] = source[1]
+      }
+      updateBlocklistItem["behavior"] = respondItem.Behavior
+      if respondItem.Delay != "" {
+        splitDelay := strings.Split(respondItem.Delay, "-")
+        if len(splitDelay) == 2 {
+          min, _ := strconv.Atoi(splitDelay[0][:len(splitDelay[0])-1])
+          max, _ := strconv.Atoi(splitDelay[1][:len(splitDelay[1])-1])
+          updateBlocklistItem["delay"] = strconv.Itoa(rand.Intn(max - min + 1) + min) + string(respondItem.Delay[len(respondItem.Delay)-1])
+        } else {
+          updateBlocklistItem["delay"] = respondItem.Delay
+        }
+      }
+      if respondItem.Duration != "" {
+        updateBlocklistItem["duration"] = respondItem.Duration
+      }
+      updateBlocklistItem["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
+      if updateBlocklistItem["behavior"] == "throttle" {
+        updateBlocklistItem["property"] = respondItem.Property
+        if respondItem.Property == "" {
+          updateBlocklistItem["property"] = "30-120"
+        }
+        if doesNotContains(throttlelist, updateBlocklistItem){
+          updateThrottleList = append(updateThrottleList, updateBlocklistItem)
+        }
+        continue;
+      }
+      if doesNotContains(blocklist, updateBlocklistItem) {
+        updateBlocklist = append(updateBlocklist, updateBlocklistItem)
+      }
+    }
   }
-  if respond.Duration != "" {
-    updateBlocklist["duration"] = respond.Duration
-  }
-  updateBlocklist["timeDetected"] = time.Now().Format("01-02-2006 15:04:05")
-  return updateBlocklist
+  return updateThrottleList, updateBlocklist
 }
 
 func getSource(configSource string, session string, userAgent string) (sourceResponse [][2]string, err error) {
@@ -227,8 +237,7 @@ func getSource(configSource string, session string, userAgent string) (sourceRes
       sourceResponse = append(sourceResponse, [2]string{ "session", session })
     case "userAgent":
       if userAgent == "" {
-        sourceResponse = append(sourceResponse, [2]string{ "userAgent", "empty" })
-        break;
+        userAgent = "empty"
       }
       sourceResponse = append(sourceResponse, [2]string{ "userAgent", userAgent })
     }
@@ -236,74 +245,40 @@ func getSource(configSource string, session string, userAgent string) (sourceRes
     return sourceResponse, err
 }
 
-func getRespondPriority(configRespond []config_parser.RespondType, session string, userAgent string) (config_parser.RespondType, error) { 
-  if len(configRespond) == 1 {
-    return configRespond[0], nil
+func toMapFiltered(s config_parser.BlocklistType) map[string]string {
+	m := make(map[string]string)
+  if s.Ip != "" {
+	  m["ip"] = s.Ip
   }
-  ip, err := proxywasm.GetProperty([]string{"source", "address"})
-  if (err != nil) {
-    return config_parser.RespondType{}, fmt.Errorf("getRespondPriority: update blocklist: failed to fetch property: %v", err)
+  if s.Useragent != "" {
+	  m["userAgent"] = s.Useragent
   }
-  var highestRespond config_parser.RespondType
-  if len(configRespond) != 0 {
-    for _, itemRespond := range configRespond {
-      sources := strings.Split(strings.ReplaceAll(itemRespond.Source, " ", ""), ",")
-      if containsSource(sources, "ip", string(ip)) && containsSource(sources, "session", session) && containsSource(sources, "userAgent", userAgent) {
-        return itemRespond, nil
-      }
-      if containsSource(sources, "ip", string(ip)) && containsSource(sources, "session", session) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
-        highestRespond = itemRespond
-      } else if containsSource(sources, "session", session) && containsSource(sources, "userAgent", userAgent) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
-        highestRespond = itemRespond
-      } else if containsSource(sources, "session", session) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
-        highestRespond = itemRespond
-      } else if containsSource(sources, "ip", string(ip)) && containsSource(sources, "userAgent", userAgent) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
-        highestRespond = itemRespond
-      } else if containsSource(sources, "ip", string(ip)) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
-        highestRespond = itemRespond
-      } else if containsSource(sources, "userAgent", userAgent) && hasHighestPriority(sources, strings.Split(strings.ReplaceAll(highestRespond.Source, " ", ""), ",")) {
-        highestRespond = itemRespond
-      }
-    }
+	if s.Session != "" {
+    m["session"] = s.Session
   }
-  return highestRespond, nil
+  if s.Property != "" {
+    m["property"] = s.Property
+  }
+  m["behavior"] = s.Behavior
+  return m
 }
 
-func containsSource(slice []string ,key string, value string) bool {
-  return slices.Contains(slice, key) && value != ""
+func filterMapEle(m map[string]string, keys []string) map[string]string {
+  mm := make(map[string]string)
+  for key, value := range m {
+    mm[key] = value
+  }
+	for _, key := range keys {
+		delete(mm, key)
+	}
+	return mm
 }
 
-func hasHighestPriority(new, current []string) bool {
-  newPriority := 99
-  currentPriority := 99
-  type priorityType struct {
-    priority int
-    source []string
-  }
-  priorityList := []priorityType{{ 1, []string{"ip", "session"} }, { 2, []string{ "userAgent", "session" } }, { 3, []string{ "session" } },  { 4, []string{ "ip", "userAgent"} }, { 5, []string{ "ip" } }, { 6, []string{ "userAgent" } }}
-  for _, elem := range priorityList {
-    if unorderedEqual(elem.source, new) {
-      newPriority = elem.priority
-    }
-    if unorderedEqual(elem.source, current) {
-      currentPriority = elem.priority
-    }
-  }
-  return newPriority <= currentPriority
-}
-
-func unorderedEqual(first, second []string) bool {
-  if len(first) != len(second) {
-      return false
-  }
-  exists := make(map[string]bool)
-  for _, value := range first {
-      exists[value] = true
-  }
-  for _, value := range second {
-      if !exists[value] {
-          return false
-      }
-  }
-  return true
+func doesNotContains(slice []config_parser.BlocklistType, element map[string]string) bool {
+	for _, a := range slice {
+		if reflect.DeepEqual(toMapFiltered(a), filterMapEle(element, []string{"delay", "duration", "timeDetected"})) {
+			return false
+		}
+	}
+	return true
 }

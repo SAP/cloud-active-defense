@@ -18,12 +18,29 @@ func IsBanned(blocklist []config_parser.BlocklistType, headers map[string]string
     if (err != nil) {
       fmt.Errorf("failed to fetch property: %v", err)
     }
-	for _, bl := range blocklist {
-		if checkSource(bl, headers["user-agent"], session, strings.Split(string(sourceIP), ":")[0]) {
-			return behaviorAction(bl), bl.Property
-		}
+	bl := findSourcePriority(blocklist, session, headers["user-agent"], strings.Split(string(sourceIP), ":")[0])
+	if bl != config_parser.EmptyBlocklist() {
+		return behaviorAction(bl), bl.Property
 	}
 	return "continue", ""
+}
+
+func IsThrottled(throttleList []config_parser.BlocklistType, headers, cookies map[string]string, config config_parser.AlertConfig) string {
+	session, _ := detect.FindSession(map[string]map[string]string{"header": headers, "cookie": cookies, "payload": { "payload": "" }}, nil, config)
+	sourceIP, err := proxywasm.GetProperty([]string{"source", "address"})
+    if (err != nil) {
+      fmt.Errorf("failed to fetch property: %v", err)
+    }
+	
+	th := findSourcePriority(throttleList, session, headers["user-agent"], strings.Split(string(sourceIP), ":")[0])
+	if th != config_parser.EmptyBlocklist() {
+		if th.Property == "" {
+			return "30-120"
+		}
+		return th.Property
+	}
+	
+	return ""
 }
 
 func behaviorAction(bl config_parser.BlocklistType) string {
@@ -40,8 +57,6 @@ func behaviorAction(bl config_parser.BlocklistType) string {
 		return "pause"
 	} else if bl.Behavior == "divert" {
 		return "clone"
-	} else if bl.Behavior == "throttle" {
-		return "throttle"
 	}
 	return "continue"
 }
@@ -73,24 +88,74 @@ func isTimeout(bl config_parser.BlocklistType) bool {
 	return false
 }
 
-func AppendBlocklist(blocklist []config_parser.BlocklistType, elem map[string]string) []config_parser.BlocklistType{
-	newElement := config_parser.BlocklistType{ Behavior: elem["behavior"], Duration: elem["duration"], Delay: elem["delay"], TimeDetected: elem["timeDetected"] }
-	if elem["property"] != "" {
-		newElement.Property = elem["property"]
+func AppendBlocklist(blocklist []config_parser.BlocklistType, elements []map[string]string) []config_parser.BlocklistType{
+	for _, elem := range elements {
+		newElement := config_parser.BlocklistType{ Behavior: elem["behavior"], Duration: elem["duration"], Delay: elem["delay"], TimeDetected: elem["timeDetected"] }
+		if elem["property"] != "" {
+			newElement.Property = elem["property"]
+		}
+		if elem["ip"] != "" {
+			newElement.Ip = elem["ip"]
+		} else if elem["session"] != "" {
+			newElement.Session = elem["session"]
+		} else if elem["userAgent"] != "" {
+			newElement.Useragent = elem["userAgent"]
+		}
+		blocklist = append(blocklist, newElement)
 	}
-	if elem["ip"] != "" {
-		newElement.Ip = elem["ip"]
-	} else if elem["session"] != "" {
-		newElement.Session = elem["session"]
-	} else if elem["userAgent"] != "" {
-		newElement.Useragent = elem["userAgent"]
+	return blocklist
+}
+
+func findSourcePriority(blocklist []config_parser.BlocklistType, session, userAgent, ip string) config_parser.BlocklistType{
+	if len(blocklist) == 0 {
+		return config_parser.BlocklistType{}
 	}
-	return append(blocklist, newElement)
+	var highestBlock config_parser.BlocklistType
+	var highestPriority int = 99
+	if userAgent == "" {
+		userAgent = "empty"
+	}
+	for _, block := range blocklist {
+		if (session != "" && block.Session == session) && (ip != "" && block.Ip == ip) && (userAgent != "" && block.Useragent == userAgent){
+			return block
+		} else if (session != "" && block.Session == session) && (ip != "" && block.Ip == ip){
+			if highestPriority > 1 {
+				highestPriority = 1
+				highestBlock = block
+			}
+		} else if (session != "" && block.Session == session) && (userAgent != "" && block.Useragent == userAgent){
+			if highestPriority > 2 {
+				highestPriority = 2
+				highestBlock = block
+			}
+		} else if (session != "" && block.Session == session) {
+			if highestPriority > 3 {
+				highestPriority = 3
+				highestBlock = block
+			}
+		} else if (ip != "" && block.Ip == ip) && (userAgent != "" && block.Useragent == userAgent) {
+			if highestPriority > 4 {
+				highestPriority = 4
+				highestBlock = block
+			}
+		} else if (ip != "" && block.Ip == ip){
+			if highestPriority > 5 {
+				highestPriority = 5
+				highestBlock = block
+			}
+		} else if (userAgent != "" && block.Useragent == userAgent) {
+			if highestPriority > 6 {
+				highestPriority = 6
+				highestBlock = block
+			}
+		}
+	}
+	return highestBlock
 }
 
 func checkSource(blocklist config_parser.BlocklistType, userAgent string, session string, ip string) bool {
 	if blocklist.Ip != "" && blocklist.Session != "" && blocklist.Useragent != "" {
-		if blocklist.Ip == ip && blocklist.Session == session && (blocklist.Useragent == userAgent || blocklist.Useragent == "empty") {
+		if blocklist.Ip == ip && blocklist.Session == session && blocklist.Useragent == userAgent {
 			return true
 		} else {
 			return false
@@ -102,18 +167,18 @@ func checkSource(blocklist config_parser.BlocklistType, userAgent string, sessio
 			return false
 		}
 	} else if blocklist.Ip != "" && blocklist.Useragent != "" {
-		if blocklist.Ip == ip && (blocklist.Useragent == userAgent || blocklist.Useragent == "empty") {
+		if blocklist.Ip == ip && blocklist.Useragent == userAgent  {
 			return true
 		} else {
 			return false
 		}
 	} else if blocklist.Session != "" && blocklist.Useragent != "" {
-		if blocklist.Session == session && (blocklist.Useragent == userAgent || blocklist.Useragent == "empty") {
+		if blocklist.Session == session && blocklist.Useragent == userAgent {
 			return true
 		} else {
 			return false
 		}
-	} else if (blocklist.Ip != "" && blocklist.Ip == ip) || (blocklist.Useragent != "" && (blocklist.Useragent == userAgent || blocklist.Useragent == "empty")) || (blocklist.Session != "" && blocklist.Session == session) {
+	} else if (blocklist.Ip != "" && blocklist.Ip == ip) || (blocklist.Useragent != "" && blocklist.Useragent == userAgent) || (blocklist.Session != "" && blocklist.Session == session) {
 		return true
 	}
 	return false

@@ -67,3 +67,7 @@ func EmptyAlert() AlertType {
 func EmptyRespond() RespondType {
   return RespondType{"", "", "", "", ""}
 }
+
+func EmptyBlocklist() BlocklistType {
+  return BlocklistType{"", "", "", "", "", "", "", ""}
+}
