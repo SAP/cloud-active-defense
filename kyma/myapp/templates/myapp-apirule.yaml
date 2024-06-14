@@ -1,0 +1,19 @@
+apiVersion: gateway.kyma-project.io/v1beta1
+kind: APIRule
+metadata:
+  name: myapp-apirule
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: myapp
+spec:
+  host: myapp.{{ .Values.gateway }} # A modifier si vous etes dans un trial account BTP
+  service:
+    name: myapp-service
+    port: 80
+  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  rules:
+    - path: /.*
+      methods: ["GET","POST"]
+      accessStrategies:
+        - handler: noop
+      mutators: []

@@ -1,0 +1,27 @@
+{
+    "filters": [
+      {
+        "decoy": {
+          "key": "x-cloud-active-defense",
+          "separator": "=",
+          "value": "ACTIVE"
+        },
+        "inject": {
+          "store": {
+            "inResponse": ".*",
+            "as": "header"
+          }
+        },
+        "detect": {
+          "seek": {
+            "inRequest": ".*",
+            "in": "url"
+          },
+          "alert": {
+            "severity": "LOW",
+            "whenSeen": true
+          }
+        }
+      }
+    ]
+  }

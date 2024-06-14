@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fluent-config
+  namespace: {{ .Values.namespace }}
+data:
+  fluent-bit.conf: |
+    [SERVICE]
+      Log_Level info
+
+    [INPUT]
+      Name              tail
+      Tag               kube.*
+      Path              /var/log/containers/myapp*.log
+      Parser            docker
+      DB                /var/log/flb_kube.db
+      Mem_Buf_Limit     1MB
+      Refresh_Interval  10
+
+    [OUTPUT]
+      Name stdout
+      Match *
+      Format json
+      Json_date_key timestamp
+      Json_date_format iso8601
+
+    [FILTER]
+      Name                kubernetes 
+      Match               kube.*
+      Kube_URL            https://kubernetes.default.svc.cluster.local:443
+      Merge_Log           Off
+      K8S-Logging.Parser  On
+
+    [FILTER]
+      Name    grep
+      Match   *  
+      Regex   $log['alert'] true
+
+  parsers.conf: |
+    [PARSER]
+      Name         docker
+      Format       json
+      Time_Key     time
+      Time_Format  %Y-%m-%dT%H:%M:%S.%L
+      Time_Keep    On
