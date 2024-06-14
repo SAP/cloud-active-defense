@@ -106,7 +106,10 @@ app.get('/:namespace/:application', (req, res) => {
 
 app.get('/blocklist', (req, res) => {
   fs.access("/data/blocklist/blocklist.json", fs.constants.F_OK, err => {
-    if (err) return res.json({})
+    if (err) {
+      fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
+      return res.json({list: []})
+    }
     const blocklist = JSON.parse(fs.readFileSync("/data/blocklist/blocklist.json", 'utf8'))
     i = 0
     for (const elem of blocklist.list) {
@@ -153,7 +156,10 @@ app.post('/blocklist', (req, res) => {
 
 app.get('/throttlelist', (req, res) => {
   fs.access("/data/blocklist/throttlelist.json", fs.constants.F_OK, err => {
-    if (err) return res.json({})
+    if (err) {
+      fs.writeFileSync("/data/blocklist/throttlelist.json", `{"list":[]}`, 'utf8')
+      return res.json({list: []})
+    }
     const throttlelist = JSON.parse(fs.readFileSync("/data/blocklist/throttlelist.json", 'utf8'))
     i = 0
     for (const elem of throttlelist.list) {
