@@ -120,8 +120,8 @@ func truncate(s string) string {
 }
 
 func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string, blocklist, throttlelist []config_parser.BlocklistType) ([]map[string]string, []map[string]string) {
-  var updateBlocklist []map[string]string
-  var updateThrottleList []map[string]string
+  var updateBlocklist []map[string]string = []map[string]string{}
+  var updateThrottleList []map[string]string = []map[string]string{}
   session := alerts[0].LogParameters["session"]
   if config.Respond != nil && len(config.Respond) != 0 {
     for _, respondItem := range config.Respond {
