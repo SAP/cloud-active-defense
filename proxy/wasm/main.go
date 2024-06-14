@@ -489,6 +489,6 @@ func (ctx *httpContext) OnHttpStreamDone() {
 
     throttlelist = block.AppendBlocklist(throttlelist, updateThrottleList)
     throttlelistjson, _ := json.Marshal(throttlelist)
-    proxywasm.SetSharedData("blocklist", []byte("{\"list\":" + string(throttlelistjson) + "}"), 0)
+    proxywasm.SetSharedData("throttlelist", []byte("{\"list\":" + string(throttlelistjson) + "}"), 0)
   }
 }

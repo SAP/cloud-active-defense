@@ -161,8 +161,8 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
         }
         if doesNotContains(throttlelist, updateBlocklistItem) {
           updateThrottleList = append(updateThrottleList, updateBlocklistItem)
-          continue;
         }
+        continue;
       }
       if doesNotContains(blocklist, updateBlocklistItem) {
         updateBlocklist = append(updateBlocklist, updateBlocklistItem)

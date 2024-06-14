@@ -96,9 +96,11 @@ func AppendBlocklist(blocklist []config_parser.BlocklistType, elements []map[str
 		}
 		if elem["ip"] != "" {
 			newElement.Ip = elem["ip"]
-		} else if elem["session"] != "" {
+		}
+		if elem["session"] != "" {
 			newElement.Session = elem["session"]
-		} else if elem["userAgent"] != "" {
+		}
+		if elem["userAgent"] != "" {
 			newElement.Useragent = elem["userAgent"]
 		}
 		blocklist = append(blocklist, newElement)
