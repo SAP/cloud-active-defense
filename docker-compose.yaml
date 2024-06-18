@@ -10,6 +10,8 @@ services:
     container_name: configmanager
     build: configmanager
     image: configmanager
+    volumes:
+      - configvolume:/data/blocklist
 
   proxy:
     container_name: proxy
@@ -19,6 +21,7 @@ services:
     - "8000:8000"
     depends_on:
     - myapp
+    - clone
     - fluent
     logging:
       driver: fluentd
@@ -32,3 +35,11 @@ services:
       - "24224:24224"
       - "24224:24224/udp"
 
+  clone:
+    container_name: clone
+    build: clone
+    image: clone
+
+
+volumes:
+  configvolume: {}

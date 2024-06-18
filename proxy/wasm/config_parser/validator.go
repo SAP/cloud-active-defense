@@ -3,7 +3,10 @@ package config_parser
 import (
 	"errors"
 	"fmt"
+	"reflect"
 	"strconv"
+	"strings"
+
 )
 
 
@@ -49,6 +52,7 @@ func (v *validator) printErrors() {
 func (v *validator) Validate(config *Config) error {
 	v.validateFilters(config.Decoys.Filters)
 	v.validateAlertConf(config.Config.Alert)
+	v.validateRespond(config.Config.Respond)
 	v.printErrors()
 	if len(v.errArr) == 0 {
 		return nil
@@ -201,11 +205,12 @@ func (v *validator) validateWhenFalse(obj ConditionType) {
 
 func (v *validator) validateDetect(obj DetectType) {
 	v.currentPlace = "filters[" + strconv.Itoa(v.currentFilterInd) + "].detect"
-  if obj == EmptyDetect() {
+  if reflect.ValueOf(obj) == reflect.ValueOf(EmptyDetect()) {
     return
   }
 	v.validateSeek(obj.Seek)
 	v.validateAlert(obj.Alert)
+	v.validateRespond(obj.Respond)
 }
 
 func (v *validator) validateSeek(obj SeekType) {
@@ -234,6 +239,42 @@ func (v *validator) validateAlert(obj AlertType) {
   }
 	if !validSeverity(obj.Severity) {
 		v.addError(v.currentPlace+".severity", "needs to be HIGH, MEDIUM or LOW")
+	}
+}
+
+func (v *validator) validateRespond(obj []RespondType) {
+	v.currentPlace = "filter[" + strconv.Itoa(v.currentFilterInd) + "].detect.respond"
+	if len(obj) == 0 {
+		return
+	} else {
+		for _, respond := range obj {
+			v.validateRespondItem(respond)
+		}
+	}
+	
+}
+
+func (v *validator) validateRespondItem(obj RespondType) {
+	if obj == EmptyRespond() {
+		return
+	}	
+	if breaksRequired(obj.Source) || breaksRequired(obj.Behavior) {
+		v.addError(v.currentPlace + ".source and behavior", "can not be empty")
+	}
+	if !breaksRequired(obj.Source) && !validSource(obj.Source) {
+		v.addError(v.currentPlace + ".source", "needs to be ip, user agent or session")
+	}
+	if !breaksRequired(obj.Behavior) && !validBehavior(obj.Behavior) {
+		v.addError(v.currentPlace + ".behavior", "needs to be drop, error or divert")
+	}
+	if !breaksRequired(obj.Delay) && !validDelay(obj.Delay) {
+		v.addError(v.currentPlace + ".delay", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or now, and must be in a correct format (ex: 10s-20s or 10s)")
+	}
+	if !breaksRequired(obj.Duration) && !validDuration(obj.Duration) {
+		v.addError(v.currentPlace + ".duration", "needs a valid delay suffix (s for seconds/m for minutes/h for hours) or forever")
+	}
+	if obj.Behavior == "throttle" && !breaksRequired(obj.Property) && !validThrottleProperty(obj.Property) {
+		v.addError(v.currentPlace + ".property", "needs to be valid int")
 	}
 }
 
@@ -328,4 +369,63 @@ func validInUsername(s string) bool {
 		return true
 	}
 	return false
+}
+
+func validSource(s string) bool {
+	if strings.Contains(s, ip) || strings.Contains(s, session) || strings.Contains(s, user_agent){
+		return true
+	}
+	return false
+}
+
+func validBehavior(s string) bool {
+	e := Behavior(s)
+	switch e {
+	case drop, server_error, divert, throttle:
+		return true
+	}
+	return false
+}
+
+func validDelay(s string) bool {
+	splitDelay := strings.Split(s, "-")
+	if len(splitDelay) == 2 {
+		lastCharFirst := string(splitDelay[0][len(splitDelay[0])-1])
+		lastCharSecond := string(splitDelay[1][len(splitDelay[1])-1])
+		if (lastCharFirst == "s" || lastCharFirst == "m" || lastCharFirst == "h") && (lastCharSecond == "s" || lastCharSecond == "m" || lastCharSecond == "h") && lastCharFirst == lastCharSecond {
+			firstNumber := splitDelay[0][:len(splitDelay[0])-1]
+			secondNumber := splitDelay[1][:len(splitDelay[1])-1]
+			return firstNumber < secondNumber
+		} 
+	} else {
+		lastChar := string(s[len(s)-1])
+		if lastChar == "s" || lastChar == "m" || lastChar == "h" || s == "now" {
+			return true
+		}
+	}
+	return false
+}
+
+func validDuration(s string) bool {
+	lastChar := string(s[len(s)-1])
+	if lastChar == "s" || lastChar == "m" || lastChar == "h" || s == "forever" {
+		return true
+	}
+	return false
+}
+
+func validThrottleProperty(s string) bool {
+	splitProperty := strings.Split(s, "-")
+	if len(splitProperty) == 2 {
+		min, err := strconv.Atoi(splitProperty[0])
+		if err != nil { return false }
+		max, err := strconv.Atoi(splitProperty[1])
+		if err != nil { return false }
+		if max <= min { return false }
+		return true
+	} else {
+		_, err := strconv.Atoi(s)
+		if err != nil { return false }
+		return true
+	}
 }

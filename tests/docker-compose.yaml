@@ -19,6 +19,7 @@ services:
     depends_on:
     - myapp
     - fluent
+    - clone
     logging:
       driver: fluentd
   
@@ -30,4 +31,8 @@ services:
     ports:
       - "24224:24224"
       - "24224:24224/udp"
+
+  clone:
+    container_name: clone
+    image: clonetest
 

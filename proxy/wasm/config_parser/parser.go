@@ -67,6 +67,8 @@ func (p *Parser) jsonToStruct(content []byte) error {
 				},
 			}, 
 			Server: string(json.GetStringBytes("config", "server")),
+			Respond: *respondJsonToStruct(json.GetArray("config", "respond")),
+			BlocklistReload: int(json.GetInt("config", "blocklistReload")),
 		}
 	}
 	filtersJs := json.GetArray("decoy", "filters")
@@ -119,8 +121,33 @@ func (p *Parser) filterJsonToStruct(filterJs *fastjson.Value) *FilterType {
 				WhenModified: filterJs.Get("detect").Get("alert").GetBool("whenModified"),
 				WhenAbsent:   filterJs.Get("detect").Get("alert").GetBool("whenAbsent"),
 			},
+			Respond: *respondJsonToStruct(filterJs.Get("detect").GetArray("respond")),
 		},
 	}
+}
+
+func BlocklistJsonToStruct(content []byte) (error, []BlocklistType) {
+	blocklist := []BlocklistType{}
+	var fjsp fastjson.Parser
+	json, err := fjsp.Parse(string(content))
+	if err != nil {
+		return err, nil
+	}
+	list := json.GetArray("list")
+	for _, elem := range list {
+		bl := BlocklistType{
+			Ip:          	string(elem.GetStringBytes("ip")),
+			Session: 		string(elem.GetStringBytes("session")),
+			Useragent: 		string(elem.GetStringBytes("userAgent")),
+			Behavior:   	string(elem.GetStringBytes("behavior")),
+			Delay:			string(elem.GetStringBytes("delay")),
+			Duration:     	string(elem.GetStringBytes("duration")),
+			Property: 		string(elem.GetStringBytes("property")),
+			TimeDetected: 	string(elem.GetStringBytes("timeDetected")),
+		}
+		blocklist = append(blocklist, bl)
+	}
+	return nil, blocklist
 }
 
 func (p *Parser) conditionsJsonToStruct(conditionsJs []*fastjson.Value) []ConditionType {
@@ -158,4 +185,21 @@ func unescapeNewlines(str string) string {
     newline = strings.Index(str, "\n") 
   }
   return str
+}
+
+func respondJsonToStruct(respondJs []*fastjson.Value) *[]RespondType {
+	respond := []RespondType{}
+	for _, elem := range respondJs {
+		item := RespondType{
+			Source: string(elem.GetStringBytes("source")),
+			Behavior: string(elem.GetStringBytes("behavior")),
+			Delay: string(elem.GetStringBytes("delay")),
+			Duration: string(elem.GetStringBytes("duration")),
+			Property: string(elem.GetStringBytes("property")),
+		}
+		if item != EmptyRespond() {
+			respond = append(respond, item)
+		}
+	}
+	return &respond
 }

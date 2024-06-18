@@ -1,7 +1,13 @@
 package main
 
-import ( //"strconv"
+import ( 
+  "strconv"
 	"errors"
+	"encoding/json"
+	"math/rand"
+	"strings"
+
+	"sundew/block"
 	"sundew/config_parser"
 	"sundew/detect"
 	"sundew/inject"
@@ -15,6 +21,14 @@ import ( //"strconv"
 
 // plugin tick period, config is reread every tick
 const tickMilliseconds uint32 = 1000
+var throttleTickMilliseconds uint32 = 0
+var throttleLoop int = 0
+var updateBlocklist, updateThrottleList []map[string]string
+var blocklist []config_parser.BlocklistType
+var throttlelist []config_parser.BlocklistType
+var blocked bool = false
+var blocklistTick uint32 = 60 // 1 minute
+var blocklistLoop = 60
 
 func main() {
   proxywasm.SetVMContext(&vmContext{})
@@ -25,7 +39,7 @@ type vmContext struct {
 }
 
 func (*vmContext) NewPluginContext(contextID uint32) types.PluginContext {
-  return &pluginContext{contextID: contextID, config: &config_parser.Config{Config: config_parser.ConfigType{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
+  return &pluginContext{ postponed: make([]uint32, 0, 1024), contextID: contextID, config: &config_parser.Config{Config: config_parser.ConfigType{} , Decoys: config_parser.DecoyConfig{ Filters: []config_parser.FilterType{}}}}
 }
 
 type pluginContext struct {
@@ -36,6 +50,7 @@ type pluginContext struct {
   config           *config_parser.Config
   configChecksum        [32]byte
   callBackConfRequested func(numHeaders, bodySize, numTrailers int)
+  postponed []uint32
 }
 
 func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
@@ -68,6 +83,9 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
       ctx.config = oldConfig
       return
     }
+    if ctx.config.Config.BlocklistReload != 0 {
+      blocklistTick = uint32(ctx.config.Config.BlocklistReload)
+    }
     if (ctx.config == nil) {
       ctx.config = &emptyConf
       return
@@ -88,10 +106,101 @@ func (ctx *pluginContext) OnTick() {
   if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
     proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
   }
+  // Update blocklist via configmanager
+  if len(updateBlocklist) != 0 || len(updateThrottleList) != 0 {
+    callBackSetBlocklist := func(numHeaders, bodySize, numTrailers int) {
+      responseBody, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+      if err != nil {
+        proxywasm.LogErrorf("could not read body when setting blocklist: %v", err)
+      }
+      if string(responseBody) != "Done" {
+        proxywasm.LogErrorf("error when setting blocklist: %v", string(responseBody))
+      }
+    }
+    jsonUpdateBlocklist, err := json.Marshal(updateBlocklist)
+    if err != nil {
+      proxywasm.LogErrorf("could not convert updateBlocklist to json: %v", err)
+      return
+    }
+    jsonUpdateThrottleList, err := json.Marshal(updateThrottleList)
+    if err != nil {
+      proxywasm.LogErrorf("could not convert updateThrottlelist to json: %v", err)
+      return
+    }
+    requestHeadersBlocklist := [][2]string{
+      {":method", "POST"}, {":authority", "configmanager"}, {":path", "/blocklist"}, {"accept", "*/*"},
+      {"Content-Type", "application/json"},
+    }
+    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlocklist, []byte("{\"blocklist\":" + string(jsonUpdateBlocklist) + ",\"throttle\":" + string(jsonUpdateThrottleList) + "}"), nil, 5000, callBackSetBlocklist); err != nil {
+      proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
+    }
+    updateBlocklist = []map[string]string{}
+    updateThrottleList = []map[string]string{}
+  }
+
+  // Add delay if
+  if throttleLoop < int(throttleTickMilliseconds) && throttleTickMilliseconds !=0 {
+    throttleLoop++
+  } else if throttleLoop != 0 {
+    throttleTickMilliseconds = 0
+    throttleLoop = 0
+    httpCtxId, tail := ctx.postponed[0], ctx.postponed[1:]
+		err := proxywasm.SetEffectiveContext(httpCtxId)
+		err = proxywasm.ResumeHttpResponse()
+    if err != nil {
+      proxywasm.LogErrorf("throttle error: error when setting context and resuming: %s", err)
+    }
+		ctx.postponed = tail
+  }
+  //Fetch blocklist every minutes
+  if blocklistLoop < int(blocklistTick){
+    blocklistLoop++
+  } else {
+    blocklistLoop = 0
+    callBackGetBlocklist:= func(numHeaders, bodySize, numTrailers int) {
+      body, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+      if err != nil {
+        proxywasm.LogErrorf("%v", err.Error())
+      }
+      proxywasm.SetSharedData("blocklist", body, 0)
+    }
+    callBackGetThrottlelist:= func(numHeaders, bodySize, numTrailers int) {
+      body, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+      if err != nil {
+        proxywasm.LogErrorf("%v", err.Error())
+      }
+      proxywasm.SetSharedData("throttlelist", body, 0)
+    }
+    reqHeadBlocklist := [][2]string{
+      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/blocklist"}, {"accept", "*/*"},
+      {"Content-Type", "application/json"},
+    }
+    if _, err := proxywasm.DispatchHttpCall("configmanager", reqHeadBlocklist, nil, nil, 5000, callBackGetBlocklist); err != nil {
+      proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
+    }
+    reqHeadThrottlelist := [][2]string{
+      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/throttlelist"}, {"accept", "*/*"},
+      {"Content-Type", "application/json"},
+    }
+    if _, err := proxywasm.DispatchHttpCall("configmanager", reqHeadThrottlelist, nil, nil, 5000, callBackGetThrottlelist); err != nil {
+      proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
+    }
+  }
 }
 
 func (ctx *pluginContext) NewHttpContext(contextID uint32) types.HttpContext {
-  return &httpContext{contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}, alerts: []alert.AlertParam{}}
+  var err error
+  blocklistjson, _, _ := proxywasm.GetSharedData("blocklist")
+  err, blocklist = config_parser.BlocklistJsonToStruct(blocklistjson)
+  if err != nil {
+    proxywasm.LogErrorf("error when parsing blocklist:", err)
+  }
+  throttlelistjson, _, _ := proxywasm.GetSharedData("throttlelist")
+  err, throttlelist = config_parser.BlocklistJsonToStruct(throttlelistjson)
+  if err != nil {
+    proxywasm.LogErrorf("error when parsing throttlelist:", err)
+  }
+  return &httpContext{pluginCtx: ctx, contextID: contextID, config: ctx.config, cookies: make(map[string]string), headers: make(map[string]string), request:  &shared.HttpRequest{ nil, make(map[string]string), make(map[string]string)}, alerts: []alert.AlertParam{}}
 }
 
 type httpContext struct {
@@ -104,6 +213,7 @@ type httpContext struct {
   body                  string
   request               *shared.HttpRequest
   alerts                []alert.AlertParam
+  pluginCtx *pluginContext
 }
 
 func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) types.Action {
@@ -120,6 +230,7 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
       proxywasm.LogCriticalf("failed to extract request headers: %s", err.Error())
       return types.ActionPause
     }
+
 
     err, ctx.request = inject.OnHttpRequestHeaders(ctx.request, ctx.config)
     if err != nil {
@@ -140,6 +251,18 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
   } else {
     if config_proxy.Debug { proxywasm.LogWarn("no headers in request") } //debug
   }
+  action, _ := block.IsBanned(blocklist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
+  if action != "continue" {
+    blocked = true
+  } else {
+    blocked = false
+  }
+  if action == "pause" {
+    return types.ActionPause
+  } else if action == "clone" {
+    ctx.request.Headers[":authority"] = "clone"
+  }
+
   for header, value := range ctx.request.Headers {
  
     err := proxywasm.RemoveHttpRequestHeader(header)
@@ -164,6 +287,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
   if err != nil {
     proxywasm.LogErrorf("could not add request header (%s= %s): %s", "Cookie", strCookie, err.Error())
   }
+
+  
   return types.ActionContinue
 }
 
@@ -281,6 +406,21 @@ func (ctx *httpContext) OnHttpResponseHeaders(numHeaders int, endOfStream bool) 
     }
   }
   if config_proxy.Debug { proxywasm.LogWarn("response header injection done") } // debug
+
+  property := block.IsThrottled(throttlelist, ctx.request.Headers, ctx.request.Cookies, ctx.config.Config.Alert)
+  if property != "" {
+    ctx.pluginCtx.postponed = append(ctx.pluginCtx.postponed, ctx.contextID)
+    splitProperty := strings.Split(property, "-")
+    if len(splitProperty) == 2 {
+      min, _ := strconv.Atoi(splitProperty[0])
+      max, _ := strconv.Atoi(splitProperty[1])
+      throttleTickMilliseconds = uint32(rand.Intn(max - min + 1) + min)
+    } else {
+      throttle, _ := strconv.Atoi(property)
+      throttleTickMilliseconds = uint32(throttle)
+    }
+    return types.ActionPause
+  }
   return types.ActionContinue
 }
 
@@ -326,6 +466,9 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
 }
 
 func (ctx *httpContext) OnHttpStreamDone() {
+  // if blocked {
+  //   return
+  // }
   resBody := ctx.body
   reqBody := *ctx.request.Body
   session, username := detect.FindSession(map[string]map[string]string{"header": ctx.request.Headers, "cookie": ctx.request.Cookies, "payload": { "payload": reqBody }}, map[string]map[string]string{ "header": ctx.headers, "cookie": ctx.cookies, "payload": { "payload": resBody }}, ctx.config.Config.Alert)
@@ -334,5 +477,18 @@ func (ctx *httpContext) OnHttpStreamDone() {
     ctx.alerts[i].LogParameters["username"] = username
     ctx.alerts[i].LogParameters["server"] = ctx.config.Config.Server
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
+
+    updateThrottleList, updateBlocklist = alert.SetAlertAction(ctx.alerts, ctx.config.Config, ctx.request.Headers, blocklist, throttlelist)
+    updateBlocklistJson, _ := json.MarshalIndent(updateBlocklist, "", " ")
+    updateThrottlelistJson, _ := json.MarshalIndent(updateThrottleList, "", " ")
+    proxywasm.LogWarnf("\n{\"action\": %s},\n{\"throttle\": %s}", updateBlocklistJson, updateThrottlelistJson)
+
+    blocklist = block.AppendBlocklist(blocklist, updateBlocklist)
+    blocklistjson, _ := json.Marshal(blocklist)
+    proxywasm.SetSharedData("blocklist", []byte("{\"list\":" + string(blocklistjson) + "}"), 0)
+
+    throttlelist = block.AppendBlocklist(throttlelist, updateThrottleList)
+    throttlelistjson, _ := json.Marshal(throttlelist)
+    proxywasm.SetSharedData("throttlelist", []byte("{\"list\":" + string(throttlelistjson) + "}"), 0)
   }
 }

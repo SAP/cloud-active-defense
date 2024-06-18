@@ -8,6 +8,7 @@ app.use(hsts({
   maxAge: 31536000,
   includeSubDomains: true
 }))
+app.use(express.json())
 
 // Define a GET route that accepts a namespace and application parameter
 app.get('/:namespace/:application', (req, res) => {
@@ -103,7 +104,90 @@ app.get('/:namespace/:application', (req, res) => {
   });
 });
 
+app.get('/blocklist', (req, res) => {
+  fs.access("/data/blocklist/blocklist.json", fs.constants.F_OK, err => {
+    if (err) {
+      fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
+      return res.json({list: []})
+    }
+    const blocklist = JSON.parse(fs.readFileSync("/data/blocklist/blocklist.json", 'utf8'))
+    i = 0
+    for (const elem of blocklist.list) {
+      if (elem.duration == 'forever') continue
+      const unbanDate = new Date(elem.timeDetected)
+      switch (elem.duration[elem.duration.length-1]) {
+        case 's':
+          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+        case 'm':
+          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+        case 'h':
+          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+      }
+      if (new Date() >= unbanDate){
+        blocklist.list.splice(i, 1)
+      }
+      i++
+    }
+    fs.writeFileSync("/data/blocklist/blocklist.json", JSON.stringify(blocklist))
+    return res.json(blocklist)
+  })
+})
+
+app.post('/blocklist', (req, res) => {
+  var error;
+  fs.access("/data/blocklist/blocklist.json", fs.constants.F_OK, err => {
+    if (err) error = err
+    const blocklistFile = JSON.parse(fs.readFileSync("/data/blocklist/blocklist.json", 'utf8'))
+    blocklistFile.list.push(...req.body.blocklist)
+    fs.writeFileSync("/data/blocklist/blocklist.json", JSON.stringify(blocklistFile))
+  })
+  fs.access("/data/blocklist/throttlelist.json", fs.constants.F_OK, err => {
+    if (err) error = err
+    const throttlelistFile = JSON.parse(fs.readFileSync("/data/blocklist/throttlelist.json", 'utf8'))
+    throttlelistFile.list.push(...req.body.throttle)
+    fs.writeFileSync("/data/blocklist/throttlelist.json", JSON.stringify(throttlelistFile))
+  })
+  if (error) return res.send(error)
+  return res.send("Done")
+})
+
+app.get('/throttlelist', (req, res) => {
+  fs.access("/data/blocklist/throttlelist.json", fs.constants.F_OK, err => {
+    if (err) {
+      fs.writeFileSync("/data/blocklist/throttlelist.json", `{"list":[]}`, 'utf8')
+      return res.json({list: []})
+    }
+    const throttlelist = JSON.parse(fs.readFileSync("/data/blocklist/throttlelist.json", 'utf8'))
+    i = 0
+    for (const elem of throttlelist.list) {
+      if (elem.duration == 'forever') continue
+      const unbanDate = new Date(elem.timeDetected)
+      switch (elem.duration[elem.duration.length-1]) {
+        case 's':
+          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+        case 'm':
+          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+        case 'h':
+          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          break;
+      }
+      if (new Date() >= unbanDate){
+        throttlelist.list.splice(i, 1)
+      }
+      i++
+    }
+    fs.writeFileSync("/data/blocklist/throttlelist.json", JSON.stringify(throttlelist))
+    return res.json(throttlelist)
+  })
+})
 // Start the server
 app.listen(3000, () => {
+  if (!fs.existsSync("/data/blocklist/blocklist.json")) fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
+  if (!fs.existsSync("/data/blocklist/throttlelist.json")) fs.writeFileSync("/data/blocklist/throttlelist.json", `{"list":[]}`, 'utf8')
   console.log('Config manager started');
 });

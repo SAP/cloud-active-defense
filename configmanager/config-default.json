@@ -10,5 +10,14 @@
       "value": ""
     }
   },
-  "server": ""
+  "server": "",
+  "respond": [
+    {
+      "source": "",
+      "behavior": "",
+      "delay": "",
+      "duration": ""
+    }
+  ],
+  "blocklistReload": 0
 }
