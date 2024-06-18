@@ -269,7 +269,7 @@ If you find any bug that may be a security problem, please follow our instructio
 # On the TODO list
 Features we plan to eventually release:
   * [DONE] adding a configuration specifying where to find information about the user's session. We want to use this to add session / logged in user information in the alert.
-  * show how to ingest alerts into fluentd for further processing (currently alerts are simply shown on the console)
+  * [DONE] show how to ingest alerts into fluentd for further processing (currently alerts are simply shown on the console)
   * show how to deploy into SAP Kyma as an extension of the mesh service
 
 # Code of Conduct

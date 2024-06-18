@@ -27,6 +27,7 @@ services:
       driver: fluentd
   
   fluent:
+    container_name: fluentbit
     image: fluent/fluent-bit:3.0
     volumes:
       - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
