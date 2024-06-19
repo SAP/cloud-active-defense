@@ -6,5 +6,5 @@
 namespace: "cad"
 
 # Image used to populate the WASM service to a data volume
-initimage: "cad.common.repositories.cloud.sap/i549577/init:0.2"
+initimage: "<SOON_INIT_IMAGE>"
 
