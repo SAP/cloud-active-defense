@@ -60,10 +60,32 @@ For linux:
 For windows:
 `helm upgrade myapp ./myapp --post-renderer ./kustomize.bat`
 
-# 5. Fluentbit
+## 5. Collect logs
 
-If you wish to connect fluentbit to the proxy to collect alerts logs, edit the `namespace` value in `values.json`
+To collect logs from the Cloud active defense you have 2 choices: You can either use Fluentbit or Telemetry
+
+- ### Fluentbit
+
+If you wish to connect fluentbit to the proxy to collect alerts logs, go to fluentbit directory, edit the `namespace` value in `values.json`
 
 And set the output in `fluent-bit.conf`, by default it displays the collected logs in fluentbit's console
 
 Then run `helm install fluent ./fluentbit`
+___
+
+- ### Telemetry
+
+If you wish to use telemetry instead, first install Telemetry module to Kyma:
+```shell
+kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-manager.yaml
+kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-default-cr.yaml -n kyma-system
+```
+
+Go to telemetry directory and edit the `namespace` and `appnamespace` (correspond to the namespace where you deployed your app) values in `values.json`
+
+Then run `helm install telemetry ./telemetry`
+
+Now you can see logs in the log-sink pod console
+
+This is just a test, what the pipeline does is sending collected logs to a fluentbit pod that just display them in the console
+Different output to the pipeline can be set, see [telemetry documentation](https://kyma-project.io/#/telemetry-manager/user/README)
