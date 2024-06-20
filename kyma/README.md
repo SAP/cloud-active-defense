@@ -16,7 +16,7 @@ If you wish to build and use your own images of the project follow the instructi
 
 ## 1. MyApp
 
-In `values.yaml` you first need to replace the values of `gateway` with the kyma host, you can find it with the api server URL (i.e. `https://api.`==c-8024eca==`.kyma.ondemand.com/`) and if needed the image of myapp in `image` (by defaut it uses the image on github registry)
+In `values.yaml` you first need to replace the values of `gateway` with the kyma host, you can find it with the api server URL (i.e. `https://api.`**c-8024eca**`.kyma.ondemand.com/`) and if needed the image of myapp in `image` (by defaut it uses the image on github registry)
 
 If you wish to use your own image of myapp, go to `myapp/` directory from the root of the project and build the Dockerfile inside
 
