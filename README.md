@@ -199,7 +199,7 @@ The decoy we just added might trigger if your application is scanned by bots, bu
 
 `docker-compose up --build`
 
-5. visit `http://localhost:8000/login`. Login as **bob/bob**. Press `CTRL-SHIFT-I` to open the developer tools and navigate to the 'storage' tab. Notice how, upon login, a 'role=user' cookie was injected into your cookie jar.
+5. visit `http://localhost:8000/login`. Login as **bob@myapp.com/bob**. Press `CTRL-SHIFT-I` to open the developer tools and navigate to the 'storage' tab. Notice how, upon login, a 'role=user' cookie was injected into your cookie jar.
 
 ![injected role cookie](./assets/cookie.png)
 
@@ -233,7 +233,7 @@ Cloud active defense complements existing solutions such as Intrusion Detection 
 Myapp is a demo application which can be used to test how decoys work. It is a simplistic web application with the following features:
   * `GET /` : the front page, displays 'welcome' if you're not authenticated. Displays a static 'dashboard' page otherwise.
   * `GET /login` : a form displaying a login field, a password field, and a submit button.
-  * `POST /login` : checks if username is 'bob' and password is 'bob'. It not, sends an error message. If yes, authenticates by setting a (hardcoded) 'SESSION' cookie
+  * `POST /login` : checks if username is 'bob@myapp.com' and password is 'bob'. It not, sends an error message. If yes, authenticates by setting a (hardcoded) 'SESSION' cookie
 
 There is no logout mechanism. Delete the SESSION cookie to log out.
 
