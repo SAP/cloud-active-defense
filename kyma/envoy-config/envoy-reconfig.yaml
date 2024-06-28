@@ -32,7 +32,7 @@ spec:
                   value: |
                     {
                       "deployment": "myapp",
-                      "namespace": "test"
+                      "namespace": "cad"
                     }
                 rootId: "my_root_id"
                 vmConfig:

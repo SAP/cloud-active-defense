@@ -1,0 +1,28 @@
+apiVersion: telemetry.kyma-project.io/v1alpha1
+kind: LogPipeline
+metadata:
+  name: custom-loki
+  namespace: {{ .Values.namespace }}
+  labels:
+   app: log
+spec:
+   input:
+      application:
+         namespaces:
+           include:
+            - {{ .Values.appnamespace }}
+         containers:
+            include:
+            - istio-proxy
+   output:
+      custom: |
+         name   loki
+         host   loki.{{ .Values.namespace }}.svc.cluster.local
+         uri    /loki/api/v1/push
+         port   3100
+         auto_kubernetes_labels off
+         labels job=fluentbit
+   filters:
+      - custom: |
+         Name    grep
+         Regex   $log['alert'] true

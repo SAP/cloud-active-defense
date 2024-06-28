@@ -15,8 +15,8 @@ spec:
       labels:
         app: configmanager
     spec:
-      imagePullSecrets:
-      - name: artifactory-creds
+      # imagePullSecrets:
+      # - name: artifactory-creds
       containers:
         - name: configmanager
           image: {{.Values.configimage}}

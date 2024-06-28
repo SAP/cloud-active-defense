@@ -7,8 +7,3 @@ namespace: "cad"
 
 image: "docker.io/valvolt2/myapp:latest"
 
-# Local deployment
-#gateway: "local.kyma.dev"
-
-# Remote deployment
-gateway: "c-8024eca.kyma.ondemand.com"

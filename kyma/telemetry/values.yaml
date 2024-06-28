@@ -2,6 +2,8 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Where to deploy loki
 namespace: "log-sink"
 
+# Where you deployed you app 
 appnamespace: "cad"

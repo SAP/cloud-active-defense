@@ -1,5 +1,5 @@
 apiVersion: v2
-name: log-sink
+name: telemetry
 description: This chart creates a logging pipeline for Kyma
 
 # A chart can be either an 'application' or a 'library' chart.

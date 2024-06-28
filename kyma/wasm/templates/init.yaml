@@ -8,8 +8,8 @@ spec:
     metadata:
       name: init-job
     spec:
-      imagePullSecrets:
-      - name: artifactory-creds
+      # imagePullSecrets:
+      # - name: artifactory-creds
       restartPolicy: Never
       containers:
       - name: init-container

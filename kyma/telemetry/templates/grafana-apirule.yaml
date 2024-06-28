@@ -1,19 +1,16 @@
 apiVersion: gateway.kyma-project.io/v1beta1
 kind: APIRule
 metadata:
-  name: myapp-apirule
+  name: grafana
   namespace: {{ .Values.namespace }}
-  labels:
-    app: myapp
 spec:
-  host: myapp
+  host: grafana
   service:
-    name: myapp-service
+    name: grafana
     port: 80
   gateway: kyma-gateway.kyma-system.svc.cluster.local
   rules:
     - path: /.*
-      methods: ["GET","POST"]
+      methods: ["GET", "POST"]
       accessStrategies:
         - handler: allow
-      mutators: []

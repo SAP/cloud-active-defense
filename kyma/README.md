@@ -1,26 +1,32 @@
 # Kyma deployment
 
 ## Requirements
-- To deploy Cloud Active Defense on Kyma you first need either install Kyma on your local machine or use The SAP cloud
-    - To install Kyma locally follow [Kyma documentation](https://kyma-project.io/#/02-get-started/01-quick-install)
+- To deploy Cloud Active Defense on Kyma you first need either install Kyma on your local machine or use SAP BTP cloud
+    - To install Kyma locally follow these instructions:
+        - Install [k3d](https://k3d.io/v5.6.3/#installation)
+        - Follow these steps before setting up Kyma: [Steps for local Kyma](https://github.com/kyma-project/api-gateway/issues/1133)
+        - Install Kyma with [Kyma documentation](https://kyma-project.io/#/02-get-started/01-quick-install)(Mandatory modules are Istio and API Gateway)
 
-    - To use Kyma in SAP cloud follow these instructions:
+    - To use Kyma in SAP BTP cloud follow these instructions:
         - [Create an account in SAP cloud](https://developers.sap.com/tutorials/btp-free-tier-account.html) (You can skip final steps from step 9)
         - [Enable Kyma](https://developers.sap.com/tutorials/cp-kyma-getting-started.html)
         - [Connect to remote cluster](https://developers.sap.com/tutorials/cp-kyma-download-cli.html)
 
-- Install helm to manage kubernetes configuration files
+- Install [helm](https://helm.sh/docs/intro/install/) to manage kubernetes configuration files
 
 If you wish to build and use your own images of the project follow the instructions in each steps
 
 
 ## 1. MyApp
 
-In `values.yaml` you first need to replace the values of `gateway` with the kyma host, you can find it with the api server URL (i.e. `https://api.`**c-8024eca**`.kyma.ondemand.com/`) and if needed the image of myapp in `image` (by defaut it uses the image on github registry)
+In `values.yaml` if needed replace the image of myapp in `image` (by defaut it uses the image on github registry), you can also change the namespace and the number of replicas
 
 If you wish to use your own image of myapp, go to `myapp/` directory from the root of the project and build the Dockerfile inside
 
-Then run `helm install myapp ./myapp`
+Then run:
+```shell
+helm install myapp ./myapp
+```
 
 If everything went good, you should be able to navigate to myapp with the link provided in `Api Rules`
 
@@ -32,7 +38,10 @@ Also modify the `cad-default.json` with your decoys config or keep the default o
 
 If you wish to use your own image of configmanager, go to `configmanager/` directory from the root of the project and build the Dockerfile inside
 
-Then run ```helm install configmanager ./configmanager```
+Then run 
+```shell
+helm install configmanager ./configmanager
+```
 
 ## 3. Wasm
 
@@ -40,14 +49,17 @@ Same as before you have to replace `initimage` in `values.yaml` with the init im
 
 If you wish to use your own image of the proxy, build the Dockerfile from `wasm/` directory 
 
-Then run `helm install wasm ./wasm`
+Then run:
+```shell
+helm install wasm ./wasm
+```
 
 ## 4. Envoy config
 
 In `envoy-reconfig.yaml` you will have to change few values:
 
 - First you can change `metadata.name` to make it more understable based on your configuration
-- Change `metadata.namespace` with the same namespace for steps 1 and 2
+- Change `metadata.namespace` with the same namespace you set for myapp in step 1
 - Replace the value in `spec.workloadSelector.labels.app` with the name of your app in step 1
 - Change the json at line 32 in `value` with your deployment name and namespace in step 1
 
@@ -56,26 +68,19 @@ Also change `name` and `namespace` in `resources-patch.yaml` so it match step 1 
 Then run the following command:
 
 For linux:
-`helm upgrade myapp ./myapp --post-renderer ./kustomize.sh`
+```shell
+helm upgrade myapp ./myapp --post-renderer ./envoy-config/kustomize.sh
+```
+
 For windows:
-`helm upgrade myapp ./myapp --post-renderer ./kustomize.bat`
+```shell
+helm upgrade myapp ./myapp --post-renderer ./envoy-config/kustomize.bat
+```
 
 ## 5. Collect logs
 
-To collect logs from the Cloud active defense you have 2 choices: You can either use Fluentbit or Telemetry
+To use telemetry, first install Telemetry module to Kyma:
 
-- ### Fluentbit
-
-If you wish to connect fluentbit to the proxy to collect alerts logs, go to fluentbit directory, edit the `namespace` value in `values.json`
-
-And set the output in `fluent-bit.conf`, by default it displays the collected logs in fluentbit's console
-
-Then run `helm install fluent ./fluentbit`
-___
-
-- ### Telemetry
-
-If you wish to use telemetry instead, first install Telemetry module to Kyma:
 ```shell
 kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-manager.yaml
 kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-default-cr.yaml -n kyma-system
@@ -83,9 +88,37 @@ kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/late
 
 Go to telemetry directory and edit the `namespace` and `appnamespace` (correspond to the namespace where you deployed your app) values in `values.json`
 
-Then run `helm install telemetry ./telemetry`
+Now install loki and grafana (Replace `log-sink` with the same namespace you just set in `values.json`)
+```shell
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm upgrade --install --create-namespace -n log-sink loki grafana/loki -f ./telemetry/loki-values.yaml
+helm upgrade --install --create-namespace -n log-sink grafana grafana/grafana -f ./telemetry/grafana-values.yaml
+```
 
-Now you can see logs in the log-sink pod console
+Then run the following command:
+```shell
+helm install telemetry telemetry
+```
 
-This is just a test, what the pipeline does is sending collected logs to a fluentbit pod that just display them in the console
-Different output to the pipeline can be set, see [telemetry documentation](https://kyma-project.io/#/telemetry-manager/user/README)
+To get grafana password and access to the dashboard run this command:
+
+For linux:
+```shell
+kubectl get secret --namespace log-sink grafana -o jsonpath="{.data.admin-password}" | base64 --decode ; echo
+```
+
+For windows:
+```shell
+kubectl get secret --namespace log-sink grafana -o jsonpath="{.data.admin-password}" | echo | ForEach-Object {[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_))}
+```
+
+Now log in with user admin and the password you retrived before
+
+On the Explore page (where the logs are gonna be listed), add a label filter with `job` as key and `fluentbit` as value
+
+Now you are all setup up, you should be able to see the logs from cloud-active-defense in grafana
+
+Try go to your app with this endpoint `/x-cloud-active-defense`, a decoy will be triggered and send logs to grafana
+
+![x-cloud-active-defense header](../assets/grafana-dasboard.png)
