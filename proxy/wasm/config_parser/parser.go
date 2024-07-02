@@ -170,8 +170,11 @@ func (p *Parser) getString(v *fastjson.Value, keys ...string) string {
 	if v == nil {
 		return ""
 	}
-	out := v.MarshalTo([]byte(""))
-	out = out[1 : len(out)-1]
+	out := v.String()
+	// out := v.MarshalTo([]byte(""))
+	if v.Type().String() == "string" {
+		out = out[1 : len(out)-1]
+	}
   outs := string(out)
   outs = unescapeNewlines(outs)
 	outs = strings.ReplaceAll(outs, "\\\"", "\"")
