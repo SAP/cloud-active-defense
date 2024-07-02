@@ -5,7 +5,5 @@ RUN npm install hsts
 COPY ./server.js /app/server.js
 RUN mkdir /data
 RUN mkdir -m 707 /data/blocklist
-COPY ./cad-default.json /data/cad-default.json
-COPY ./config-default.json /data/config-default.json
 USER nobody
 CMD ["node", "server.js"]

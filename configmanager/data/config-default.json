@@ -1,8 +1,8 @@
 {
   "alert": {
     "session": {
-      "in": "",
-      "key": ""
+      "in": "cookie",
+      "key": "SESSION"
     },
     "username": {
       "in": "",
@@ -19,5 +19,5 @@
       "duration": ""
     }
   ],
-  "blocklistReload": 0
+  "blocklistReload": 1
 }
