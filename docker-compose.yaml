@@ -11,8 +11,9 @@ services:
     build: configmanager
     image: configmanager
     volumes:
-      - ./configmanager/data:/data
-
+    - ./configmanager/data:/data
+    - configvolume:/data/blocklist
+      
   proxy:
     container_name: proxy
     build: proxy
@@ -40,3 +41,6 @@ services:
     container_name: clone
     build: clone
     image: clone
+  
+volumes:
+  configvolume: {}
