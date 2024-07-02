@@ -65,10 +65,11 @@ func isTimeout(bl config_parser.BlocklistType) bool {
 	if bl.Delay == "" || bl.Delay == "now" {
 		return true
 	}
-	parsedDate, err := time.Parse("01-02-2006 15:04:05", bl.TimeDetected)
+	date, err := strconv.ParseInt(bl.Time, 10, 64)
 	if err != nil {
 		proxywasm.LogErrorf("error parsing blocklist element '%s' when parsing time: %s", bl, err)
 	}
+	parsedDate := time.Unix(date, 0)	
 	intDelay, _ := strconv.Atoi(bl.Delay[:len(bl.Delay)-1])
 	var dateToCompare time.Time
 	switch string(bl.Delay[len(bl.Delay)-1]) {
@@ -90,18 +91,18 @@ func isTimeout(bl config_parser.BlocklistType) bool {
 
 func AppendBlocklist(blocklist []config_parser.BlocklistType, elements []map[string]string) []config_parser.BlocklistType{
 	for _, elem := range elements {
-		newElement := config_parser.BlocklistType{ Behavior: elem["behavior"], Duration: elem["duration"], Delay: elem["delay"], TimeDetected: elem["timeDetected"] }
-		if elem["property"] != "" {
-			newElement.Property = elem["property"]
+		newElement := config_parser.BlocklistType{ Behavior: elem["Behavior"], Duration: elem["Duration"], Delay: elem["Delay"], Time: elem["Time"] }
+		if elem["Property"] != "" {
+			newElement.Property = elem["Property"]
 		}
-		if elem["ip"] != "" {
-			newElement.Ip = elem["ip"]
+		if elem["SourceIp"] != "" {
+			newElement.SourceIp = elem["SourceIp"]
 		}
-		if elem["session"] != "" {
-			newElement.Session = elem["session"]
+		if elem["Session"] != "" {
+			newElement.Session = elem["Session"]
 		}
-		if elem["userAgent"] != "" {
-			newElement.Useragent = elem["userAgent"]
+		if elem["UserAgent"] != "" {
+			newElement.Useragent = elem["UserAgent"]
 		}
 		blocklist = append(blocklist, newElement)
 	}
@@ -118,9 +119,9 @@ func findSourcePriority(blocklist []config_parser.BlocklistType, session, userAg
 		userAgent = "empty"
 	}
 	for _, block := range blocklist {
-		if (session != "" && block.Session == session) && (ip != "" && block.Ip == ip) && (userAgent != "" && block.Useragent == userAgent){
+		if (session != "" && block.Session == session) && (ip != "" && block.SourceIp == ip) && (userAgent != "" && block.Useragent == userAgent){
 			return block
-		} else if (session != "" && block.Session == session) && (ip != "" && block.Ip == ip){
+		} else if (session != "" && block.Session == session) && (ip != "" && block.SourceIp == ip){
 			if highestPriority > 1 {
 				highestPriority = 1
 				highestBlock = block
@@ -135,12 +136,12 @@ func findSourcePriority(blocklist []config_parser.BlocklistType, session, userAg
 				highestPriority = 3
 				highestBlock = block
 			}
-		} else if (ip != "" && block.Ip == ip) && (userAgent != "" && block.Useragent == userAgent) {
+		} else if (ip != "" && block.SourceIp == ip) && (userAgent != "" && block.Useragent == userAgent) {
 			if highestPriority > 4 {
 				highestPriority = 4
 				highestBlock = block
 			}
-		} else if (ip != "" && block.Ip == ip){
+		} else if (ip != "" && block.SourceIp == ip){
 			if highestPriority > 5 {
 				highestPriority = 5
 				highestBlock = block
@@ -156,20 +157,20 @@ func findSourcePriority(blocklist []config_parser.BlocklistType, session, userAg
 }
 
 func checkSource(blocklist config_parser.BlocklistType, userAgent string, session string, ip string) bool {
-	if blocklist.Ip != "" && blocklist.Session != "" && blocklist.Useragent != "" {
-		if blocklist.Ip == ip && blocklist.Session == session && blocklist.Useragent == userAgent {
+	if blocklist.SourceIp != "" && blocklist.Session != "" && blocklist.Useragent != "" {
+		if blocklist.SourceIp == ip && blocklist.Session == session && blocklist.Useragent == userAgent {
 			return true
 		} else {
 			return false
 		}
-	} else if blocklist.Ip != "" && blocklist.Session != "" {
-		if blocklist.Ip == ip && blocklist.Session == session {
+	} else if blocklist.SourceIp != "" && blocklist.Session != "" {
+		if blocklist.SourceIp == ip && blocklist.Session == session {
 			return true
 		} else {
 			return false
 		}
-	} else if blocklist.Ip != "" && blocklist.Useragent != "" {
-		if blocklist.Ip == ip && blocklist.Useragent == userAgent  {
+	} else if blocklist.SourceIp != "" && blocklist.Useragent != "" {
+		if blocklist.SourceIp == ip && blocklist.Useragent == userAgent  {
 			return true
 		} else {
 			return false
@@ -180,7 +181,7 @@ func checkSource(blocklist config_parser.BlocklistType, userAgent string, sessio
 		} else {
 			return false
 		}
-	} else if (blocklist.Ip != "" && blocklist.Ip == ip) || (blocklist.Useragent != "" && blocklist.Useragent == userAgent) || (blocklist.Session != "" && blocklist.Session == session) {
+	} else if (blocklist.SourceIp != "" && blocklist.SourceIp == ip) || (blocklist.Useragent != "" && blocklist.Useragent == userAgent) || (blocklist.Session != "" && blocklist.Session == session) {
 		return true
 	}
 	return false

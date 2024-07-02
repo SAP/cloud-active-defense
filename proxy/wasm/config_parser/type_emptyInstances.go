@@ -69,5 +69,5 @@ func EmptyRespond() RespondType {
 }
 
 func EmptyBlocklist() BlocklistType {
-  return BlocklistType{"", "", "", "", "", "", "", ""}
+  return BlocklistType{"", "", "", "", "", "", "", "", ""}
 }

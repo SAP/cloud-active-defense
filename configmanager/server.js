@@ -113,17 +113,17 @@ app.get('/blocklist', (req, res) => {
     const blocklist = JSON.parse(fs.readFileSync("/data/blocklist/blocklist.json", 'utf8'))
     i = 0
     for (const elem of blocklist.list) {
-      if (elem.duration == 'forever') continue
-      const unbanDate = new Date(elem.timeDetected)
-      switch (elem.duration[elem.duration.length-1]) {
+      if (elem.Duration == 'forever') continue
+      const unbanDate = new Date(elem.Time * 1000)
+      switch (elem.Duration[elem.Duration.length-1]) {
         case 's':
-          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
           break;
         case 'm':
-          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
           break;
         case 'h':
-          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
           break;
       }
       if (new Date() >= unbanDate){
@@ -163,17 +163,17 @@ app.get('/throttlelist', (req, res) => {
     const throttlelist = JSON.parse(fs.readFileSync("/data/blocklist/throttlelist.json", 'utf8'))
     i = 0
     for (const elem of throttlelist.list) {
-      if (elem.duration == 'forever') continue
-      const unbanDate = new Date(elem.timeDetected)
-      switch (elem.duration[elem.duration.length-1]) {
+      if (elem.Duration == 'forever') continue
+      const unbanDate = new Date(elem.Time * 1000)
+      switch (elem.Duration[elem.Duration.length-1]) {
         case 's':
-          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
           break;
         case 'm':
-          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
           break;
         case 'h':
-          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.duration.substring(0, elem.duration.length-1)))
+          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
           break;
       }
       if (new Date() >= unbanDate){

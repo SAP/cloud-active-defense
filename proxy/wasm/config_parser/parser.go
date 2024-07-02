@@ -136,14 +136,15 @@ func BlocklistJsonToStruct(content []byte) (error, []BlocklistType) {
 	list := json.GetArray("list")
 	for _, elem := range list {
 		bl := BlocklistType{
-			Ip:          	string(elem.GetStringBytes("ip")),
-			Session: 		string(elem.GetStringBytes("session")),
-			Useragent: 		string(elem.GetStringBytes("userAgent")),
-			Behavior:   	string(elem.GetStringBytes("behavior")),
-			Delay:			string(elem.GetStringBytes("delay")),
-			Duration:     	string(elem.GetStringBytes("duration")),
-			Property: 		string(elem.GetStringBytes("property")),
-			TimeDetected: 	string(elem.GetStringBytes("timeDetected")),
+			SourceIp:       string(elem.GetStringBytes("SourceIp")),
+			Session: 		string(elem.GetStringBytes("Session")),
+			Useragent: 		string(elem.GetStringBytes("UserAgent")),
+			Behavior:   	string(elem.GetStringBytes("Behavior")),
+			Delay:			string(elem.GetStringBytes("Delay")),
+			Duration:     	string(elem.GetStringBytes("Duration")),
+			Property: 		string(elem.GetStringBytes("Property")),
+			Time: 			string(elem.GetStringBytes("Time")),
+			RequestID: 		string(elem.GetStringBytes("RequestID")),
 		}
 		blocklist = append(blocklist, bl)
 	}

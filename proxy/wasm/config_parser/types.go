@@ -109,14 +109,15 @@ type RespondType struct {
 }
 
 type BlocklistType struct {
-	Ip            string  `json:"ip"`
-	Useragent	  string  `json:"userAgent"`
-	Session		  string  `json:"session"`
-	Behavior      string  `json:"behavior"`
-	Delay         string  `json:"delay"`
-	Duration      string  `json:"duration"`
-	Property	  string  `json:"property"`
-	TimeDetected  string  `json:"timeDetected"`
+	SourceIp      string  `json:"SourceIp"`
+	Useragent	  string  `json:"UserAgent"`
+	Session		  string  `json:"Session"`
+	Behavior      string  `json:"Behavior"`
+	Delay         string  `json:"Delay"`
+	Duration      string  `json:"Duration"`
+	Property	  string  `json:"Property"`
+	Time  		  string  `json:"Time"`
+	RequestID	  string  `json:"RequestID"`
 }
 func (c *DecoyConfig) MakeChecksum() [20]byte{
   confStr := ""
