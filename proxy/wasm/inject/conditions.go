@@ -60,7 +60,7 @@ func checkCondition(request *shared.HttpRequest, condition *config_parser.Condit
     return checkUrl(request.Headers[":path"], condition)
   case "getParam":
     return checkGetParams(request, condition)
-  case "postParams":
+  case "postParam":
     return checkPostParams(request, condition)
   case "payload":
     return checkBody(request, condition)

@@ -171,7 +171,7 @@ func (v *validator) validateWhenTrue(obj ConditionType) {
     return
   }
 	if breaksRequired(obj.Key) && (obj.In == "header" || obj.In == "cookie" || obj.In == "getParam" || obj.In == "postParam") {
-		v.addError(v.currentPlace+".key", "is required and can not be empty for header, cookie, getParam and postParams")
+		v.addError(v.currentPlace+".key", "is required and can not be empty for header, cookie, getParam and postParam")
 	}
 	if breaksRequired(obj.Value) {
 		v.addError(v.currentPlace+".value", "is required and can not be empty")
@@ -180,7 +180,7 @@ func (v *validator) validateWhenTrue(obj ConditionType) {
 		v.addError(v.currentPlace+".in", "is required and can not be empty")
 	}
 	if !validInRequest(obj.In) {
-		v.addError(v.currentPlace+".in", "needs to be cookie, header, url, getParam, postParams or payload")
+		v.addError(v.currentPlace+".in", "needs to be cookie, header, url, getParam, postParam or payload")
 	}
 }
 
@@ -190,7 +190,7 @@ func (v *validator) validateWhenFalse(obj ConditionType) {
     return
   }
 	if breaksRequired(obj.Key) && (obj.In == "header" || obj.In == "cookie" || obj.In == "getParam" || obj.In == "postParam") {
-		v.addError(v.currentPlace+".key", "is required and can not be empty for header, cookie, getParam and postParams")
+		v.addError(v.currentPlace+".key", "is required and can not be empty for header, cookie, getParam and postParam")
 	}
 	if breaksRequired(obj.Value) {
 		v.addError(v.currentPlace+".value", "is required and can not be empty")
@@ -199,7 +199,7 @@ func (v *validator) validateWhenFalse(obj ConditionType) {
 		v.addError(v.currentPlace+".in", "is required and can not be empty")
 	}
 	if !validInRequest(obj.In) {
-		v.addError(v.currentPlace+".in", "needs to be cookie, header, url, getParam, postParams or payload")
+		v.addError(v.currentPlace+".in", "needs to be cookie, header, url, getParam, postParam or payload")
 	}
 }
 
@@ -228,7 +228,7 @@ func (v *validator) validateSeek(obj SeekType) {
 		v.addError(v.currentPlace+".withVerb", "needs to be a valid HTTP verb or empty")
 	}
 	if !validInRequest(obj.In) {
-		v.addError(v.currentPlace+".in", "needs to be cookie, header, url, getParam, postParams or payload")
+		v.addError(v.currentPlace+".in", "needs to be cookie, header, url, getParam, postParam or payload")
 	}
 }
 
