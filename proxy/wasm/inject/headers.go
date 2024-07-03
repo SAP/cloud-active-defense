@@ -416,6 +416,7 @@ func (i *injectHeader) setInitialHeaderContent() error {
 			i.cookies[key] = i.headerContent
 		}
 	} else if i.curFilter.Inject.Store.As == "status" {
+		i.headerContent = ""
 		i.headers[":status"] = ""
 		i.curFilter.Inject.Store.At.Method = ""
 	} else {
