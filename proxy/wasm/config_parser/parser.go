@@ -1,7 +1,7 @@
 package config_parser
 
 import (
-	// "strconv"
+	"strconv"
 	"strings"
 
 	"github.com/valyala/fastjson"
@@ -177,8 +177,8 @@ func (p *Parser) getString(v *fastjson.Value, keys ...string) string {
 	}
   outs := string(out)
   outs = unescapeNewlines(outs)
-	outs = strings.ReplaceAll(outs, "\\\"", "\"")
-	// outs, _ = strconv.Unquote(`"` + outs + `"`)
+	outs = strings.ReplaceAll(outs, "\\\\", "\\")
+	outs, _ = strconv.Unquote("`" + strings.ReplaceAll(outs, "\\\"", "\"") + "`")
   return outs
 }
 
