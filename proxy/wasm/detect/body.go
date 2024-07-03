@@ -137,7 +137,7 @@ func (d *detectBody) detectDecoyInRequest() (error, *alert.AlertParam) {
     alertInfos["verb"] = d.headers[":method"]
     alertInfos["path"] = d.headers[":path"]
     if d.curFilter.Detect.Seek.In == "postParam" && keyMatches {
-      rEValue, err := regexp.Compile("(&)" + key + separator + "[^&]*")
+      rEValue, err := regexp.Compile(key + separator + "[^&]*")
       if err != nil {
         return fmt.Errorf("failed to retrieve postParam value of decoy:" , err.Error()), nil
       }
