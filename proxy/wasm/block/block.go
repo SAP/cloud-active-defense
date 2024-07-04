@@ -33,6 +33,9 @@ func IsThrottled(throttleList []config_parser.BlocklistType, headers, cookies ma
     }
 	
 	th := findSourcePriority(throttleList, session, headers["user-agent"], strings.Split(string(sourceIP), ":")[0])
+	if !isTimeout(th){
+		return "continue"
+	}
 	if th != config_parser.EmptyBlocklist() {
 		if th.Property == "" {
 			return "30-120"
