@@ -26,8 +26,8 @@ services:
   fluent:
     image: fluent/fluent-bit:3.0
     volumes:
-      - ../fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
-      - ../parsers.conf:/fluent-bit/etc/custom_parsers.conf
+      - ../fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ../fluentbit/parsers.conf:/fluent-bit/etc/custom_parsers.conf
     ports:
       - "24224:24224"
       - "24224:24224/udp"
