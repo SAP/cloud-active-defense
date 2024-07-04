@@ -55,8 +55,8 @@ func behaviorAction(bl config_parser.BlocklistType) string {
 			proxywasm.LogErrorf("error when blocking blocklisted user: ", err)
 		}
 		return "pause"
-	} else if bl.Behavior == "divert" {
-		return "clone"
+	} else if bl.Behavior == "clone" || bl.Behavior == "exhaust" {
+		return bl.Behavior
 	}
 	return "continue"
 }

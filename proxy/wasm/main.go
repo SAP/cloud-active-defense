@@ -259,8 +259,8 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
   }
   if action == "pause" {
     return types.ActionPause
-  } else if action == "clone" {
-    ctx.request.Headers[":authority"] = "clone"
+  } else if action == "clone" || action == "exhaust" {
+    ctx.request.Headers[":authority"] = action
   }
 
   for header, value := range ctx.request.Headers {

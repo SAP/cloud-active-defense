@@ -23,6 +23,7 @@ services:
     depends_on:
     - myapp
     - clone
+    - exhaust
     - fluent
     logging:
       driver: fluentd
@@ -41,6 +42,19 @@ services:
     container_name: clone
     build: clone
     image: clone
+    depends_on:
+      - fluent
+    logging:
+      driver: fluentd
+
+  exhaust:
+    container_name: exhaust
+    build: exhaust
+    image: exhaust
+    depends_on:
+      - fluent
+    logging:
+      driver: fluentd
   
 volumes:
   configvolume: {}

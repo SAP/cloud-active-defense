@@ -18,9 +18,12 @@ app.use((req, res, next) => {
 })
 
 const homepage=`
-<div class="full-width">CLONE</div>
+<div class="full-width">
+  ${'EXHAUST'.split('').map(letter => `<span class="letter">${letter}</span>`).join('')}
+</div>
 <div align="center"><button type="button" onclick="window.location.href='/login'">Login</button></div>
-`
+<script src="/script.js"></script>
+`;
 
 const css = `
 <style>
@@ -32,7 +35,7 @@ body {
 .full-width {
   width: 100%;
   text-align: center;
-  font-size: 22vw;
+  font-size: 15vw;
   margin-top: 100px;
 }
 
@@ -110,7 +113,7 @@ const dashboard = `
     </ul>
   </div>
   <div class="main-content">
-    <h2>Welcome to CLONE</h2>
+    <h2>Exhaust</h2>
     <div class="widgets">
       <div class="widget">
         <h3>Total Sales</h3>
@@ -137,7 +140,7 @@ app.get('/', function(req, res) {
    res.send("<html><body>"+css+homepage+"</body></html>");
  }
 });
-app.listen(2000);
+app.listen(4000);
 console.log("Listening on port 3000...");
 
 app.get('/login', (req, res) => {
@@ -146,7 +149,7 @@ app.get('/login', (req, res) => {
   res.send(`
     <h1>Login</h1>
     <form method="POST">
-      <input type="text" name="username" placeholder="Username" />
+      <input type="text" name="username" placeholder="Username" pattern="[^@\\s]+@[^@\\s]+\\.[^@\\s]+" title="Invalid email address" />
       <input type="password" name="password" placeholder="Password" />
       <button type="submit">Sign In</button>
     </form>
@@ -160,15 +163,15 @@ app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
   // Check if the username and password are valid
-  if (username === 'bob' && password === 'bob') {
-    // Valid credentials, set session cookie
-    res.cookie('SESSION', "c32272b9-99d8-4687-b57e-a606952ae870", {
-      httpOnly: true,
-      secure: true
-    });
-    res.redirect('/');
-  } else {
+  // if (username === 'bob@myapp.com' && password === 'bob') {
+  //   // Valid credentials, set session cookie
+  //   res.cookie('SESSION', "c32272b9-99d8-4687-b57e-a606952ae870", {
+  //     httpOnly: true,
+  //     secure: true
+  //   });
+  //   res.redirect('/');
+  // } else {
     res.send('Invalid username or password');
-  }
+  // }
 });
 

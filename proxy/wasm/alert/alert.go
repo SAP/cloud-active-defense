@@ -163,6 +163,13 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
         }
         continue;
       }
+      if updateBlocklistItem["Behavior"] == "divert" {
+        if session != "" {
+          updateBlocklistItem["Behavior"] = "clone"
+        } else {
+          updateBlocklistItem["Behavior"] = "exhaust"
+        }
+      }
       if doesNotContains(blocklist, updateBlocklistItem) {
         updateBlocklist = append(updateBlocklist, updateBlocklistItem)
       }
@@ -207,6 +214,13 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
           updateThrottleList = append(updateThrottleList, updateBlocklistItem)
         }
         continue;
+      }
+      if updateBlocklistItem["Behavior"] == "divert" {
+        if session != "" {
+          updateBlocklistItem["Behavior"] = "clone"
+        } else {
+          updateBlocklistItem["Behavior"] = "exhaust"
+        }
       }
       if doesNotContains(blocklist, updateBlocklistItem) {
         updateBlocklist = append(updateBlocklist, updateBlocklistItem)
