@@ -18,8 +18,11 @@ app.use((req, res, next) => {
 })
 
 const homepage=`
-<div class="full-width">CLONE</div>
+<div class="full-width">
+  ${'CLONE'.split('').map(letter => `<span class="letter">${letter}</span>`).join('')}
+</div>
 <div align="center"><button type="button" onclick="window.location.href='/login'">Login</button></div>
+<script src="/script.js"></script>
 `
 
 const css = `
