@@ -1,4 +1,3 @@
-version: '3'
 services:
 
   myapp:
@@ -20,6 +19,7 @@ services:
     - myapp
     - fluent
     - clone
+    - exhaust
     logging:
       driver: fluentd
   
@@ -35,4 +35,17 @@ services:
   clone:
     container_name: clone
     image: clonetest
+    depends_on:
+      - fluent
+    logging:
+      driver: fluentd
+
+  exhaust:
+    container_name: exhaust
+    build: exhaust
+    image: exhausttest
+    depends_on:
+      - fluent
+    logging:
+      driver: fluentd
 

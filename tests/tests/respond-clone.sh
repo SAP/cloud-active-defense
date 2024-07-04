@@ -33,6 +33,12 @@ config='
 # Configure global config
 globalconfig='
 {
+  "alert": {
+    "session": {
+      "in": "cookie",
+      "key": "SESSION"
+    }
+  },
   "blocklistReload": 1
 }
 '
@@ -51,7 +57,7 @@ start_time=$(date +%s.%N)
 tempfile=$(bash ./uuidgen.sh)
 
 # Call it once first to trigger the alert and get blocklisted
-curl -v -H "x-cloud-active-defense: ACTIVE" -s http://localhost:8000/ &>/dev/null
+curl -v -H "x-cloud-active-defense: ACTIVE" --cookie SESSION=c32272b9-99d8-4687-b57e-a606952ae870 -s http://localhost:8000/ &>/dev/null
 
 # Wait a little for the delay option
 sleep 5

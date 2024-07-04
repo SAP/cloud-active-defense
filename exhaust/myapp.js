@@ -22,6 +22,7 @@ const homepage=`
   ${'EXHAUST'.split('').map(letter => `<span class="letter">${letter}</span>`).join('')}
 </div>
 <div align="center"><button type="button" onclick="window.location.href='/login'">Login</button></div>
+<div class="label">EXHAUST</div>
 <script src="/script.js"></script>
 `;
 
@@ -37,6 +38,12 @@ body {
   text-align: center;
   font-size: 15vw;
   margin-top: 100px;
+}
+
+.label {
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 
 .dashboard {
@@ -128,6 +135,7 @@ const dashboard = `
         <p>3%</p>
       </div>
     </div>
+    <div class="label">EXHAUST</div>
   </div>
 </div>
 `
