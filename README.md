@@ -62,11 +62,9 @@ Visit `http://localhost:8000` from a web browser. You should be granted by a 'we
 
 Let's add a first simple decoy. It won't be very useful but it is easy to understand.
 
-1. stop the demo (CTRL-C in the docker window)
+1. open file `cloud-active-defense/configmanager/cad-default.json`
 
-2. open file `cloud-active-defense/configmanager/cad-default.json`
-
-3. replace the content with the following:
+2. replace the content with the following:
 
 ```
 {
@@ -104,11 +102,9 @@ Let's add a first simple decoy. It won't be very useful but it is easy to unders
 }
 ```
 
-4. restart the demo
+3. check the console for the following line: `wasm log: read new config`
 
-`docker-compose up --build`
-
-5. visit `http://localhost:8000/forbidden`. This should give you an error message `Cannot GET /forbidden`. Check that an alert was sent to the console with LOW severity.
+4. visit `http://localhost:8000/forbidden`. This should give you an error message `Cannot GET /forbidden`. Check that an alert was sent to the console with LOW severity.
 
 ![forbidden decoy alert](./assets/alert.png)
 
@@ -116,11 +112,9 @@ Let's add a first simple decoy. It won't be very useful but it is easy to unders
 
 The decoy we just added might trigger if your application is scanned by bots, but what's more interesting is to detect compromised user accounts. So let's create a decoy which will be visible only to authenticated users.
 
-1. stop the demo (CTRL-C in the docker window)
+1. open file `cloud-active-defense/configmanager/cad-default.json`
 
-2. open file `cloud-active-defense/configmanager/cad-default.json`
-
-3. replace the content with the following:
+2. replace the content with the following:
 
 ```
 {
@@ -195,11 +189,9 @@ The decoy we just added might trigger if your application is scanned by bots, bu
 }
 ```
 
-4. restart the demo
+3. check the console for the following line: `wasm log: read new config`
 
-`docker-compose up --build`
-
-5. visit `http://localhost:8000/login`. Login as **bob@myapp.com/bob**. Press `CTRL-SHIFT-I` to open the developer tools and navigate to the 'storage' tab. Notice how, upon login, a 'role=user' cookie was injected into your cookie jar.
+4. visit `http://localhost:8000/login`. Login as **bob@myapp.com/bob**. Press `CTRL-SHIFT-I` to open the developer tools and navigate to the 'storage' tab. Notice how, upon login, a 'role=user' cookie was injected into your cookie jar.
 
 ![injected role cookie](./assets/cookie.png)
 
