@@ -479,9 +479,13 @@ func (ctx *httpContext) OnHttpStreamDone() {
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
 
     updateThrottleList, updateBlocklist = alert.SetAlertAction(ctx.alerts, ctx.config.Config, ctx.request.Headers, blocklist, throttlelist)
-    updateBlocklistJson, _ := json.MarshalIndent(updateBlocklist, "", " ")
-    updateThrottlelistJson, _ := json.MarshalIndent(updateThrottleList, "", " ")
-    proxywasm.LogWarnf("\n{\"action\": %s},\n{\"throttle\": %s}", updateBlocklistJson, updateThrottlelistJson)
+    beautifyBlocklist, _ := json.MarshalIndent(updateBlocklist, "", " ")
+    beautifyThrottlelist, _ := json.MarshalIndent(updateThrottleList, "", " ")
+    proxywasm.LogWarnf("\n{\"action\": %s},\n{\"throttle\": %s}", beautifyBlocklist, beautifyThrottlelist)
+
+    updateBlocklistJson, _ := json.Marshal(updateBlocklist)
+    updateThrottlelistJson, _ := json.Marshal(updateThrottleList)
+    proxywasm.LogWarnf("{\"event\": true, \"content\": {\"action\": %s},{\"throttle\": %s}}", updateBlocklistJson, updateThrottlelistJson)
 
     blocklist = block.AppendBlocklist(blocklist, updateBlocklist)
     blocklistjson, _ := json.Marshal(blocklist)
