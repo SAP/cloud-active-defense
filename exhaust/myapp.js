@@ -142,11 +142,11 @@ const dashboard = `
 
 app.get('/', function(req, res) {
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
- if (req.cookies.SESSION === "c32272b9-99d8-4687-b57e-a606952ae870") {
-   res.send("<html><body>"+css+dashboard+"</body></html>");
- } else {
+// if (req.cookies.SESSION === "c32272b9-99d8-4687-b57e-a606952ae870") {
+//   res.send("<html><body>"+css+dashboard+"</body></html>");
+// } else {
    res.send("<html><body>"+css+homepage+"</body></html>");
- }
+// }
 });
 app.listen(4000);
 console.log("Listening on port 3000...");
