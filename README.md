@@ -253,14 +253,14 @@ On top of alerting, cloud active defense can be configured to execute an automat
 We pre-defined two such diversion endpoints: **clone** and **exhaust**. As with how **myapp** should be replaced with your own application, these two endpoints should be replaced too if you chose to use diversion as a response mechanism.
 
 ### Exhaust
-This of this endpoint as a *fake facade*. From the outside it looks like your application, but there is nothing behind. The goal of this facade is to exhaust attackers resources against what is basically a wall.
+Think of this endpoint as a *fake facade*. From the outside it looks like your application, but there is nothing behind. The goal of this facade is to exhaust attackers resources against what is basically a wall.
 
 If, upon detection of an attack, envoy detects that the request to be diverted is not authenticated, then it will forward it to the **exhaust** endpoint instead of **myapp**. The exhaust honeypot can be simply a copy of myapp's publicly reachable pages, with no business logic behind. For the demo, the exhaust app is a copy of myapp without any business logic, meaning that trying to login with valid credentials will be denied. All requests sent to **exhaust** should be considered malicious and are thus logged.
 
 ### Clone
-This of this endpoint as a regular *honeypot*. It looks like what is inside your application, but all the content is fake and worthless. The goal of this trap is to further blur the line between what is real and what is not.
+Think of this endpoint as a regular *honeypot*. It looks like what is inside your application, but all the content is fake and worthless. The goal of this trap is to further blur the line between what is real and what is not.
 
-If, upon detection of an attack, envoy detects that the request to divert is authenticated, then it will forward it to the **clone** endpoint instead of **myapp**. The clone honeypot should keep the illusion that the user is logged into the real application, so the clone should be a copy of myapp, except for its data, which should be faked. Creating a believable, fake copy of an application is a complex task that we might visit someday. In the meantime, you may want to deploy a copy of your **exhaust** application as your **clone**. All requests sent to **clone** should be considered malicious and are thus logged.
+If, upon detection of an attack, envoy detects that the request to divert is authenticated, then it will forward it to the **clone** endpoint instead of **myapp**. The clone honeypot should keep the illusion that the user is logged into the real application, so the clone should be a copy of myapp, except for its data, which should be faked. Creating a believable, fake copy of an application is a complex task that we might visit someday. In the meantime, you may want to deploy a second copy of your **exhaust** application as your **clone**. All requests sent to **clone** should be considered malicious and are thus logged.
 
 Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki/Detect#respond) for details.
 
