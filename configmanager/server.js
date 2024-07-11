@@ -36,7 +36,13 @@ app.get('/:namespace/:application', (req, res) => {
               return res.json([]);
             }
             if(!decoys) return res.json([])
-            const decoysJson = JSON.parse(decoys);
+            var decoysJson;
+            try {
+              decoysJson = JSON.parse(decoys);
+            } catch(e){
+              console.error("File cad-default.json is not a valid json");
+              return res.json([]);
+            }
             // Check if the file exists
             fs.access(configFilePath, fs.constants.F_OK, err => {
               if(err) {
@@ -45,8 +51,13 @@ app.get('/:namespace/:application', (req, res) => {
                   fs.readFile(defaultConfigFilePath, 'utf8', (err, config) => {
                     if(err) return res.json({ decoy: decoysJson });
                     if (config) {
-                      const configJson = JSON.parse(config);
-                      return res.json({ decoy: decoysJson, config: configJson });
+                      try {
+                        const configJson = JSON.parse(config);
+                        return res.json({ decoy: decoysJson, config: configJson });
+                      } catch(e){
+                        console.error("File config-default.json is not a valid json");
+                        return res.json([]);
+                      }
                     }
                     return res.json({ decoy: decoysJson })
                   })
@@ -55,8 +66,13 @@ app.get('/:namespace/:application', (req, res) => {
                 fs.readFile(configFilePath, 'utf8', (err, config) => {
                   if(err) return res.json({ decoy: decoysJson });
                   if (config) {
-                    const configJson = JSON.parse(config);
-                    return res.json({ decoy: decoysJson, config: configJson });
+                    try{
+                      const configJson = JSON.parse(config);
+                      return res.json({ decoy: decoysJson, config: configJson });
+                    } catch(e){
+                      console.error(`File config-${namespace}-${application}.json is not a valid json`);
+                      return res.json([]);
+                    }
                   }
                   return res.json({ decoy: decoysJson })
                 })
@@ -73,7 +89,13 @@ app.get('/:namespace/:application', (req, res) => {
           return res.json([]);
         }
         if(!decoys) return res.json([])
-        const decoysJson = JSON.parse(decoys);
+        var decoysJson;
+        try{
+          decoysJson = JSON.parse(decoys);
+        } catch(e){
+          console.error(`File cad-${namespace}-${application}.json is not a valid json`);
+          return res.json([]);
+        }
         // Check if the file exists
         fs.access(configFilePath, fs.constants.F_OK, err => {
           if(err) {
@@ -82,8 +104,13 @@ app.get('/:namespace/:application', (req, res) => {
               fs.readFile(defaultConfigFilePath, 'utf8', (err, config) => {
                 if(err) return res.json({ decoy: decoysJson });
                 if (config) {
-                  const configJson = JSON.parse(config);
-                  return res.json({ decoy: decoysJson, config: configJson });
+                  try{
+                    const configJson = JSON.parse(config);
+                    return res.json({ decoy: decoysJson, config: configJson });
+                  } catch(e){
+                    console.log("File config-default.json is not a valid json");
+                    return res.json([]);
+                  }
                 }
                 return res.json({ decoy: decoysJson })
               })
@@ -92,8 +119,13 @@ app.get('/:namespace/:application', (req, res) => {
             fs.readFile(configFilePath, 'utf8', (err, config) => {
               if(err) return res.json({ decoy: decoysJson });
               if (config) {
-                const configJson = JSON.parse(config);
-                return res.json({ decoy: decoysJson, config: configJson });
+                try{
+                  const configJson = JSON.parse(config);
+                  return res.json({ decoy: decoysJson, config: configJson });
+                } catch(e){
+                  console.error(`File config-${namespace}-${application}.json is not a valid json`);
+                  return res.json([]);
+                }
               }
               return res.json({ decoy: decoysJson })
             })
