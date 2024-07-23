@@ -131,7 +131,7 @@ func (ctx *pluginContext) OnTick() {
       {":method", "POST"}, {":authority", "configmanager"}, {":path", "/blocklist"}, {"accept", "*/*"},
       {"Content-Type", "application/json"},
     }
-    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlocklist, []byte(strings.ReplaceAll("{\"blocklist\":" + string(jsonUpdateBlocklist) + ",\"throttle\":" + string(jsonUpdateThrottleList) + "}", `\`, `\\`)), nil, 5000, callBackSetBlocklist); err != nil {
+    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlocklist, []byte(strings.ReplaceAll("{\"blocklist\":" + strings.ReplaceAll(string(jsonUpdateBlocklist), `\`, `\\`) + ",\"throttle\":" + string(jsonUpdateThrottleList) + "}", `\`, `\\`)), nil, 5000, callBackSetBlocklist); err != nil {
       proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
     }
     updateBlocklist = []map[string]string{}
