@@ -21,13 +21,13 @@ import (
 
 // plugin tick period, config is reread every tick
 const tickMilliseconds uint32 = 1000
-var throttleTickMilliseconds uint32 = 0
+var throttleTickMilliseconds int = 0
 var throttleLoop int = 0
 var updateBlocklist, updateThrottleList []map[string]string
 var blocklist []config_parser.BlocklistType
 var throttlelist []config_parser.BlocklistType
 var blocked bool = false
-var blocklistTick uint32 = 60 // 1 minute
+var blocklistTick int = 60 // 1 minute
 var blocklistLoop = 60
 
 func main() {
@@ -84,7 +84,7 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
       return
     }
     if ctx.config.Config.BlocklistReload != 0 {
-      blocklistTick = uint32(ctx.config.Config.BlocklistReload)
+      blocklistTick = ctx.config.Config.BlocklistReload
     }
     if (ctx.config == nil) {
       ctx.config = &emptyConf
@@ -138,7 +138,7 @@ func (ctx *pluginContext) OnTick() {
   }
 
   // Add delay if
-  if throttleLoop < int(throttleTickMilliseconds) && throttleTickMilliseconds !=0 {
+  if throttleLoop < throttleTickMilliseconds && throttleTickMilliseconds !=0 {
     throttleLoop++
   } else if throttleLoop != 0 {
     throttleTickMilliseconds = 0
@@ -152,7 +152,7 @@ func (ctx *pluginContext) OnTick() {
 		ctx.postponed = tail
   }
   //Fetch blocklist every minutes
-  if blocklistLoop < int(blocklistTick){
+  if blocklistLoop < blocklistTick{
     blocklistLoop++
   } else {
     blocklistLoop = 0
@@ -413,10 +413,14 @@ func (ctx *httpContext) OnHttpResponseHeaders(numHeaders int, endOfStream bool) 
     if len(splitProperty) == 2 {
       min, _ := strconv.Atoi(splitProperty[0])
       max, _ := strconv.Atoi(splitProperty[1])
-      throttleTickMilliseconds = uint32(rand.Intn(max - min + 1) + min)
+      throttleTickMilliseconds = rand.Intn(max - min + 1) + min
     } else {
-      throttle, _ := strconv.Atoi(property)
-      throttleTickMilliseconds = uint32(throttle)
+      throttleTickMilliseconds, err = strconv.Atoi(property)
+      if err != nil {
+        proxywasm.LogErrorf("could not throttle: %s", err.Error())
+        return types.ActionContinue
+      }
+      // throttleTickMilliseconds = throttle
     }
     return types.ActionPause
   }
