@@ -117,21 +117,20 @@ func (ctx *pluginContext) OnTick() {
         proxywasm.LogErrorf("error when setting blocklist: %v", string(responseBody))
       }
     }
-    jsonUpdateBlocklist, err := json.Marshal(updateBlocklist)
-    if err != nil {
-      proxywasm.LogErrorf("could not convert updateBlocklist to json: %v", err)
-      return
+    type updateBlockData struct {
+      Blocklist []map[string]string `json:"blocklist"`
+      Throttlelist  []map[string]string `json:"throttle"`
     }
-    jsonUpdateThrottleList, err := json.Marshal(updateThrottleList)
+    payload, err := json.Marshal(updateBlockData{ Blocklist: updateBlocklist, Throttlelist: updateThrottleList })
     if err != nil {
-      proxywasm.LogErrorf("could not convert updateThrottlelist to json: %v", err)
+      proxywasm.LogErrorf("could not convert updateBlocklist/updateThrottlelist to json: %v", err)
       return
     }
     requestHeadersBlocklist := [][2]string{
       {":method", "POST"}, {":authority", "configmanager"}, {":path", "/blocklist"}, {"accept", "*/*"},
       {"Content-Type", "application/json"},
     }
-    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlocklist, []byte(strings.ReplaceAll("{\"blocklist\":" + strings.ReplaceAll(string(jsonUpdateBlocklist), `\`, `\\`) + ",\"throttle\":" + string(jsonUpdateThrottleList) + "}", `\`, `\\`)), nil, 5000, callBackSetBlocklist); err != nil {
+    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlocklist, payload, nil, 5000, callBackSetBlocklist); err != nil {
       proxywasm.LogCriticalf("dispatch httpcall failed: %v", err)
     }
     updateBlocklist = []map[string]string{}
