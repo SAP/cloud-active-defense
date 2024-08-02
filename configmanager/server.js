@@ -15,9 +15,14 @@ app.get('/:namespace/:application', (req, res) => {
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   res.setHeader("Content-Security-Policy", "script-src 'self'");
   const { namespace, application } = req.params;
-  const filePath = path.resolve(path.normalize(`/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
+  var filePath = '', configFilePath = ''
+  if (!namespace.match(/^[a-zA-Z0-9-]+$/) || !application.match(/^[a-zA-Z0-9-]+$/)) {
+    console.warn(`Bad path provided for decoys config file: ${filePath}, ${configFilePath}`);
+  } else {
+    filePath = path.resolve(`/data/cad-${namespace}-${application}.json`);
+    configFilePath = path.resolve(`/data/config-${namespace}-${application}.json`);
+  }
   const defaultFilePath = `/data/cad-default.json`;
-  const configFilePath = path.resolve(path.normalize(`/data/config-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
   const defaultConfigFilePath = `/data/config-default.json`;
   
   // Check if the file exists
