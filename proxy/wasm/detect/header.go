@@ -34,7 +34,7 @@ func (d *detectHeader) Alert(logParameters map[string]string, headers map[string
 func OnHttpRequestHeaders(request *shared.HttpRequest, config *config_parser.Config) (error, []alert.AlertParam) {
   d := &detectHeader{ config, nil, request.Headers, request.Cookies, nil}
   noFilters := len(d.conf.Decoys.Filters)
-  if config_proxy.Debug { proxywasm.LogWarnf("*** detect request headers *** %v filters", noFilters) } //debug
+  if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"*** detect request headers *** %v filters\"}", noFilters) } //debug
 
   alerts := []alert.AlertParam{}
   for ind := 0; ind < noFilters; ind++ {
@@ -46,7 +46,7 @@ func OnHttpRequestHeaders(request *shared.HttpRequest, config *config_parser.Con
       continue
     } 
 
-    if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"did not skip, apply filter[%v] now\"}", ind) } //debug
     err, decoyAlert := d.detectDecoyInRequest()
     if err != nil {
       return err, alerts
@@ -63,7 +63,7 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
 
   var err error
 
-  if config_proxy.Debug { proxywasm.LogWarn("*** detect response headers ***") } //debug
+  if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"*** detect response headers ***\"}") } //debug
   alerts := []alert.AlertParam{}
   for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
     d.curFilter = &d.conf.Decoys.Filters[ind]
@@ -76,7 +76,7 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
     } else if skip {
       continue
     } 
-    if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"did not skip, apply filter[%v] now\"}", ind) } //debug
 
     err, decoyAlert := d.detectDecoyInResponse()
     if err != nil {
@@ -96,12 +96,12 @@ func (d *detectHeader) checkConditionsRequest(ind int) (error, bool) {
   if isRelReq, err := d.relevantRequest(); err != nil {
     return fmt.Errorf("store.forRequest: can not compile regEx: %v", err.Error()), true
   } else if !d.relevantVerbRequest() || !isRelReq {
-    if config_proxy.Debug { proxywasm.LogWarnf("skip [%v] because wrong verb or request", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skip [%v] because wrong verb or request\"}", ind) } //debug
     return nil, true
   }
 
   if d.curFilter.Detect.Seek.In == "payload" || d.curFilter.Detect.Seek.In == "postParam"{
-    if config_proxy.Debug { proxywasm.LogWarnf("skipped [%v] because header detection", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped [%v] because header detection\"}", ind) } //debug
     return nil, true
   }
   return nil, skip
@@ -113,12 +113,12 @@ func (d *detectHeader) checkConditionsResponse(ind int) (error, bool) {
   if isRelRes, err := d.relevantResponse(); err != nil {
     return fmt.Errorf("store.forResponse: can not compile regEx: %v", err.Error()), true
   } else if !d.relevantVerbResponse() || !isRelRes {
-    if config_proxy.Debug { proxywasm.LogWarnf("skip [%v] because wrong verb or response", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skip [%v] because wrong verb or response\"}", ind) } //debug
     return nil, true
   }
 
   if d.curFilter.Detect.Seek.In == "payload" || d.curFilter.Detect.Seek.In == "postParam"{
-    if config_proxy.Debug { proxywasm.LogWarnf("skipped [%v] because header detection", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped [%v] because header detection\"}", ind) } //debug
     return nil, true
   }
   return nil, skip
@@ -223,7 +223,7 @@ func (d *detectHeader) relevantVerbRequest() bool {
   httpMethod := d.headers[":method"]
   res := (d.curFilter.Detect.Seek.WithVerb == httpMethod) || (d.curFilter.Detect.Seek.WithVerb == "")
   if !res {
-    if config_proxy.Debug { proxywasm.LogWarnf("Method does not match: %s != %s \n", d.curFilter.Detect.Seek.WithVerb, httpMethod) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"Method does not match: %s != %s \n\"}", d.curFilter.Detect.Seek.WithVerb, httpMethod) } //debug
   }
   return res
 }
@@ -232,7 +232,7 @@ func (d *detectHeader) relevantVerbResponse() bool {
   httpMethod := d.request.Headers[":method"]
   res := (d.curFilter.Detect.Seek.WithVerb == httpMethod) || (d.curFilter.Detect.Seek.WithVerb == "")
   if !res {
-    if config_proxy.Debug { proxywasm.LogWarnf("Method does not match: %s != %s \n", d.curFilter.Detect.Seek.WithVerb, httpMethod) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"Method does not match: %s != %s \n\"}", d.curFilter.Detect.Seek.WithVerb, httpMethod) } //debug
   }
   return res
 }
@@ -249,7 +249,7 @@ func (d *detectHeader) relevantRequest() (bool, error) {
   httpReqUrl := d.headers[":path"]
   res := regEx.MatchString(httpReqUrl)
   if !res {
-    if config_proxy.Debug { proxywasm.LogWarnf("Path does not match: %s != %s", httpReqUrl, d.curFilter.Detect.Seek.InRequest) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"Path does not match: %s != %s\"}", httpReqUrl, d.curFilter.Detect.Seek.InRequest) } //debug
   }
   return res, nil
 }
@@ -266,9 +266,9 @@ func (d *detectHeader) relevantResponse() (bool, error) {
   httpResUrl := d.request.Headers[":path"]
   res := regEx.MatchString(httpResUrl)
   if !res {
-    if config_proxy.Debug { proxywasm.LogWarnf("Path does not match: %s != %s", httpResUrl, d.curFilter.Detect.Seek.InResponse) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"Path does not match: %s != %s\"}", httpResUrl, d.curFilter.Detect.Seek.InResponse) } //debug
   }else{
-    if config_proxy.Debug { proxywasm.LogWarnf("Path does match: %s != %s", httpResUrl, d.curFilter.Detect.Seek.InResponse) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"Path does match: %s != %s\"}", httpResUrl, d.curFilter.Detect.Seek.InResponse) } //debug
   }
   return res, nil
 }
@@ -328,7 +328,7 @@ func (d *detectHeader) detectHeader(alertInfos *map[string]string) (error, bool)
   header = key+"="+header
   (*alertInfos)["injected"] = d.headers[key]
   err, keyMatch, combinedMatch := shared.KeyCombinedMatch(d.curFilter, &header)
-  if config_proxy.Debug { proxywasm.LogWarnf("detect in header matches key %v, combined %v", keyMatch, combinedMatch ) } //debug
+  if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"detect in header matches key %v, combined %v\"}", keyMatch, combinedMatch ) } //debug
   if err != nil {
     return fmt.Errorf("could not match: %v", err.Error()), false
   }
