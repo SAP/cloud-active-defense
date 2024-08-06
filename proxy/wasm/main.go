@@ -489,7 +489,7 @@ func (ctx *httpContext) OnHttpStreamDone() {
 
     updateBlocklistJson, _ := json.Marshal(updateBlocklist)
     updateThrottlelistJson, _ := json.Marshal(updateThrottleList)
-    proxywasm.LogWarnf("{\"type\": \"event\", \"content\": {\"action\": %s},{\"throttle\": %s}}", updateBlocklistJson, updateThrottlelistJson)
+    proxywasm.LogWarnf("{\"type\": \"event\", \"content\": {\"action\": %s,\"throttle\": %s}}", updateBlocklistJson, updateThrottlelistJson)
 
     blocklist = block.AppendBlocklist(blocklist, updateBlocklist)
     blocklistjson, _ := json.Marshal(blocklist)
