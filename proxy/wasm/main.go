@@ -11,6 +11,7 @@ import ( //"strconv"
 
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
+	"github.com/valyala/fastjson"
 )
 
 // plugin tick period, config is reread every tick
@@ -36,10 +37,27 @@ type pluginContext struct {
   config           *config_parser.Config
   configChecksum        [32]byte
   callBackConfRequested func(numHeaders, bodySize, numTrailers int)
+  deployment            string
+  namespace             string
 }
 
 func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
   // load decoy config
+
+  data, err := proxywasm.GetPluginConfiguration()
+	if err != nil {
+		proxywasm.LogCriticalf("error reading plugin configuration: %v", err)
+	}
+
+	ctx.deployment = fastjson.GetString(data, "deployment")
+  ctx.namespace = fastjson.GetString(data, "namespace")
+  if ctx.deployment == "" {
+    ctx.deployment = "unknown"
+  }
+  if ctx.namespace == "" {
+    ctx.namespace = "unknown"
+  }
+
   if err := proxywasm.SetTickPeriodMilliSeconds(tickMilliseconds); err != nil {
     proxywasm.LogCriticalf("failed to set tick period: %v", err.Error())
     return types.OnPluginStartStatusFailed
@@ -82,7 +100,7 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
 func (ctx *pluginContext) OnTick() {
   //proxywasm.LogInfof("--- plugin tick, rereading config ---")
   requestHeaders := [][2]string{
-    {":method", "GET"}, {":authority", "configmanager"}, {":path", "/CHANGE/ME"}, {"accept", "*/*"},
+    {":method", "GET"}, {":authority", "configmanager"}, {":path", "/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
     {"Content-Type", "application/json"},
   }
   if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
