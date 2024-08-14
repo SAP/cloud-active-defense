@@ -40,7 +40,7 @@ jobs:
         id: push
         uses: docker/build-push-action@v5.3.0
         with:
-          context: .
+          context: ./myapp
           push: true
           file: ./myapp/Dockerfile
           tags: ${{ steps.meta.outputs.tags }}
