@@ -14,6 +14,8 @@ type Config struct {
 type ConfigType struct {
 	Alert AlertConfig	`json:"config"`
 	Server string		`json:"server"`
+	Respond []RespondType	`json:"respond"`
+	BlocklistReload int `json:"blocklistReload"`
 }
 
 type AlertConfig struct {
@@ -80,6 +82,7 @@ type AtType struct {
 type DetectType struct {
 	Seek  SeekType  `json:"seek"`
 	Alert AlertType `json:"alert"`
+	Respond []RespondType	`json:"respond"`
 }
 
 type SeekType struct {
@@ -97,6 +100,25 @@ type AlertType struct {
 	WhenAbsent   bool   `json:"whenAbsent"`
 }
 
+type RespondType struct {
+	Source		string `json:"source"`
+	Behavior	string `json:"behavior"`
+	Delay		string `json:"delay"`
+	Duration	string `json:"duration"`
+	Property	string `json:"property"`
+}
+
+type BlocklistType struct {
+	SourceIp      string  `json:"SourceIp"`
+	Useragent	  string  `json:"UserAgent"`
+	Session		  string  `json:"Session"`
+	Behavior      string  `json:"Behavior"`
+	Delay         string  `json:"Delay"`
+	Duration      string  `json:"Duration"`
+	Property	  string  `json:"Property"`
+	Time  		  string  `json:"Time"`
+	RequestID	  string  `json:"RequestID"`
+}
 func (c *DecoyConfig) MakeChecksum() [20]byte{
   confStr := ""
 	for _, filter := range c.Filters {

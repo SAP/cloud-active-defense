@@ -6,12 +6,23 @@ var cookieParser = require('cookie-parser')
 app.use(express.static('files'))
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use((req, res, next) => {
+  console.warn(JSON.stringify({ log: true, source: "exhaust", content: { 
+    method: req.method,
+    path: req.path,
+    isAuthenticated: req.cookies.SESSION ? true : false,
+    requestHeaders: req.headers,
+    requestBody: req.body,
+  }}));
+  next();
+})
 
 const homepage=`
 <div class="full-width">
-  ${'WELCOME'.split('').map(letter => `<span class="letter">${letter}</span>`).join('')}
+  ${'EXHAUST'.split('').map(letter => `<span class="letter">${letter}</span>`).join('')}
 </div>
 <div align="center"><button type="button" onclick="window.location.href='/login'">Login</button></div>
+<div class="label">EXHAUST</div>
 <script src="/script.js"></script>
 `;
 
@@ -27,6 +38,12 @@ body {
   text-align: center;
   font-size: 15vw;
   margin-top: 100px;
+}
+
+.label {
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 
 .dashboard {
@@ -103,7 +120,7 @@ const dashboard = `
     </ul>
   </div>
   <div class="main-content">
-    <h2>Welcome Bob</h2>
+    <h2>Exhaust</h2>
     <div class="widgets">
       <div class="widget">
         <h3>Total Sales</h3>
@@ -118,19 +135,20 @@ const dashboard = `
         <p>3%</p>
       </div>
     </div>
+    <div class="label">EXHAUST</div>
   </div>
 </div>
 `
 
 app.get('/', function(req, res) {
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
- if (req.cookies.SESSION === "c32272b9-99d8-4687-b57e-a606952ae870") {
-   res.send("<html><body>"+css+dashboard+"</body></html>");
- } else {
+// if (req.cookies.SESSION === "c32272b9-99d8-4687-b57e-a606952ae870") {
+//   res.send("<html><body>"+css+dashboard+"</body></html>");
+// } else {
    res.send("<html><body>"+css+homepage+"</body></html>");
- }
+// }
 });
-app.listen(3000);
+app.listen(4000);
 console.log("Listening on port 3000...");
 
 app.get('/login', (req, res) => {
@@ -153,15 +171,15 @@ app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
   // Check if the username and password are valid
-  if (username === 'bob@myapp.com' && password === 'bob') {
-    // Valid credentials, set session cookie
-    res.cookie('SESSION', "c32272b9-99d8-4687-b57e-a606952ae870", {
-      httpOnly: true,
-      secure: true
-    });
-    res.redirect('/');
-  } else {
+  // if (username === 'bob@myapp.com' && password === 'bob') {
+  //   // Valid credentials, set session cookie
+  //   res.cookie('SESSION', "c32272b9-99d8-4687-b57e-a606952ae870", {
+  //     httpOnly: true,
+  //     secure: true
+  //   });
+  //   res.redirect('/');
+  // } else {
     res.send('Invalid username or password');
-  }
+  // }
 });
 

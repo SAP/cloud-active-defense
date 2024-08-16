@@ -1,4 +1,3 @@
-version: '3'
 services:
 
   myapp:
@@ -19,15 +18,34 @@ services:
     depends_on:
     - myapp
     - fluent
+    - clone
+    - exhaust
     logging:
       driver: fluentd
   
   fluent:
     image: fluent/fluent-bit:3.0
     volumes:
-      - ../fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
-      - ../parsers.conf:/fluent-bit/etc/custom_parsers.conf
+      - ../fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ../fluentbit/parsers.conf:/fluent-bit/etc/custom_parsers.conf
     ports:
       - "24224:24224"
       - "24224:24224/udp"
+
+  clone:
+    container_name: clone
+    image: clonetest
+    depends_on:
+      - fluent
+    logging:
+      driver: fluentd
+
+  exhaust:
+    container_name: exhaust
+    build: exhaust
+    image: exhausttest
+    depends_on:
+      - fluent
+    logging:
+      driver: fluentd
 

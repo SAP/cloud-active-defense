@@ -62,11 +62,9 @@ Visit `http://localhost:8000` from a web browser. You should be granted by a 'we
 
 Let's add a first simple decoy. It won't be very useful but it is easy to understand.
 
-1. stop the demo (CTRL-C in the docker window)
+1. open file `cloud-active-defense/configmanager/cad-default.json`
 
-2. open file `cloud-active-defense/configmanager/cad-default.json`
-
-3. replace the content with the following:
+2. replace the content with the following:
 
 ```
 {
@@ -104,11 +102,9 @@ Let's add a first simple decoy. It won't be very useful but it is easy to unders
 }
 ```
 
-4. restart the demo
+3. check the console for the following line: `wasm log: read new config`
 
-`docker-compose up --build`
-
-5. visit `http://localhost:8000/forbidden`. This should give you an error message `Cannot GET /forbidden`. Check that an alert was sent to the console with LOW severity.
+4. visit `http://localhost:8000/forbidden`. This should give you an error message `Cannot GET /forbidden`. Check that an alert was sent to the console with LOW severity.
 
 ![forbidden decoy alert](./assets/alert.png)
 
@@ -116,11 +112,9 @@ Let's add a first simple decoy. It won't be very useful but it is easy to unders
 
 The decoy we just added might trigger if your application is scanned by bots, but what's more interesting is to detect compromised user accounts. So let's create a decoy which will be visible only to authenticated users.
 
-1. stop the demo (CTRL-C in the docker window)
+1. open file `cloud-active-defense/configmanager/cad-default.json`
 
-2. open file `cloud-active-defense/configmanager/cad-default.json`
-
-3. replace the content with the following:
+2. replace the content with the following:
 
 ```
 {
@@ -195,11 +189,9 @@ The decoy we just added might trigger if your application is scanned by bots, bu
 }
 ```
 
-4. restart the demo
+3. check the console for the following line: `wasm log: read new config`
 
-`docker-compose up --build`
-
-5. visit `http://localhost:8000/login`. Login as **bob/bob**. Press `CTRL-SHIFT-I` to open the developer tools and navigate to the 'storage' tab. Notice how, upon login, a 'role=user' cookie was injected into your cookie jar.
+4. visit `http://localhost:8000/login`. Login as **bob@myapp.com/bob**. Press `CTRL-SHIFT-I` to open the developer tools and navigate to the 'storage' tab. Notice how, upon login, a 'role=user' cookie was injected into your cookie jar.
 
 ![injected role cookie](./assets/cookie.png)
 
@@ -233,7 +225,7 @@ Cloud active defense complements existing solutions such as Intrusion Detection 
 Myapp is a demo application which can be used to test how decoys work. It is a simplistic web application with the following features:
   * `GET /` : the front page, displays 'welcome' if you're not authenticated. Displays a static 'dashboard' page otherwise.
   * `GET /login` : a form displaying a login field, a password field, and a submit button.
-  * `POST /login` : checks if username is 'bob' and password is 'bob'. It not, sends an error message. If yes, authenticates by setting a (hardcoded) 'SESSION' cookie
+  * `POST /login` : checks if username is 'bob@myapp.com' and password is 'bob'. It not, sends an error message. If yes, authenticates by setting a (hardcoded) 'SESSION' cookie
 
 There is no logout mechanism. Delete the SESSION cookie to log out.
 
@@ -245,6 +237,32 @@ Envoy will send a GET request to configmanager a few times per minute and update
 
 ## Envoy
 Envoy is an open-source reverse proxy. Upon start, it reads the envoy.yaml config file, which loads the cloud-active-defense.wasm plugin. This plugin reads the content of cad-default.json and applies it upon receiving HTTP requests from the browser and HTTP responses from myapp.
+
+# Full architecture
+
+![Full architecture](./assets/arch1.png)
+
+The full architecture comprises extra containers which achieve the following goals:
+
+## Fluent-bit
+Alerts raised by Envoy are sent to its console log. By configuring 'fluentd' as a logging driver, these alerts are sent to a **fluent-bit** container. Fluent-bit can be seen as a pipe which can collect and forward data. By default, fluent-bit will display the collected data to its own console log. Now, fluent-bit can be configured to forward these logs to your favorite monitoring tool, such as Splunk, Loki or Elasticsearch. Please refer to [fluentbit.io](https://docs.fluentbit.io/manual/pipeline/outputs) for details.
+
+## Clone and Exhaust
+On top of alerting, cloud active defense can be configured to execute an automated response. One such response is to *divert* the adversary to, essentially, a honeypot.
+
+We pre-defined two such diversion endpoints: **clone** and **exhaust**. As with how **myapp** should be replaced with your own application, these two endpoints should be replaced too if you chose to use diversion as a response mechanism.
+
+### Exhaust
+Think of this endpoint as a *fake facade*. From the outside it looks like your application, but there is nothing behind. The goal of this facade is to exhaust attackers resources against what is basically a wall.
+
+If, upon detection of an attack, envoy detects that the request to be diverted is not authenticated, then it will forward it to the **exhaust** endpoint instead of **myapp**. The exhaust honeypot can be simply a copy of myapp's publicly reachable pages, with no business logic behind. For the demo, the exhaust app is a copy of myapp without any business logic, meaning that trying to login with valid credentials will be denied. All requests sent to **exhaust** should be considered malicious and are thus logged.
+
+### Clone
+Think of this endpoint as a regular *honeypot*. It looks like what is inside your application, but all the content is fake and worthless. The goal of this trap is to further blur the line between what is real and what is not.
+
+If, upon detection of an attack, envoy detects that the request to divert is authenticated, then it will forward it to the **clone** endpoint instead of **myapp**. The clone honeypot should keep the illusion that the user is logged into the real application, so the clone should be a copy of myapp, except for its data, which should be faked. Creating a believable, fake copy of an application is a complex task that we might visit someday. In the meantime, you may want to deploy a second copy of your **exhaust** application as your **clone**. All requests sent to **clone** should be considered malicious and are thus logged.
+
+Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki/Detect#respond) for details.
 
 # Configuration and advanced topics
 Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki) page to learn about decoys in details, and about how to modify the source code.
@@ -269,7 +287,7 @@ If you find any bug that may be a security problem, please follow our instructio
 # On the TODO list
 Features we plan to eventually release:
   * [DONE] adding a configuration specifying where to find information about the user's session. We want to use this to add session / logged in user information in the alert.
-  * show how to ingest alerts into fluentd for further processing (currently alerts are simply shown on the console)
+  * [DONE] show how to ingest alerts into fluentd for further processing (currently alerts are simply shown on the console)
   * show how to deploy into SAP Kyma as an extension of the mesh service
 
 # Code of Conduct

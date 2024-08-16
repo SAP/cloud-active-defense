@@ -6,14 +6,25 @@ var cookieParser = require('cookie-parser')
 app.use(express.static('files'))
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use((req, res, next) => {
+  console.warn(JSON.stringify({ log: true, source: "exhaust", content: { 
+    method: req.method,
+    path: req.path,
+    isAuthenticated: req.cookies.SESSION ? true : false,
+    requestHeaders: req.headers,
+    requestBody: req.body,
+  }}));
+  next();
+})
 
 const homepage=`
 <div class="full-width">
-  ${'WELCOME'.split('').map(letter => `<span class="letter">${letter}</span>`).join('')}
+  ${'CLONE'.split('').map(letter => `<span class="letter">${letter}</span>`).join('')}
 </div>
 <div align="center"><button type="button" onclick="window.location.href='/login'">Login</button></div>
+<div class="label">CLONE</div>
 <script src="/script.js"></script>
-`;
+`
 
 const css = `
 <style>
@@ -25,13 +36,19 @@ body {
 .full-width {
   width: 100%;
   text-align: center;
-  font-size: 15vw;
+  font-size: 22vw;
   margin-top: 100px;
 }
 
 .dashboard {
   display: flex;
   height: 100vh;
+}
+
+.label {
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 
 .header {
@@ -103,7 +120,7 @@ const dashboard = `
     </ul>
   </div>
   <div class="main-content">
-    <h2>Welcome Bob</h2>
+    <h2>Welcome to CLONE</h2>
     <div class="widgets">
       <div class="widget">
         <h3>Total Sales</h3>
@@ -118,6 +135,7 @@ const dashboard = `
         <p>3%</p>
       </div>
     </div>
+    <div class="label">CLONE</div>
   </div>
 </div>
 `
@@ -130,7 +148,7 @@ app.get('/', function(req, res) {
    res.send("<html><body>"+css+homepage+"</body></html>");
  }
 });
-app.listen(3000);
+app.listen(2000);
 console.log("Listening on port 3000...");
 
 app.get('/login', (req, res) => {
@@ -139,7 +157,7 @@ app.get('/login', (req, res) => {
   res.send(`
     <h1>Login</h1>
     <form method="POST">
-      <input type="text" name="username" placeholder="Username" pattern="[^@\\s]+@[^@\\s]+\\.[^@\\s]+" title="Invalid email address" />
+      <input type="text" name="username" placeholder="Username" />
       <input type="password" name="password" placeholder="Password" />
       <button type="submit">Sign In</button>
     </form>
@@ -153,7 +171,7 @@ app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
   // Check if the username and password are valid
-  if (username === 'bob@myapp.com' && password === 'bob') {
+  if (username === 'bob' && password === 'bob') {
     // Valid credentials, set session cookie
     res.cookie('SESSION', "c32272b9-99d8-4687-b57e-a606952ae870", {
       httpOnly: true,

@@ -8,7 +8,7 @@ ADD files/script.js /usr/app/files/script.js
 ADD https://raw.githubusercontent.com/SAP/cloud-active-defense/main/LICENSE /
 LABEL org.opencontainers.image.licenses="APACHE-2.0"
 LABEL org.opencontainers.image.auhors="cedric.hebert@sap.com"
-LABEL org.opencontainers.image.source="https://github.com/SAP/cloud-active-defense/tree/main/myapp"
+LABEL org.opencontainers.image.source="https://github.com/SAP/cloud-active-defense/tree/main/clone"
 USER nobody
-EXPOSE 3000
+EXPOSE 2000
 CMD [ "node", "myapp.js" ]

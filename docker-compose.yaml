@@ -10,7 +10,10 @@ services:
     container_name: configmanager
     build: configmanager
     image: configmanager
-
+    volumes:
+    - ./configmanager/data:/data
+    - configvolume:/data/blocklist
+      
   proxy:
     container_name: proxy
     build: proxy
@@ -19,16 +22,39 @@ services:
     - "8000:8000"
     depends_on:
     - myapp
+    - clone
+    - exhaust
     - fluent
     logging:
       driver: fluentd
   
   fluent:
+    container_name: fluentbit
     image: fluent/fluent-bit:3.0
     volumes:
-      - ./fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
-      - ./parsers.conf:/fluent-bit/etc/custom_parsers.conf
+      - ./fluentbit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./fluentbit/parsers.conf:/fluent-bit/etc/custom_parsers.conf
     ports:
       - "24224:24224"
       - "24224:24224/udp"
 
+  clone:
+    container_name: clone
+    build: clone
+    image: clone
+    depends_on:
+      - fluent
+    logging:
+      driver: fluentd
+
+  exhaust:
+    container_name: exhaust
+    build: exhaust
+    image: exhaust
+    depends_on:
+      - fluent
+    logging:
+      driver: fluentd
+  
+volumes:
+  configvolume: {}

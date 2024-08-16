@@ -8,15 +8,21 @@ app.use(hsts({
   maxAge: 31536000,
   includeSubDomains: true
 }))
+app.use(express.json())
 
 // Define a GET route that accepts a namespace and application parameter
 app.get('/:namespace/:application', (req, res) => {
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   res.setHeader("Content-Security-Policy", "script-src 'self'");
   const { namespace, application } = req.params;
-  const filePath = path.resolve(path.normalize(`/data/cad-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
+  var filePath = '', configFilePath = ''
+  if (!namespace.match(/^[a-zA-Z0-9-]+$/) || !application.match(/^[a-zA-Z0-9-]+$/)) {
+    console.warn(`Bad path provided for decoys config file: ${filePath}, ${configFilePath}`);
+  } else {
+    filePath = path.resolve(`/data/cad-${namespace}-${application}.json`);
+    configFilePath = path.resolve(`/data/config-${namespace}-${application}.json`);
+  }
   const defaultFilePath = `/data/cad-default.json`;
-  const configFilePath = path.resolve(path.normalize(`/data/config-${namespace}-${application}.json`).replace(/^(\.\.(\/|\\|$))+/, ''));
   const defaultConfigFilePath = `/data/config-default.json`;
   
   // Check if the file exists
@@ -35,7 +41,13 @@ app.get('/:namespace/:application', (req, res) => {
               return res.json([]);
             }
             if(!decoys) return res.json([])
-            const decoysJson = JSON.parse(decoys);
+            var decoysJson;
+            try {
+              decoysJson = JSON.parse(decoys);
+            } catch(e){
+              console.error("File cad-default.json is not a valid json");
+              return res.json([]);
+            }
             // Check if the file exists
             fs.access(configFilePath, fs.constants.F_OK, err => {
               if(err) {
@@ -44,8 +56,13 @@ app.get('/:namespace/:application', (req, res) => {
                   fs.readFile(defaultConfigFilePath, 'utf8', (err, config) => {
                     if(err) return res.json({ decoy: decoysJson });
                     if (config) {
-                      const configJson = JSON.parse(config);
-                      return res.json({ decoy: decoysJson, config: configJson });
+                      try {
+                        const configJson = JSON.parse(config);
+                        return res.json({ decoy: decoysJson, config: configJson });
+                      } catch(e){
+                        console.error("File config-default.json is not a valid json");
+                        return res.json([]);
+                      }
                     }
                     return res.json({ decoy: decoysJson })
                   })
@@ -54,8 +71,13 @@ app.get('/:namespace/:application', (req, res) => {
                 fs.readFile(configFilePath, 'utf8', (err, config) => {
                   if(err) return res.json({ decoy: decoysJson });
                   if (config) {
-                    const configJson = JSON.parse(config);
-                    return res.json({ decoy: decoysJson, config: configJson });
+                    try{
+                      const configJson = JSON.parse(config);
+                      return res.json({ decoy: decoysJson, config: configJson });
+                    } catch(e){
+                      console.error(`File config-${namespace}-${application}.json is not a valid json`);
+                      return res.json([]);
+                    }
                   }
                   return res.json({ decoy: decoysJson })
                 })
@@ -72,7 +94,13 @@ app.get('/:namespace/:application', (req, res) => {
           return res.json([]);
         }
         if(!decoys) return res.json([])
-        const decoysJson = JSON.parse(decoys);
+        var decoysJson;
+        try{
+          decoysJson = JSON.parse(decoys);
+        } catch(e){
+          console.error(`File cad-${namespace}-${application}.json is not a valid json`);
+          return res.json([]);
+        }
         // Check if the file exists
         fs.access(configFilePath, fs.constants.F_OK, err => {
           if(err) {
@@ -81,8 +109,13 @@ app.get('/:namespace/:application', (req, res) => {
               fs.readFile(defaultConfigFilePath, 'utf8', (err, config) => {
                 if(err) return res.json({ decoy: decoysJson });
                 if (config) {
-                  const configJson = JSON.parse(config);
-                  return res.json({ decoy: decoysJson, config: configJson });
+                  try{
+                    const configJson = JSON.parse(config);
+                    return res.json({ decoy: decoysJson, config: configJson });
+                  } catch(e){
+                    console.log("File config-default.json is not a valid json");
+                    return res.json([]);
+                  }
                 }
                 return res.json({ decoy: decoysJson })
               })
@@ -91,8 +124,13 @@ app.get('/:namespace/:application', (req, res) => {
             fs.readFile(configFilePath, 'utf8', (err, config) => {
               if(err) return res.json({ decoy: decoysJson });
               if (config) {
-                const configJson = JSON.parse(config);
-                return res.json({ decoy: decoysJson, config: configJson });
+                try{
+                  const configJson = JSON.parse(config);
+                  return res.json({ decoy: decoysJson, config: configJson });
+                } catch(e){
+                  console.error(`File config-${namespace}-${application}.json is not a valid json`);
+                  return res.json([]);
+                }
               }
               return res.json({ decoy: decoysJson })
             })
@@ -103,6 +141,87 @@ app.get('/:namespace/:application', (req, res) => {
   });
 });
 
+app.get('/blocklist', (req, res) => {
+  fs.access("/data/blocklist/blocklist.json", fs.constants.F_OK, err => {
+    if (err) {
+      fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
+      return res.json({list: []})
+    }
+    const blocklist = JSON.parse(fs.readFileSync("/data/blocklist/blocklist.json", 'utf8'))
+    i = 0
+    for (const elem of blocklist.list) {
+      if (elem.Duration == 'forever') continue
+      const unbanDate = new Date(elem.Time * 1000)
+      switch (elem.Duration[elem.Duration.length-1]) {
+        case 's':
+          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
+          break;
+        case 'm':
+          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
+          break;
+        case 'h':
+          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
+          break;
+      }
+      if (new Date() >= unbanDate){
+        blocklist.list.splice(i, 1)
+      }
+      i++
+    }
+    fs.writeFileSync("/data/blocklist/blocklist.json", JSON.stringify(blocklist))
+    return res.json(blocklist)
+  })
+})
+
+app.post('/blocklist', (req, res) => {
+  var error;
+  fs.access("/data/blocklist/blocklist.json", fs.constants.F_OK, err => {
+    if (err) error = err
+    const blocklistFile = JSON.parse(fs.readFileSync("/data/blocklist/blocklist.json", 'utf8'))
+    blocklistFile.list.push(...req.body.blocklist)
+    fs.writeFileSync("/data/blocklist/blocklist.json", JSON.stringify(blocklistFile))
+  })
+  fs.access("/data/blocklist/throttlelist.json", fs.constants.F_OK, err => {
+    if (err) error = err
+    const throttlelistFile = JSON.parse(fs.readFileSync("/data/blocklist/throttlelist.json", 'utf8'))
+    throttlelistFile.list.push(...req.body.throttle)
+    fs.writeFileSync("/data/blocklist/throttlelist.json", JSON.stringify(throttlelistFile))
+  })
+  if (error) return res.send(error)
+  return res.send("Done")
+})
+
+app.get('/throttlelist', (req, res) => {
+  fs.access("/data/blocklist/throttlelist.json", fs.constants.F_OK, err => {
+    if (err) {
+      fs.writeFileSync("/data/blocklist/throttlelist.json", `{"list":[]}`, 'utf8')
+      return res.json({list: []})
+    }
+    const throttlelist = JSON.parse(fs.readFileSync("/data/blocklist/throttlelist.json", 'utf8'))
+    i = 0
+    for (const elem of throttlelist.list) {
+      if (elem.Duration == 'forever') continue
+      const unbanDate = new Date(elem.Time * 1000)
+      switch (elem.Duration[elem.Duration.length-1]) {
+        case 's':
+          unbanDate.setSeconds(unbanDate.getSeconds() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
+          break;
+        case 'm':
+          unbanDate.setMinutes(unbanDate.getMinutes() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
+          break;
+        case 'h':
+          unbanDate.setHours(unbanDate.getHours() + parseInt(elem.Duration.substring(0, elem.Duration.length-1)))
+          break;
+      }
+      if (new Date() >= unbanDate){
+        throttlelist.list.splice(i, 1)
+      }
+      i++
+    }
+    fs.writeFileSync("/data/blocklist/throttlelist.json", JSON.stringify(throttlelist))
+    return res.json(throttlelist)
+  })
+})
 // Start the server
 app.listen(3000, () => {
   try {
@@ -110,6 +229,12 @@ app.listen(3000, () => {
     if (!fs.existsSync('/data/config-default.json')) fs.cpSync('/app/config-default.json', '/data/config-default.json');
   } catch(e){
     console.error(`Could not create default decoy and global config file: ${e}`)
+  }
+  try {
+    if (!fs.existsSync("/data/blocklist/blocklist.json")) fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
+    if (!fs.existsSync("/data/blocklist/throttlelist.json")) fs.writeFileSync("/data/blocklist/throttlelist.json", `{"list":[]}`, 'utf8')
+  } catch(e) {
+    console.error(`Could not create blacklist files: ${e}`);
   }
   console.log('Config manager started');
 });

@@ -4,11 +4,16 @@
 docker build -f myappDockerfile -t myapptest ../myapp/
 docker build -f configmanagerDockerfile -t configmanagertest ../configmanager/
 docker build -f proxyDockerfile -t proxytest ../proxy/
+docker build -f cloneDockerfile -t clonetest ../clone/
+docker build -f exhaustDockerfile -t exhausttest ../exhaust/
 
 # Delete possible container conflicts
 docker rm -f myapp
 docker rm -f configmanager
 docker rm -f proxy
+docker rm -f clone
+docker rm -f exhaust
+docker rm -f fluentbit
 
 # Start the application in demo mode
 docker-compose up -d
