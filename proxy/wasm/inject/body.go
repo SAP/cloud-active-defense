@@ -273,7 +273,7 @@ func (i *injecterBody) setInjectString() error {
     } else { 
       val = &i.curFilter.Decoy.Value
     }
-    if i.curFilter.Decoy.Separator == "" {
+    if i.curFilter.Decoy.Separator == "" && *val != "" {
       sepStr := "="
       sep = &sepStr
     } else { sep = &i.curFilter.Decoy.Separator }
