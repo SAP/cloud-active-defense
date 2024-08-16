@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: configmanager
-  namespace: config-ns
+  namespace: {{ .Values.namespace }}
   labels:
     app: configmanager
 spec:
@@ -31,10 +31,12 @@ spec:
           ports:
           - containerPort: 3000
           volumeMounts:
-          - name: configdata-default
+          - name: config
             mountPath: /data
       volumes:
-      - name: configdata-default
-        configMap:
-          name: default-config
+      - name: config
+        persistentVolumeClaim:
+          claimName: config-data
+      securityContext:
+        fsGroup: 1234
 

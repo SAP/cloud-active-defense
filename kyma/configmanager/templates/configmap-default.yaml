@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: default-config
-  namespace: config-ns
-data:
-  {{- (.Files.Glob "cad-default.json").AsConfig | nindent 2 }}
-

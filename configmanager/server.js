@@ -105,5 +105,11 @@ app.get('/:namespace/:application', (req, res) => {
 
 // Start the server
 app.listen(3000, () => {
+  try {
+    if (!fs.existsSync('/data/cad-default.json')) fs.cpSync('/app/cad-default.json', '/data/cad-default.json');
+    if (!fs.existsSync('/data/config-default.json')) fs.cpSync('/app/config-default.json', '/data/config-default.json');
+  } catch(e){
+    console.error(`Could not create default decoy and global config file: ${e}`)
+  }
   console.log('Config manager started');
 });

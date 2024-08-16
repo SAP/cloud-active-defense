@@ -1,7 +1,7 @@
 kind: Namespace
 apiVersion: v1
 metadata:
- name: config-ns
+ name: {{ .Values.namespace }}
  labels:
    istio-injection: disabled
    app.kubernetes.io/name: sundew

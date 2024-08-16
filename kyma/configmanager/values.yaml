@@ -2,6 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+namespace: "config-ns"
 # Image of the config manager
 configimage: "<SOON_CONFIGMANAGER_IMAGE>"
 
