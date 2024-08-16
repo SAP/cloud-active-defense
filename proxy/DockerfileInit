@@ -1,0 +1,2 @@
+FROM alpine:latest
+COPY ./wasm/cloud-active-defense.wasm /sundew.wasm

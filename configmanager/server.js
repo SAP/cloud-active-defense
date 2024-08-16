@@ -231,6 +231,7 @@ app.listen(3000, () => {
     console.error(`Could not create default decoy and global config file: ${e}`)
   }
   try {
+    if (!fs.existsSync("/data/blocklist")) fs.mkdirSync("/data/blocklist");
     if (!fs.existsSync("/data/blocklist/blocklist.json")) fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
     if (!fs.existsSync("/data/blocklist/throttlelist.json")) fs.writeFileSync("/data/blocklist/throttlelist.json", `{"list":[]}`, 'utf8')
   } catch(e) {
