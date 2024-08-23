@@ -35,7 +35,7 @@ func OnHttpRequestBody(reqBody string, reqHeaders map[string]string, cookies map
 
   var err error
 
-  if config_proxy.Debug { proxywasm.LogWarn("*** detect request body ***") } //debug
+  if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"*** detect request body ***\"}") } //debug
   alerts := []alert.AlertParam{}
   for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
     d.curFilter = &d.conf.Decoys.Filters[ind]
@@ -44,15 +44,15 @@ func OnHttpRequestBody(reqBody string, reqHeaders map[string]string, cookies map
   if isRelReq, err := d.relevantRequest(); err != nil {
       return fmt.Errorf("store.forRequest: can not compile regEx: %v", err.Error()), alerts
     } else if !d.relevantVerb() || !isRelReq {
-      if config_proxy.Debug { proxywasm.LogWarnf("skipped [%v] because wrong verb or request", ind) } //debug
+      if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped [%v] because wrong verb or request\"}", ind) } //debug
       continue
     }
 
     if d.curFilter.Detect.Seek.In != "payload" && d.curFilter.Detect.Seek.In != "postParam"{
-      if config_proxy.Debug { proxywasm.LogWarnf("skipped [%v] because not body", ind) } //debug
+      if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped [%v] because not body\"}", ind) } //debug
       continue
     }
-    if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"did not skip, apply filter[%v] now\"}", ind) } //debug
 
     err, decoyAlert := d.detectDecoyInRequest()
     if err != nil {
@@ -70,7 +70,7 @@ func OnHttpResponseBody(body string, headers map[string]string, cookies map[stri
 
   var err error
 
-  if config_proxy.Debug { proxywasm.LogWarn("*** detect reponse body ***") } //debug
+  if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"*** detect reponse body ***\"}") } //debug
   alerts := []alert.AlertParam{}
   for ind := 0; ind < len(d.conf.Decoys.Filters); ind++ {
     d.curFilter = &d.conf.Decoys.Filters[ind]
@@ -82,7 +82,7 @@ func OnHttpResponseBody(body string, headers map[string]string, cookies map[stri
     } else if skip {
       continue
     } 
-    if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"did not skip, apply filter[%v] now\"}", ind) } //debug
 
     err, decoyAlert := d.detectDecoyInResponse()
     if err != nil {
@@ -100,12 +100,12 @@ func (d *detectBody) checkConditionsResponse(ind int) (error, bool) {
   if isRelRes, err := d.relevantResponse(); err != nil {
       return fmt.Errorf("store.forResponse: can not compile regEx: %v", err.Error()), false
     } else if !d.relevantVerb() || !isRelRes {
-      if config_proxy.Debug { proxywasm.LogWarnf("skipped [%v] because wrong verb or response", ind) } //debug
+      if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped [%v] because wrong verb or response\"}", ind) } //debug
       return nil, skip 
     }
 
     if !(d.curFilter.Detect.Seek.In == "payload" || d.curFilter.Detect.Seek.In == "postParam") {
-      if config_proxy.Debug { proxywasm.LogWarnf("skipped [%v] because not body", ind) } //debug
+      if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped [%v] because not body\"}", ind) } //debug
       return nil, skip
     }
   return nil, !skip
@@ -129,7 +129,7 @@ func (d *detectBody) detectDecoyInRequest() (error, *alert.AlertParam) {
 
   err, keyMatches, combinedMatches := shared.KeyCombinedMatch(d.curFilter, &d.body)
   if err != nil {
-    proxywasm.LogErrorf("could not match: %v", err.Error())
+    proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not match: %v\"}", err.Error())
   }
 
     alertInfos := make(map[string]string, 0)
@@ -214,7 +214,7 @@ func (d *detectBody) detectDecoyInResponse() (error, *alert.AlertParam) {
 
   err, keyMatches, combinedMatches := shared.KeyCombinedMatch(d.curFilter, &d.body)
   if err != nil {
-    proxywasm.LogErrorf("could not match: %v", err.Error())
+    proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not match: %v\"}", err.Error())
   }
   alertInfos := make(map[string]string, 0)
   alertInfos["decoy"] = key+separator+value
@@ -223,7 +223,7 @@ func (d *detectBody) detectDecoyInResponse() (error, *alert.AlertParam) {
 
   err, injected := shared.FindInjectedValue(*d.curFilter, d.body)
   if err != nil {
-    proxywasm.LogErrorf("could not find injected value: %v", err.Error())
+    proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not find injected value: %v\"}", err.Error())
   }
   alertInfos["injected"] = injected
   sendAlert := false
@@ -264,7 +264,7 @@ func (d *detectBody) detectDecoyInResponse() (error, *alert.AlertParam) {
   if sendAlert {
     return nil, &alert.AlertParam{ *d.curFilter, alertInfos }
   }
-  if config_proxy.Debug { proxywasm.LogWarn("done") }
+  if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"done\"}") }
   return nil, nil
 }
 
@@ -275,7 +275,7 @@ func (d *detectBody) relevantVerb() bool {
   }
   res := (d.curFilter.Detect.Seek.WithVerb == httpMethod) || (d.curFilter.Detect.Seek.WithVerb == "")
   if !res {
-    if config_proxy.Debug { proxywasm.LogWarnf("Method does not match: %s != %s \n", d.curFilter.Detect.Seek.WithVerb, httpMethod) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"Method does not match: %s != %s \n\"}", d.curFilter.Detect.Seek.WithVerb, httpMethod) } //debug
   }
   return res
 }
@@ -305,9 +305,9 @@ func (d *detectBody) relevantRequest() (bool, error) {
   httpReqUrl := d.headers[":path"]
   res := regEx.MatchString(httpReqUrl)
   if !res {
-    if config_proxy.Debug { proxywasm.LogWarnf("Path does not match: %s != %s", httpReqUrl, d.curFilter.Detect.Seek.InRequest) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"Path does not match: %s != %s\"}", httpReqUrl, d.curFilter.Detect.Seek.InRequest) } //debug
   } else {
-    if config_proxy.Debug { proxywasm.LogWarnf("Path does match: %s != %s", httpReqUrl, d.curFilter.Detect.Seek.InRequest) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"Path does match: %s != %s\"}", httpReqUrl, d.curFilter.Detect.Seek.InRequest) } //debug
   }
   return res, nil
 }

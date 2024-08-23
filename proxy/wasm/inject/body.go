@@ -24,7 +24,7 @@ type injecterBody struct {
 func OnHttpRequestBody(request *shared.HttpRequest, originalBody []byte, conf *config_parser.Config) (error, []byte) {
 	i := injecterBody{conf, nil, nil, string(originalBody), "", request}
 
-	if config_proxy.Debug { proxywasm.LogWarn("*** inject request body ***") } //debug
+	if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"*** inject request body ***\"}") } //debug
 	for ind := 0; ind < len(i.conf.Decoys.Filters); ind++ {
 		i.curFilter = &i.conf.Decoys.Filters[ind]
 
@@ -36,7 +36,7 @@ func OnHttpRequestBody(request *shared.HttpRequest, originalBody []byte, conf *c
       continue
     }
 
-    if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"did not skip, apply filter[%v] now\"}", ind) } //debug
 
 		err = i.injectDecoyInResponse()
 		if err != nil {
@@ -51,7 +51,7 @@ func OnHttpRequestBody(request *shared.HttpRequest, originalBody []byte, conf *c
 func OnHttpResponseBody(request *shared.HttpRequest, originalBody []byte, conf *config_parser.Config) (error, []byte) {
 	i := injecterBody{conf, nil, nil, string(originalBody), "", request}
 
-	if config_proxy.Debug { proxywasm.LogWarn("*** inject reponse body ***") } //debug
+	if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"*** inject reponse body ***\"}") } //debug
 	for ind := 0; ind < len(i.conf.Decoys.Filters); ind++ {
 		i.curFilter = &i.conf.Decoys.Filters[ind]
 
@@ -63,7 +63,7 @@ func OnHttpResponseBody(request *shared.HttpRequest, originalBody []byte, conf *
       continue
     }
 
-    if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter[%v] now", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"did not skip, apply filter[%v] now\"}", ind) } //debug
 
 		err = i.injectDecoyInResponse()
 		if err != nil {
@@ -286,7 +286,7 @@ func (i *injecterBody) setInjectString() error {
 func (i *injecterBody) storeMethodCharacter() error {
 	var err error = nil
 	var charIndex int
-	if config_proxy.Debug { proxywasm.LogWarnf("inserting %v", i.injectString) }
+	if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"inserting %v\"}", i.injectString) }
 
 	charIndex, err = strconv.Atoi(i.curFilter.Inject.Store.At.Property)
 	fmt.Println("converted charInd is: ", charIndex)

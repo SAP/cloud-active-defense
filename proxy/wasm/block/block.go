@@ -55,7 +55,7 @@ func behaviorAction(bl config_parser.BlocklistType) string {
 	} else if bl.Behavior == "error" {
 		err := proxywasm.SendHttpResponse(500, [][2]string{}, []byte("500 Error Server"), -1)
 		if err != nil {
-			proxywasm.LogErrorf("error when blocking blocklisted user: ", err)
+			proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error when blocking blocklisted user: %s\"}", err)
 		}
 		return "pause"
 	} else if bl.Behavior == "clone" || bl.Behavior == "exhaust" {
@@ -70,7 +70,7 @@ func isTimeout(bl config_parser.BlocklistType) bool {
 	}
 	date, err := strconv.ParseInt(bl.Time, 10, 64)
 	if err != nil {
-		proxywasm.LogErrorf("error parsing blocklist element '%s' when parsing time: %s", bl, err)
+		proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error parsing blocklist element '%s' when parsing time: %s\"}", bl, err)
 	}
 	parsedDate := time.Unix(date, 0)	
 	intDelay, _ := strconv.Atoi(bl.Delay[:len(bl.Delay)-1])

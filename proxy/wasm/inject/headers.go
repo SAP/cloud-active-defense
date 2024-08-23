@@ -65,7 +65,7 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
 		injectedHeaders: nil,
 	}
 	// insert cookies, headers
-	if config_proxy.Debug { proxywasm.LogWarn("*** inject response headers ***") } //debug
+	if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"*** inject response headers ***\"}") } //debug
 	for filterInd := 0; filterInd < len(conf.Decoys.Filters); filterInd++ {
 		i.curFilter = &conf.Decoys.Filters[filterInd]
     //proxywasm.LogWarnf("try filter[%v]", filterInd) //debug
@@ -78,7 +78,7 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
         continue
       }
 
-	  if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter [%v] now", filterInd) } //debug
+	  if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"did not skip, apply filter [%v] now\"}", filterInd) } //debug
 
 			err := i.setInitialHeaderContent()
 			if err != nil {
@@ -89,7 +89,7 @@ func OnHttpResponseHeaders(request *shared.HttpRequest, headers, cookies map[str
 				return err, nil
 			}
 		}else{
-			if config_proxy.Debug { proxywasm.LogWarnf("skipped because body") } //debug
+			if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped because body\"}") } //debug
     }
 	}
 
@@ -116,7 +116,7 @@ func OnHttpRequestHeaders(request *shared.HttpRequest, conf *config_parser.Confi
 		injectedHeaders: nil,
 	}
 	// insert cookies, headers
-	if config_proxy.Debug { proxywasm.LogWarn("*** inject request headers ***") } //debug
+	if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"*** inject request headers ***\"}") } //debug
 	for filterInd := 0; filterInd < len(conf.Decoys.Filters); filterInd++ {
 		i.curFilter = &conf.Decoys.Filters[filterInd]
     //proxywasm.LogWarnf("try filter[%v]", filterInd) //debug
@@ -127,7 +127,7 @@ func OnHttpRequestHeaders(request *shared.HttpRequest, conf *config_parser.Confi
         continue
       }
 
-	  if config_proxy.Debug { proxywasm.LogWarnf("did not skip, apply filter [%v] now", filterInd) } //debug
+	  if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"did not skip, apply filter [%v] now\"}", filterInd) } //debug
 
     err := i.injectDecoyInRequest()
 			if err != nil {
@@ -180,12 +180,12 @@ func (i *injectHeader) checkConditionsResponse(ind int) (error, bool) {
   if isRelReq, err := i.isRelevantPathResponse(); err != nil {
     return fmt.Errorf("store.forRequest: can not compile regEx: %v", err.Error()), false
   } else if !i.isRelevantVerb() || !isRelReq {
-    if config_proxy.Debug { proxywasm.LogWarnf("skipped[%v] because wrong verb or request", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped[%v] because wrong verb or request\"}", ind) } //debug
     return nil, false
   }
 
   if i.curFilter.Inject.Store.As != "header" && i.curFilter.Inject.Store.As != "cookie" && i.curFilter.Inject.Store.As != "status" {
-    if config_proxy.Debug { proxywasm.LogWarnf("skipped[%v] because not body: ", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped[%v] because not body: \"}", ind) } //debug
     return nil, false
   }
 
@@ -199,7 +199,7 @@ func (i *injectHeader) checkConditionsResponse(ind int) (error, bool) {
       return err, false
     }
     if !applies {
-		if config_proxy.Debug { proxywasm.LogWarnf("skipped[%v] because %v=%v could not be found in %v", ind, condition.Key, condition.Value, condition.In) } //debug
+		if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped[%v] because %v=%v could not be found in %v\"}", ind, condition.Key, condition.Value, condition.In) } //debug
       return nil, false
     }
   }
@@ -209,11 +209,11 @@ func (i *injectHeader) checkConditionsResponse(ind int) (error, bool) {
       return err, false
     }
     if !applies {
-		if config_proxy.Debug { proxywasm.LogWarnf("skipped[%v] because %v=%v was found in %v", ind, condition.Key, condition.Value, condition.In) } //debug
+		if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped[%v] because %v=%v was found in %v\"}", ind, condition.Key, condition.Value, condition.In) } //debug
       return nil, false
     }
   }
-  if config_proxy.Debug { proxywasm.LogWarnf("5") } //debug
+  if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"5\"}") } //debug
   return nil, true
 }
 
@@ -222,12 +222,12 @@ func (i *injectHeader) checkConditionsRequest(ind int) (error, bool) {
   if isRelReq, err := i.isRelevantPathRequest(); err != nil {
     return fmt.Errorf("store.inRequest: can not compile regEx: %v", err.Error()), false
   } else if !i.isRelevantVerb() || !isRelReq {
-    if config_proxy.Debug { proxywasm.LogWarnf("skipped[%v] because wrong verb or request", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped[%v] because wrong verb or request\"}", ind) } //debug
     return nil, false
   }
 
   if i.curFilter.Inject.Store.As != "header" && i.curFilter.Inject.Store.As != "cookie" {
-    if config_proxy.Debug { proxywasm.LogWarnf("skipped[%v] because not body: ", ind) } //debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped[%v] because not body: \"}", ind) } //debug
     return nil, false
   }
 
@@ -243,18 +243,18 @@ func (i *injectHeader) checkConditionsRequest(ind int) (error, bool) {
       return err, false
     }
     if !applies {
-		if config_proxy.Debug { proxywasm.LogWarnf("skipped[%v] because %v=%v could not be found in %v", ind, condition.Key, condition.Value, condition.In) } //debug
+		if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped[%v] because %v=%v could not be found in %v\"}", ind, condition.Key, condition.Value, condition.In) } //debug
       return nil, false
     }
   }
   for _, condition := range i.curFilter.Inject.WhenFalse {
-    if config_proxy.Debug { proxywasm.LogWarnf("checking %v, %v", request.Cookies["state"], condition.Key) }
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"checking %v, %v\"}", request.Cookies["state"], condition.Key) }
     err, applies := WhenFalse(request, &condition) 
     if err != nil {
       return err, false
     }
     if !applies {
-		if config_proxy.Debug { proxywasm.LogWarnf("skipped[%v] because %v=%v was found in %v", ind, condition.Key, condition.Value, condition.In) } //debug
+		if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"skipped[%v] because %v=%v was found in %v\"}", ind, condition.Key, condition.Value, condition.In) } //debug
       return nil, false
     }
   }
@@ -285,7 +285,7 @@ func (i *injectHeader) injectDecoyInResponse() error {
 	if err != nil {
 		return err
 	}
-	if config_proxy.Debug { proxywasm.LogWarnf("successfully injected sth in headers") } //debug
+	if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"successfully injected sth in headers\"}") } //debug
 	return nil
 }
 
@@ -312,7 +312,7 @@ func (i *injectHeader) injectDecoyInRequest() error {
 		return fmt.Errorf("could not add injected header: %s", err.Error())
 	}
 
-	if config_proxy.Debug { proxywasm.LogWarnf("successfully injected sth") }//debug
+	if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"successfully injected sth\"}") }//debug
 	return nil
 }
 
@@ -492,7 +492,7 @@ func (i *injectHeader) storeMethodCharacter() error {
 	var err error = nil
 	var charIndex int
 
-	if config_proxy.Debug { proxywasm.LogWarnf("header content before injection: %v", i.headerContent) } //debug
+	if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"header content before injection: %v\"}", i.headerContent) } //debug
 	charIndex, err = strconv.Atoi(i.curFilter.Inject.Store.At.Property)
 	if err != nil {
 		err = fmt.Errorf("store.at.method: character, can not convert property \"%s\" to int: \"%s\"", i.curFilter.Inject.Store.At.Property, err.Error())
@@ -513,7 +513,7 @@ func (i *injectHeader) storeMethodCharacter() error {
 		fmt.Println("using this other case")
 		i.headerContent = i.headerContent[:len(i.headerContent)+charIndex] + i.injectString + i.headerContent[len(i.headerContent)+charIndex:]
 	}
-	if config_proxy.Debug { proxywasm.LogWarnf("header content after injection: %v", i.headerContent) } //debug
+	if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"header content after injection: %v\"}", i.headerContent) } //debug
 
 	return err
 }
@@ -592,7 +592,7 @@ func (i *injectHeader) storeMethodAfter() error {
 }
 
 func (i *injectHeader) storeMethodReplace() error {
-	if config_proxy.Debug {proxywasm.LogWarnf("called replace on header \n headerContent before: %s\n", i.headerContent) } //debug
+	if config_proxy.Debug {proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"called replace on header \n headerContent before: %s\n\"}", i.headerContent) } //debug
 	var err error = nil
 
   regexVal := i.curFilter.Inject.Store.At.Property
@@ -609,7 +609,7 @@ func (i *injectHeader) storeMethodReplace() error {
 		i.headerContent = i.headerContent[0:matchPosition[0]] + i.injectString + i.headerContent[matchPosition[1]:]
 	}
 
-	if config_proxy.Debug { proxywasm.LogWarnf("replace done \n headerContent after: %s\n", i.headerContent) }//debug
+	if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"replace done \n headerContent after: %s\n\"}", i.headerContent) }//debug
 	return err
 }
 

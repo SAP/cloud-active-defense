@@ -58,7 +58,7 @@ func getUsername(headers map[string]map[string]string, config config_parser.Aler
 	} else if config.Username.In == "payload" && config.Username.Value != "" {
 		rEKey, err := regexp.Compile(config.Username.Value)
 		if err != nil {
-			proxywasm.LogErrorf("username.value: \"%s\" is not a valid regex: %s", config.Username.Value, err.Error())
+			proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"username.value: \"%s\" is not a valid regex: %s\"}", config.Username.Value, err.Error())
 			return ""
 		}
 		foundValue := rEKey.FindStringSubmatch(headers["payload"]["payload"])
@@ -76,7 +76,7 @@ func FindInValue(value, str string) string {
 	if value != "" {
 		rEValue, err := regexp.Compile(value)
 		if err != nil {
-			proxywasm.LogErrorf("username.Value: \"%s\" is not a valid regex: %s", value, err.Error())
+			proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"username.Value: \"%s\" is not a valid regex: %s\"}", value, err.Error())
 			return str
 		}
 		foundValue := rEValue.FindStringSubmatch(str)

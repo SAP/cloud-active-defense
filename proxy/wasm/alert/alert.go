@@ -48,18 +48,18 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
 
   destinationIP, err := proxywasm.GetProperty([]string{"destination","address"})
 	if (err != nil) {
-		proxywasm.LogCriticalf("failed to fetch property: %v", err)
+		proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"failed to fetch property: %v\"}", err)
 	}
   server, err := proxywasm.GetProperty([]string{"connection","requested_server_name"})
 	if (err != nil) {
-		proxywasm.LogCriticalf("failed to fetch property: %v", err)
+		proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"failed to fetch property: %v\"}", err)
 	}
   if string(server[:]) == "" {
     server = []byte(logParameters["server"])
   }
   sourceIP, err := proxywasm.GetProperty([]string{"source", "address"})
 	if (err != nil) {
-		proxywasm.LogCriticalf("failed to fetch property: %v", err)
+		proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"failed to fetch property: %v\"}", err)
 	}
 
   var decoyKey, decoyValue string
@@ -101,7 +101,7 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
   }
 
   jsonAlertContent, _ := json.Marshal(&alertContent)
-  proxywasm.LogWarnf("{ \"alert\": true, \"content\": %v }", string(jsonAlertContent))
+  proxywasm.LogWarnf("{ \"type\": \"alert\", \"content\": %v }", string(jsonAlertContent))
   beautifyAlert, _ := json.MarshalIndent(&alertContent, "", " ")
   proxywasm.LogWarnf("%v", string(beautifyAlert))
   //proxywasm.LogWarn("Alert called")
@@ -131,7 +131,7 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
       sources, err := getSource(respondItem.Source, session, headers["user-agent"])
       if err != nil {
         respondJson, _ := json.Marshal(respondItem)
-        proxywasm.LogErrorf("error while setAlertAction: %s: %s", err, respondJson)
+        proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error while setAlertAction: %s: %s\"}", err, respondJson)
         continue;
       }
       if len(sources) == 0 || len(strings.Split(respondItem.Source, ",")) != len(sources) {
@@ -183,7 +183,7 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
       sources, err := getSource(respondItem.Source, session, headers["user-agent"])
       if err != nil {
         respondJson, _ := json.Marshal(respondItem)
-        proxywasm.LogErrorf("error while setAlertAction: %s: %s", err, string(respondJson))
+        proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error while setAlertAction: %s: %s\"}", err, string(respondJson))
         continue;
       }
       if len(sources) == 0 || len(strings.Split(respondItem.Source, ",")) != len(sources) {

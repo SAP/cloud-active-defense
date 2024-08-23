@@ -83,7 +83,7 @@ func KeyCombinedMatch(filter *config_parser.FilterType, query *string) (err erro
     }
   } else {
     value = key+separator+value
-    if config_proxy.Debug { proxywasm.LogWarnf("reg str %v", value) } //Debug
+    if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"reg str %v\"}", value) } //Debug
     combinedMatch, err = RegexMatches(&value, query)
     if err != nil {
       return fmt.Errorf("invalid value regex: %v", err.Error()), false, false
