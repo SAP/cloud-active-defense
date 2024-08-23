@@ -6,4 +6,4 @@
 namespace: "log-sink"
 
 # Where you deployed you app 
-appnamespace: "cad"
+# appnamespace: "cad"

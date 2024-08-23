@@ -8,9 +8,9 @@ metadata:
 spec:
    input:
       application:
-         namespaces:
-           include:
-            - {{ .Values.appnamespace }}
+         # namespaces:
+         #   include:
+         #    - {{ .Values.appnamespace }}
          containers:
             include:
             - istio-proxy
