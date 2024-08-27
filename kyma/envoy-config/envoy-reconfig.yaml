@@ -26,14 +26,6 @@ spec:
             type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
             value:
               config:
-                configuration:
-                  '@type': type.googleapis.com/google.protobuf.StringValue
-                  # EDIT THE VALUES FOR DEPLOYMENT AND NAMESPACE BELOW
-                  value: |
-                    {
-                      "deployment": "myapp",
-                      "namespace": "cad"
-                    }
                 rootId: "my_root_id"
                 vmConfig:
                   code:
