@@ -17,7 +17,6 @@ import (
 
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
-	"github.com/valyala/fastjson"
 )
 
 // plugin tick period, config is reread every tick
@@ -59,19 +58,20 @@ type pluginContext struct {
 func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
   // load decoy config
 
-  data, err := proxywasm.GetPluginConfiguration()
+  namespace, err := proxywasm.GetProperty([]string{"node", "metadata", "NAMESPACE"})
 	if err != nil {
-		proxywasm.LogCriticalf("error reading plugin configuration: %v", err)
+		proxywasm.LogErrorf("error when getting container namespace", err)
 	}
-
-	ctx.deployment = fastjson.GetString(data, "deployment")
-  ctx.namespace = fastjson.GetString(data, "namespace")
-  if ctx.deployment == "" {
-    ctx.deployment = "unknown"
-  }
-  if ctx.namespace == "" {
-    ctx.namespace = "unknown"
-  }
+	workload, err := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
+	if err != nil {
+		proxywasm.LogErrorf("error when getting container pod name", err)
+	}
+	if len(namespace) != 0 {
+		ctx.namespace = string(namespace)
+	}
+	if len(workload) != 0 {
+		ctx.deployment = string(workload)
+	}
 
   if err := proxywasm.SetTickPeriodMilliSeconds(tickMilliseconds); err != nil {
     proxywasm.LogCriticalf("failed to set tick period: %v", err.Error())
