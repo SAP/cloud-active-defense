@@ -4,16 +4,19 @@ metadata:
   name: myapp
   namespace: {{ .Values.namespace }}
   labels:
-    app: cloudactivedefense
+    app: myapp
+    protectedBy: cloudactivedefense
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: cloudactivedefense
+      app: myapp
+      protectedBy: cloudactivedefense
   template:
     metadata:
       labels:
-        app: cloudactivedefense
+        app: myapp
+        protectedBy: cloudactivedefense
     spec:
       containers:
         - name: myapp
