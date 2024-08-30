@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: clone
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: clone
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: clone
+  template:
+    metadata:
+      labels:
+        app: clone
+    spec:
+      containers:
+        - name: clone
+          image: {{ .Values.image }}
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 20m
+              memory: 32Mi
+            requests:
+              cpu: 10m
+              memory: 16Mi
+          ports:
+          - containerPort: 2000
