@@ -224,7 +224,18 @@ app.get('/throttlelist', (req, res) => {
 })
 // Start the server
 app.listen(3000, () => {
-  if (!fs.existsSync("/data/blocklist/blocklist.json")) fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
-  if (!fs.existsSync("/data/blocklist/throttlelist.json")) fs.writeFileSync("/data/blocklist/throttlelist.json", `{"list":[]}`, 'utf8')
+  try {
+    if (!fs.existsSync('/data/cad-default.json')) fs.cpSync('/app/cad-default.json', '/data/cad-default.json');
+    if (!fs.existsSync('/data/config-default.json')) fs.cpSync('/app/config-default.json', '/data/config-default.json');
+  } catch(e){
+    console.error(`Could not create default decoy and global config file: ${e}`)
+  }
+  try {
+    if (!fs.existsSync("/data/blocklist")) fs.mkdirSync("/data/blocklist");
+    if (!fs.existsSync("/data/blocklist/blocklist.json")) fs.writeFileSync("/data/blocklist/blocklist.json", `{"list":[]}`, 'utf8')
+    if (!fs.existsSync("/data/blocklist/throttlelist.json")) fs.writeFileSync("/data/blocklist/throttlelist.json", `{"list":[]}`, 'utf8')
+  } catch(e) {
+    console.error(`Could not create blacklist files: ${e}`);
+  }
   console.log('Config manager started');
 });
