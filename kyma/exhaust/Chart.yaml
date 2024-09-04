@@ -1,6 +1,6 @@
 apiVersion: v2
-name: demoapp
-description: This chart creates a mesh-enabled namespace and deploys a demo app in it
+name: exhaust
+description: This chart deploys an exhaust app for demo app
 
 # A chart can be either an 'application' or a 'library' chart.
 #

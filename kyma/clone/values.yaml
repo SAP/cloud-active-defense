@@ -7,3 +7,4 @@ namespace: "cad"
 
 image: "ghcr.io/sap/clone:latest"
 
+deploymentName: "myapp"

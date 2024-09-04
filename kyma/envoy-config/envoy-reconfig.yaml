@@ -34,35 +34,6 @@ spec:
                   runtime: envoy.wasm.runtime.v8
                   vmId: cad-filter
 
-  - applyTo: VIRTUAL_HOST
-    match:
-      context: SIDECAR_INBOUND
-    patch:
-      operation: ADD
-      value:
-        name: clone_service
-        domains:
-        - "clone"
-        routes:
-        - match:
-            prefix: "/"
-          route:
-            cluster: outbound|80||clone-service.cad.svc.cluster.local
-  - applyTo: VIRTUAL_HOST
-    match:
-      context: SIDECAR_INBOUND
-    patch:
-      operation: ADD
-      value:
-        name: exhaust_service
-        domains:
-        - "exhaust"
-        routes:
-        - match:
-            prefix: "/"
-          route:
-            cluster: outbound|80||exhaust-service.cad.svc.cluster.local
-
   - applyTo: CLUSTER
     match:
       context: SIDECAR_OUTBOUND

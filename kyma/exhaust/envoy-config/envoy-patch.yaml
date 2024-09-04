@@ -1,0 +1,17 @@
+- op: add
+  path: "/spec/configPatches/-"
+  value:
+    applyTo: VIRTUAL_HOST
+    match:
+      context: SIDECAR_INBOUND
+    patch:
+      operation: ADD
+      value:
+        name: exhaust_service
+        domains:
+        - "exhaust"
+        routes:
+        - match:
+            prefix: "/"
+          route:
+            cluster: outbound|80||exhaust-service.cad.svc.cluster.local #EDIT THIS VALUE

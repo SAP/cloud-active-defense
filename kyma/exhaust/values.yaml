@@ -7,3 +7,4 @@ namespace: "cad"
 
 image: "ghcr.io/sap/exhaust:latest"
 
+deploymentName: "myapp"
