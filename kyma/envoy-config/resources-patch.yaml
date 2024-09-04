@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: myapp # EDIT THIS VALUE
-  namespace: cad # EDIT THIS VALUE
+  namespace: demo-ns # EDIT THIS VALUE
 spec:
   template:
     metadata:

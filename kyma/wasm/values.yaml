@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 # Namespace where the target application resides
-namespace: "cad"
+namespace: "demo-ns"
 
 # Image used to populate the WASM service to a data volume
 initimage: "<SOON_INIT_IMAGE>"

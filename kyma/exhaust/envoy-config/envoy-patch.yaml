@@ -14,4 +14,4 @@
         - match:
             prefix: "/"
           route:
-            cluster: outbound|80||exhaust-service.cad.svc.cluster.local #EDIT THIS VALUE
+            cluster: outbound|80||exhaust-service.demo-ns.svc.cluster.local #EDIT THIS VALUE

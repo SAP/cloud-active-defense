@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 replicaCount: 1
-namespace: "cad"
+namespace: "demo-ns"
 
 image: "ghcr.io/sap/exhaust:latest"
 
