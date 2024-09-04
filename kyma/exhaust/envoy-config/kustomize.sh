@@ -1,4 +1,6 @@
 #!/bin/bash
-kubectl get envoyfilter test-myapp-cloudactivedefensefilter -n cad -o yaml > resources.yaml
-kubectl kustomize
-rm resources.yaml
+dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+kubectl get envoyfilter test-myapp-cloudactivedefensefilter -n cad -o yaml > "$dir/resources.yaml"
+kubectl apply -k "$dir"
+rm -f "$dir/resources.yaml"

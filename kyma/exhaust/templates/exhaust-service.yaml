@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: exhaust-service
+  name: {{ .Values.deploymentName }}-exhaust-service
   namespace: {{ .Values.namespace }}
   labels:
-    app: exhaust  
+    app: {{ .Values.deploymentName }}-exhaust  
 spec:
   type: ClusterIP
   ports:
@@ -13,4 +13,4 @@ spec:
       protocol: TCP
       targetPort: 4000
   selector:
-    app: exhaust
+    app: {{ .Values.deploymentName }}-exhaust
