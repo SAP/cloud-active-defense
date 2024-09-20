@@ -42,7 +42,7 @@ setlocal enabledelayedexpansion
 
     set loki_default_namespace=log-sink
     set /p loki_userInput_namespace="In what namespace to install loki (default: !loki_default_namespace!): "
-    if not defined loki_userInput_namespace set loki_userInput_namespace=%loki_default_namespace%
+    if not defined loki_userInput_namespace set loki_userInput_namespace=!loki_default_namespace!
     for /f "tokens=*" %%i in ('kubectl get clusterrole ^| findstr grafana-clusterrole') do set grafana_clusterrole=%%i
     if defined grafana_clusterrole (
       kubectl delete clusterrole grafana-clusterrole > nul
