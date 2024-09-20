@@ -3,10 +3,14 @@ kind: Job
 metadata:
   name: init-job
   namespace: {{.Values.namespace}}
+  annotations:
+    sidecar.istio.io/inject: "false"
 spec:
   template:
     metadata:
       name: init-job
+      annotations:
+        sidecar.istio.io/inject: "false"
     spec:
       # imagePullSecrets:
       # - name: artifactory-creds

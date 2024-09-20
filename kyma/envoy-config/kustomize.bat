@@ -2,5 +2,5 @@
 
 @pushd %~dp0
 FINDSTR . > resources.yaml
-kubectl apply -k .
+kubectl apply -k . > nul
 del resources.yaml
