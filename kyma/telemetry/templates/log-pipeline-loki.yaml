@@ -22,4 +22,5 @@ spec:
    filters:
       - custom: |
          Name    grep
-         Regex   $log['alert'] true
+         Match   *  
+         Regex   log \b(type\"\s*:\s*\"(alert|event|system|debug))\b
