@@ -97,12 +97,12 @@ setlocal enabledelayedexpansion
   if "%app_userInput_directory%"=="myapp" (
     echo Deploying myapp demo in %app_userInput_namespace% 🚀
     for /f "tokens=* delims=" %%A in ('helm list ^| findstr myapp-%app_userInput_namespace%') do set "myappResult=%%A"
-    (echo replicaCount: 1
-    echo namespace: "%app_userInput_namespace%"
-    echo image: "ghcr.io/sap/myapp:latest") > myapp\values_tmp.yaml
     if not "!myappResult!"=="" (
       echo Myapp is already deployed ✅ 
     ) else (
+      (echo replicaCount: 1
+      echo namespace: "%app_userInput_namespace%"
+      echo image: "ghcr.io/sap/myapp:latest") > myapp\values_tmp.yaml
       helm install -f myapp\values_tmp.yaml myapp-%app_userInput_namespace% myapp > nul
       del myapp\values_tmp.yaml
     )
@@ -270,8 +270,11 @@ setlocal enabledelayedexpansion
   echo.
   exit /B
 :installClone
+  echo Deploying clone in %app_userInput_namespace% 🚀
   if not defined app_userInput_deployment (
       set app_userInput_deployment=myapp
+      set clone_userInput_image=ghcr.io/sap/clone:latest
+    ) else if "!app_userInput_deployment!"=="myapp" (
       set clone_userInput_image=ghcr.io/sap/clone:latest
     ) else (
       set /p clone_userInput_image="Please provide the image of your clone: "
@@ -349,8 +352,11 @@ setlocal enabledelayedexpansion
   echo.
   exit /B
 :installExhaust
+  echo Deploying exhaust in %app_userInput_namespace% 🚀
   if not defined app_userInput_deployment (
       set app_userInput_deployment=myapp
+      set exhaust_userInput_image=ghcr.io/sap/exhaust:latest
+    ) else if "!app_userInput_deployment!"=="myapp" (
       set exhaust_userInput_image=ghcr.io/sap/exhaust:latest
     ) else (
       set /p exhaust_userInput_image="Please provide the image of your exhaust: "
