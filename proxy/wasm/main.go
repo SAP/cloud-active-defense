@@ -50,11 +50,28 @@ type pluginContext struct {
   config           *config_parser.Config
   configChecksum        [32]byte
   callBackConfRequested func(numHeaders, bodySize, numTrailers int)
+  deployment            string
+  namespace             string
   postponed []uint32
 }
 
 func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
   // load decoy config
+
+  namespace, err := proxywasm.GetProperty([]string{"node", "metadata", "NAMESPACE"})
+	if err != nil {
+		proxywasm.LogErrorf("error when getting container namespace", err)
+	}
+	workload, err := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
+	if err != nil {
+		proxywasm.LogErrorf("error when getting container pod name", err)
+	}
+	if len(namespace) != 0 {
+		ctx.namespace = string(namespace)
+	}
+	if len(workload) != 0 {
+		ctx.deployment = string(workload)
+	}
 
   if err := proxywasm.SetTickPeriodMilliSeconds(tickMilliseconds); err != nil {
     proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"failed to set tick period: %v\"}", err.Error())
@@ -101,7 +118,7 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
 func (ctx *pluginContext) OnTick() {
   //proxywasm.LogInfof("--- plugin tick, rereading config ---")
   requestHeaders := [][2]string{
-    {":method", "GET"}, {":authority", "configmanager"}, {":path", "/CHANGE/ME"}, {"accept", "*/*"},
+    {":method", "GET"}, {":authority", "configmanager"}, {":path", "/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
     {"Content-Type", "application/json"},
   }
   if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {

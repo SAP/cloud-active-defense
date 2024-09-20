@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: myapp
+    protects: myapp
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: myapp
+      protects: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+        protects: myapp
+    spec:
+      containers:
+        - name: myapp
+          image: {{ .Values.image }}
+          imagePullPolicy: Always
+          resources:
+            limits:
+              cpu: 20m
+              memory: 32Mi
+            requests:
+              cpu: 10m
+              memory: 16Mi
+          ports:
+          - containerPort: 3000

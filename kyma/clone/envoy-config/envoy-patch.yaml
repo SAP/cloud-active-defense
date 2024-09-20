@@ -1,0 +1,17 @@
+- op: add
+  path: "/spec/configPatches/-"
+  value:
+    applyTo: VIRTUAL_HOST
+    match:
+      context: SIDECAR_INBOUND
+    patch:
+      operation: ADD
+      value:
+        name: clone_service
+        domains:
+        - "clone"
+        routes:
+        - match:
+            prefix: "/"
+          route:
+            cluster: outbound|80||myapp-clone-service.demo-ns.svc.cluster.local #EDIT THIS VALUE

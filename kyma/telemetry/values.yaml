@@ -1,0 +1,6 @@
+# Default values for sundew.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Where to deploy loki
+namespace: "log-sink"

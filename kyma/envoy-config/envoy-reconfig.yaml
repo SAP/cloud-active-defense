@@ -1,0 +1,54 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: test-myapp-cloudactivedefensefilter # EDIT THIS VALUE
+  namespace: demo-ns # EDIT THIS VALUE
+spec:
+  workloadSelector:
+    labels:
+      protects: myapp # EDIT THIS VALUE
+  configPatches:
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND
+      listener:
+        filterChain:
+          filter:
+            name: envoy.filters.network.http_connection_manager
+            subFilter:
+              name: envoy.filters.http.router
+    patch:
+      operation: INSERT_BEFORE
+      value:
+        name: envoy.filters.http.wasm
+        typed_config:
+            '@type': type.googleapis.com/udpa.type.v1.TypedStruct
+            type_url: type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+            value:
+              config:
+                rootId: "my_root_id"
+                vmConfig:
+                  code:
+                    local:
+                      filename: var/local/lib/wasm/sundew.wasm
+                  runtime: envoy.wasm.runtime.v8
+                  vmId: cad-filter
+
+  - applyTo: CLUSTER
+    match:
+      context: SIDECAR_OUTBOUND
+    patch:
+      operation: ADD
+      value:
+        name: "configmanager"
+        type: STRICT_DNS
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: configmanager
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: configmanager-service
+                    port_value: 80
