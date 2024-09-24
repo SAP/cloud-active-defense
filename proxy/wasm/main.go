@@ -58,20 +58,14 @@ type pluginContext struct {
 func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
   // load decoy config
 
-  namespace, err := proxywasm.GetProperty([]string{"node", "metadata", "NAMESPACE"})
-	if err != nil {
-		proxywasm.LogErrorf("error when getting container namespace", err)
-	}
-	workload, err := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
-	if err != nil {
-		proxywasm.LogErrorf("error when getting container pod name", err)
-	}
+  namespace, _ := proxywasm.GetProperty([]string{"node", "metadata", "NAMESPACE"})
+	workload, _ := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
 	if len(namespace) != 0 {
 		ctx.namespace = string(namespace)
-	}
+	} else { ctx.namespace = "unknown" }
 	if len(workload) != 0 {
 		ctx.deployment = string(workload)
-	}
+	} else { ctx.deployment = "unknown" }
 
   if err := proxywasm.SetTickPeriodMilliSeconds(tickMilliseconds); err != nil {
     proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"failed to set tick period: %v\"}", err.Error())
