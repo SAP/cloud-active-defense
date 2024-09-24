@@ -13,9 +13,17 @@ setlocal enabledelayedexpansion
   )
 
   echo Looking for Configmanager 🔍
-  helm list | findstr configmanager > nul
-  if %errorlevel% equ 0 (
-    echo Configmanager is already deployed ✅
+  for /f "tokens=*" %%i in ('helm list ^| findstr configmanager') do set configmanager_helm=%%i
+  if defined configmanager_helm (
+  for /f "tokens=* delims=" %%i in ('kubectl get deployment configmanager -n config-ns -o jsonpath^="{.status.conditions[0].status}"') do set configmanager_health=%%i
+    if "!configmanager_health!"=="True" (
+      echo Configmanager is already deployed ✅
+    ) else (
+      helm uninstall configmanager > nul
+      timeout /T 4 /NOBREAK >nul
+      echo Configmanager is unhealthy, redeploying it 🚀
+      helm install configmanager configmanager > nul
+    )
   ) else (
     echo Configmanager is missing, deploying it 🚀
     helm install configmanager configmanager > nul
@@ -23,53 +31,23 @@ setlocal enabledelayedexpansion
   echo.
 
   echo Looking for Telemetry module 🔍
-  kubectl get deployment telemetry-manager -n kyma-system | findstr telemetry-manager > nul 2> nul && kubectl get telemetry default -n kyma-system | findstr default > nul 2> nul
-  if %errorlevel% equ 0 (
-    echo Telemetry module is already added ✅
+  for /f "tokens=* delims=" %%i in ('kubectl get deployment telemetry-manager -n kyma-system ^| findstr telemetry-manager') do set telemetry_deployment=%%i
+  for /f "tokens=* delims=" %%i in ('kubectl get telemetry default -n kyma-system ^| findstr default') do set telemetry_default=%%i
+  if not defined telemetry_deployment (
+    call :installTelemetry
+  ) else if not defined telemetry_default (
+    call :installTelemetry
   ) else (
-    echo Telemetry module is missing, adding it 📦️
-    kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-manager.yaml > nul
-    kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-default-cr.yaml -n kyma-system > nul
+    echo Telemetry module is already added ✅
   )
   echo.
 
   echo Looking for Loki 🔍
-  helm list | findstr telemetry > nul
-  if %errorlevel% equ 0 (
+  for /f "tokens=*" %%i in ('helm list ^| findstr telemetry') do set loki_helm=%%i
+  if defined loki_helm (
     echo Loki is already deployed ✅
   ) else (
-    echo Loki is missing, deploying it 🚀
-
-    set loki_default_namespace=log-sink
-    set /p loki_userInput_namespace="In what namespace to install loki (default: !loki_default_namespace!): "
-    if not defined loki_userInput_namespace set loki_userInput_namespace=!loki_default_namespace!
-    for /f "tokens=*" %%i in ('kubectl get clusterrole ^| findstr grafana-clusterrole') do set grafana_clusterrole=%%i
-    if defined grafana_clusterrole (
-      kubectl delete clusterrole grafana-clusterrole > nul
-    )
-    for /f "tokens=*" %%i in ('kubectl get clusterrolebinding ^| findstr grafana-clusterrolebinding') do set "grafana_clusterrolebinding=%%i"
-    if defined grafana_clusterrolebinding (
-      kubectl delete clusterrolebinding grafana-clusterrolebinding > nul
-    )
-
-    helm repo add grafana https://grafana.github.io/helm-charts > nul
-    helm repo update > nul
-    helm upgrade --install --create-namespace -n !loki_userInput_namespace! loki grafana/loki -f ./telemetry/loki-values.yaml > nul
-    helm upgrade --install --create-namespace -n !loki_userInput_namespace! grafana grafana/grafana -f ./telemetry/grafana-values.yaml > nul
-
-    echo namespace: "!loki_userInput_namespace!" > telemetry\values_tmp.yaml
-    helm install -f telemetry/values_tmp.yaml telemetry telemetry > nul 2> nul
-    del telemetry\values_tmp.yaml
-    kubectl get secret -n !loki_userInput_namespace! grafana -o jsonpath="{.data.admin-password}" > temp.b64
-    certutil -decode temp.b64 temp.txt > nul
-    set /p decoded_password=<temp.txt
-
-    set "jsonpath={.items[0].spec.hosts[0]}"
-    for /F "delims=" %%i in ('kubectl get virtualservice -n !loki_userInput_namespace! -o jsonpath^="!jsonpath!"') do set "loki_url=%%i"
-    
-    echo To access loki dashboard, go to: !loki_url!
-    echo Use these credentials: admin/!decoded_password!
-    del temp.b64 temp.txt
+    call :installLoki
   )
   echo.
 
@@ -252,6 +230,8 @@ setlocal enabledelayedexpansion
     rmdir /S /Q envoy-config\temp
 
     echo Done ✅
+    for /F "delims=" %%i in ('kubectl get virtualservice -n %app_userInput_namespace% -o jsonpath^="{.items[0].spec.hosts[0]}" ^| findstr !app_userInput_deployment!') do set "app_url=%%i"
+    echo To access your app, go to: !app_url!
   )
   exit /B
 :askClone
@@ -416,4 +396,46 @@ setlocal enabledelayedexpansion
     call .\exhaust\envoy-config\temp\kustomize.bat > nul 2> nul
     rmdir /S /Q exhaust\envoy-config\temp
     del exhaust\values_tmp.yaml
+  exit /B
+:installLoki
+  echo Loki is missing, deploying it 🚀
+
+  set loki_default_namespace=log-sink
+  set /p loki_userInput_namespace="In what namespace to install loki (default: !loki_default_namespace!): "
+  if not defined loki_userInput_namespace set loki_userInput_namespace=!loki_default_namespace!
+  for /f "tokens=*" %%i in ('kubectl get clusterrole ^| findstr grafana-clusterrole') do set grafana_clusterrole=%%i
+  if defined grafana_clusterrole (
+    kubectl delete clusterrole grafana-clusterrole > nul
+  )
+  for /f "tokens=*" %%i in ('kubectl get clusterrolebinding ^| findstr grafana-clusterrolebinding') do set "grafana_clusterrolebinding=%%i"
+  if defined grafana_clusterrolebinding (
+    kubectl delete clusterrolebinding grafana-clusterrolebinding > nul
+  )
+
+  helm repo add grafana https://grafana.github.io/helm-charts > nul
+  helm repo update > nul
+  helm upgrade --install --create-namespace -n !loki_userInput_namespace! loki grafana/loki -f ./telemetry/loki-values.yaml > nul
+  helm upgrade --install --create-namespace -n !loki_userInput_namespace! grafana grafana/grafana -f ./telemetry/grafana-values.yaml > nul
+
+  echo namespace: "!loki_userInput_namespace!" > telemetry\values_tmp.yaml
+  helm install -f telemetry/values_tmp.yaml telemetry telemetry > nul 2> nul
+  del telemetry\values_tmp.yaml
+  kubectl get secret -n !loki_userInput_namespace! grafana -o jsonpath="{.data.admin-password}" > temp.b64
+  certutil -decode temp.b64 temp.txt > nul
+  set /p decoded_password=<temp.txt
+
+  for /F "delims=" %%i in ('kubectl get virtualservice -n !loki_userInput_namespace! -o jsonpath^="{.items[0].spec.hosts[0]}"') do set "loki_url=%%i"
+  
+  echo To access loki dashboard, go to: !loki_url!
+  echo Use these credentials: admin/!decoded_password!
+  del temp.b64 temp.txt
+  exit /B
+:installTelemetry
+  echo Telemetry module is missing, adding it 📦️
+  kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-manager.yaml > nul
+  kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-default-cr.yaml -n kyma-system > nul
+  for /f "tokens=* delims=" %%i in ('kubectl get kyma default -n kyma-system -o jsonpath="{.spec.modules}" ^| findstr telemetry') do set telemetry_module=%%i
+  if not defined telemetry_module (
+    kubectl patch kyma default --type^=json -p^='^[^{"op": "add", "path": "/spec/modules/-", "value": ^{"name": "telemetry"^}^}^]' > nul
+  )
   exit /B
