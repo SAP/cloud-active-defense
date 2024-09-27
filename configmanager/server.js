@@ -10,6 +10,13 @@ app.use(hsts({
 }))
 app.use(express.json())
 
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).send("Invalid JSON")
+  }
+  next(err);
+});
+
 // Define a GET route that accepts a namespace and application parameter
 app.get('/:namespace/:application', (req, res) => {
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
@@ -139,6 +146,57 @@ app.get('/:namespace/:application', (req, res) => {
       });
     }
   });
+});
+
+app.post('/:namespace/:application', (req, res) => {
+  if (req.headers['content-type'] != 'application/json') return res.status(400).send("Invalid JSON");
+  const { namespace, application } = req.params;
+  console.log(req.body)
+  const body = JSON.stringify(req.body)
+  console.log(body)
+  try {
+    const parsedBody = JSON.parse(body);
+    console.log(parsedBody)
+    const newDecoys = parsedBody.decoys;
+    const newConfig = parsedBody.config;
+    var filePath = '', configFilePath = ''
+    if (!namespace.match(/^[a-zA-Z0-9-]+$/) || !application.match(/^[a-zA-Z0-9-]+$/)) {
+      console.warn(`Bad path provided for decoys config file: ${filePath}, ${configFilePath}`);
+    } else {
+      filePath = path.resolve(`/data/cad-${namespace}-${application}.json`);
+      configFilePath = path.resolve(`/data/config-${namespace}-${application}.json`);
+    }
+    const defaultFilePath = `/data/cad-default.json`;
+    const defaultConfigFilePath = `/data/config-default.json`;
+    
+    if (newDecoys){
+      fs.access(filePath, fs.constants.F_OK, err => {
+        if (err) {
+          fs.access(defaultFilePath, fs.constants.F_OK, err => {
+            if (err) return res.send("Cannot update decoy config");
+            fs.writeFileSync(defaultFilePath, JSON.stringify(newDecoys));
+          })
+        } else {
+          fs.writeFileSync(filePath, JSON.stringify(newDecoys));
+        }
+      })
+    }
+    if (newConfig) {
+      fs.access(configFilePath, fs.constants.F_OK, err => {
+        if (err) {
+          fs.access(defaultConfigFilePath, fs.constants.F_OK, err => {
+            if (err) return res.send("Cannot update config");
+            fs.writeFileSync(defaultConfigFilePath, JSON.stringify(newConfig))
+          })
+        } else {
+          fs.writeFileSync(configFilePath, JSON.stringify(newConfig))
+        }
+      })
+    }
+    return res.send("Config updated");
+  } catch (err) {
+    return res.status(400).send("Invalid JSON");
+  }
 });
 
 app.get('/blocklist', (req, res) => {

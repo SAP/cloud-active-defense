@@ -1,0 +1,42 @@
+{
+  "config": {
+    "alert": {
+      "session": {
+        "in": "cookie",
+        "key": "SESSION"
+      },
+      "username": {
+        "in": "",
+        "key": "",
+        "value": ""
+      }
+    },
+    "server": "",
+    "respond": [
+      {
+        "source": "",
+        "behavior": "",
+        "delay": "",
+        "duration": ""
+      }
+    ],
+    "blocklistReload": 1
+  },
+  "decoys": {
+    "filters": [
+      {
+        "decoy": {
+          "key": "x-cloud-active-defense",
+          "separator": "=",
+          "value": "ACTIVE"
+        },
+        "inject": {
+          "store": {
+            "inResponse": ".*",
+            "as": "header"
+          }
+        }
+      }
+    ]
+  }
+}
