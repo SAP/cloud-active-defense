@@ -209,12 +209,13 @@ spec:
 EOF
 
   cp envoy-config/kustomize.sh envoy-config/temp/kustomize.sh
+  chmod +x envoy-config/temp/kustomize.sh
   cp envoy-config/kustomization.yaml envoy-config/temp/kustomization.yaml
 
   echo "Waiting for wasm to be deployed... ⏳"
   kubectl wait --for=condition=complete job/init-job -n "${app_userInput_namespace}" > /dev/null
   if [[ $? -eq 0 ]]; then
-    helm upgrade "${app_userInput_deployment}-${app_userInput_namespace}" "${app_userInput_directory}" --post-renderer ./envoy-config/temp/kustomize.sh --dry-run > /dev/null
+    helm upgrade "${app_userInput_deployment}-${app_userInput_namespace}" "${app_userInput_directory}" --post-renderer ./envoy-config/temp/kustomize.sh > /dev/null
     rm -rf envoy-config/temp
     echo "Done ✅"
     app_url=$(kubectl get virtualservice -n "${app_userInput_namespace}" -o jsonpath="{.items[0].spec.hosts[0]}" | grep "${app_userInput_deployment}")
@@ -291,6 +292,7 @@ patches:
 EOF
 
   cp clone/envoy-config/kustomize.sh clone/envoy-config/temp/kustomize.sh
+  chmod +x clone/envoy-config/kustomize.sh
 
   clone/envoy-config/temp/kustomize.sh > /dev/null 2> /dev/null
   rm -rf clone/envoy-config/temp
@@ -366,6 +368,7 @@ patches:
 EOF
 
   cp exhaust/envoy-config/kustomize.sh exhaust/envoy-config/temp/kustomize.sh
+  chmod +x exhaust/envoy-config/temp/kustomize.sh
 
   exhaust/envoy-config/temp/kustomize.sh > /dev/null 2> /dev/null
   rm -rf exhaust/envoy-config/temp
