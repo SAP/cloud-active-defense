@@ -208,7 +208,12 @@ spec:
         sidecar.istio.io/userVolumeMount: '{"sundew":{"mountPath":"var/local/lib/wasm","readOnly":true}}'
 EOF
 
-  cp envoy-config/kustomize.sh envoy-config/temp/kustomize.sh
+  cat <<EOF > envoy-config/temp/kustomize.sh
+#!/bin/bash
+cat > envoy-config/temp/resources.yaml
+kubectl kustomize envoy-config/temp
+rm envoy-config/temp/resources.yaml
+EOF
   chmod +x envoy-config/temp/kustomize.sh
   cp envoy-config/kustomization.yaml envoy-config/temp/kustomization.yaml
 
