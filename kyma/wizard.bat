@@ -31,11 +31,8 @@ setlocal enabledelayedexpansion
   echo.
 
   echo Looking for Telemetry module 🔍
-  for /f "tokens=* delims=" %%i in ('kubectl get deployment telemetry-manager -n kyma-system ^| findstr telemetry-manager') do set telemetry_deployment=%%i
-  for /f "tokens=* delims=" %%i in ('kubectl get telemetry default -n kyma-system ^| findstr default') do set telemetry_default=%%i
+  for /f "tokens=* delims=" %%i in ('kubectl get deployment -n kyma-system ^| findstr telemetry-manager') do set telemetry_deployment=%%i
   if not defined telemetry_deployment (
-    call :installTelemetry
-  ) else if not defined telemetry_default (
     call :installTelemetry
   ) else (
     echo Telemetry module is already added ✅
@@ -434,8 +431,9 @@ setlocal enabledelayedexpansion
   echo Telemetry module is missing, adding it 📦️
   kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-manager.yaml > nul
   kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-default-cr.yaml -n kyma-system > nul
-  for /f "tokens=* delims=" %%i in ('kubectl get kyma default -n kyma-system -o jsonpath="{.spec.modules}" ^| findstr telemetry') do set telemetry_module=%%i
+  for /f "tokens=* delims=" %%i in ('kubectl get kyma default -n kyma-system -o jsonpath^="{.spec.modules[*].name}" ^| findstr telemetry') do set telemetry_module=%%i
   if not defined telemetry_module (
-    kubectl patch kyma default --type^=json -p^='^[^{"op": "add", "path": "/spec/modules/-", "value": ^{"name": "telemetry"^}^}^]' > nul
+    set "json_patch=[{\"op\":\"add\",\"path\":\"/spec/modules/-\",\"value\":{\"name\":\"telemetry\"}}]"
+    kubectl patch kyma default -n kyma-system --type=json --patch=!json_patch! > nul
   )
   exit /B
