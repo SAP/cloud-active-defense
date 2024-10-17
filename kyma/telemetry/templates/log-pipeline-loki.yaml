@@ -14,7 +14,7 @@ spec:
    output:
       custom: |
          name   loki
-         host   loki.{{ .Values.namespace }}.svc.cluster.local
+         host   loki-app.{{ .Values.namespace }}.svc.cluster.local
          uri    /loki/api/v1/push
          port   3100
          auto_kubernetes_labels off

@@ -1,12 +1,12 @@
 apiVersion: gateway.kyma-project.io/v1beta1
 kind: APIRule
 metadata:
-  name: grafana
+  name: grafana-app
   namespace: {{ .Values.namespace }}
 spec:
-  host: grafana
+  host: grafana-app
   service:
-    name: grafana
+    name: grafana-app
     port: 80
   gateway: kyma-gateway.kyma-system.svc.cluster.local
   rules:

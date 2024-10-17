@@ -12,7 +12,7 @@ data:
       - name: Loki
         type: loki
         access: proxy
-        url: "http://loki:3100"
+        url: "http://loki-app:3100"
         version: 1
         isDefault: false
         jsonData: {}

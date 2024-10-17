@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set -e  # Exit immediately if a command exits with a non-zero status
 set -o pipefail  # Prevent errors in a pipeline from being masked
 
 main() {
@@ -15,14 +14,18 @@ main() {
 
   echo "Looking for Configmanager 🔍"
   if helm list | grep -q configmanager; then
-    configmanager_health=$(kubectl get deployment configmanager -n config-ns -o jsonpath="{.status.conditions[0].status}")
-    if [[ "${configmanager_health}" == "True" ]]; then
-      echo "Configmanager is already deployed ✅"
+    configmanager_up=$(kubectl get deployment -n config-ns 2>/dev/null | grep configmanager)
+    if [[ "${configmanager_up}" ]]; then
+      configmanager_health=$(kubectl get deployment configmanager -n config-ns -o jsonpath="{.status.unavailableReplicas}")
+      if [[ "${configmanager_health}" == "" ]]; then
+        echo "Configmanager is already deployed ✅"
+      else
+        echo "Configmanager is unhealthy, redeploying it 🚑"
+        helm upgrade --install configmanager configmanager > /dev/null
+      fi
     else
-      helm uninstall configmanager > /dev/null
-      sleep 4
-      echo "Configmanager is unhealthy, redeploying it 🚀"
-      helm install configmanager configmanager > /dev/null
+      echo "Configmanager is missing, deploying it 🚀"
+      helm upgrade configmanager configmanager > /dev/null
     fi
   else
     echo "Configmanager is missing, deploying it 🚀"
@@ -31,7 +34,7 @@ main() {
   echo
 
   echo "Looking for Telemetry module 🔍"
-  if ! kubectl get deployment -n kyma-system | grep -q telemetry-manager || ! kubectl get telemetry -n kyma-system | grep -q default; then
+  if ! kubectl get deployment -n kyma-system | grep -q telemetry-manager; then
     installTelemetry
   else
     echo "Telemetry module is already added ✅"
@@ -39,7 +42,7 @@ main() {
   echo
 
   echo "Looking for Loki 🔍"
-  if helm list | grep -q telemetry; then
+  if (helm list | grep -q telemetry) && (helm list -A | grep -q loki-app) && (helm list -A | grep -q grafana-app); then
     echo "Loki is already deployed ✅"
   else
     installLoki
@@ -51,18 +54,23 @@ main() {
   app_userInput_namespace=${app_userInput_namespace:-$app_default_namespace}
 
   echo "Deploying wasm in ${app_userInput_namespace} 🚀"
-  if helm list | grep -q "wasm-${app_userInput_namespace}"; then
-    echo "Wasm is already deployed ✅"
+  if helm list | grep -q -E "(^|[[:space:]])wasm-${app_userInput_namespace}([[:space:]]|$)"; then
+    wasm_health=$(kubectl get job init-job -n "${app_userInput_namespace}" -o jsonpath="{.status.conditions[0].type}")
+    if kubectl get jobs -n "${app_userInput_namespace}" | grep -q init-job && [ "${wasm_health}" == "Complete" ]; then
+      echo "Wasm is already deployed ✅"
+    else
+      echo "Wasm is unhealthy, redeploying it 🚑"
+      installWasm
+      echo "Done ✅"
+    fi
   else
-    init_default_image="ghcr.io/sap/init:latest"
-    read -p "Specify if you want to use a custom image for wasm (Press enter to skip): " init_userInput_image
-    init_userInput_image=${init_userInput_image:-$init_default_image}
-    cat <<EOF > wasm/values_tmp.yaml
-namespace: "${app_userInput_namespace}"
-initimage: "${init_userInput_image}"
-EOF
-    helm install -f wasm/values_tmp.yaml "wasm-${app_userInput_namespace}" wasm > /dev/null
-    rm wasm/values_tmp.yaml
+    if kubectl get namespace | grep -q -E "(^|[[:space:]])${app_userInput_namespace}([[:space:]]|$)"; then
+      echo "Cannot install wasm, namespace '${app_userInput_namespace}'" already exists
+      echo "exiting..."
+      exit 1
+    else
+      installWasm
+    fi
   fi
   echo
 
@@ -70,7 +78,23 @@ EOF
   if [[ "${app_userInput_directory}" == "myapp" ]]; then
     echo "Deploying myapp demo in ${app_userInput_namespace} 🚀"
     if helm list | grep -q "myapp-${app_userInput_namespace}"; then
-      echo "Myapp is already deployed ✅"
+      if kubectl get deployments -n "${app_userInput_namespace}" 2>/dev/null | grep -q myapp; then
+        myapp_health=$(kubectl get deployment myapp -n "${app_userInput_namespace}" -o jsonpath="{.status.availableReplicas}")
+        if [[ ${myapp_health} == "" ]]; then
+          echo "Myapp is unhealthy, redeploying it 🚑"
+          cat <<EOF > myapp/values_tmp.yaml
+replicaCount: 1
+namespace: "${app_userInput_namespace}"
+image: "ghcr.io/sap/myapp:latest"
+EOF
+          helm upgrade myapp-"${app_userInput_namespace}" myapp -f myapp/values_tmp.yaml > /dev/null
+          rm myapp/values_tmp.yaml
+          apply_envoyreconfig
+        else
+          echo "Myapp is already deployed ✅"
+          app_userInput_deployment="myapp"
+        fi
+      fi
     else
       cat <<EOF > myapp/values_tmp.yaml
 replicaCount: 1
@@ -79,18 +103,29 @@ image: "ghcr.io/sap/myapp:latest"
 EOF
       helm install -f myapp/values_tmp.yaml "myapp-${app_userInput_namespace}" myapp > /dev/null
       rm myapp/values_tmp.yaml
+      apply_envoyreconfig
     fi
   else
     ask_deployment_name
     if helm list | grep -q "${app_userInput_deployment}-${app_userInput_namespace}"; then
-      echo "Updating ${app_userInput_deployment} in ${app_userInput_namespace} 🔄️"
-      helm upgrade "${app_userInput_deployment}-${app_userInput_namespace}" "${app_userInput_directory}" > /dev/null
+      if kubectl get deployments -n "${app_userInput_namespace}" > /dev/null 2>/dev/null | grep "${app_userInput_deployment}"; then
+        app_health=$(kubectl get deployment "${app_userInput_deployment}" -n "${app_userInput_namespace}" -o jsonpath="{.status.availableReplicas}")
+        if [[ ${app_health} == "" ]]; then
+          echo "Cannot update, ${app_userInput_deployment} is unhealthy 🤒"
+          echo "exiting..."
+          exit 1
+        else
+          echo "Updating ${app_userInput_deployment} in ${app_userInput_namespace} 🔄️"
+          helm upgrade "${app_userInput_deployment}-${app_userInput_namespace}" "${app_userInput_directory}" > /dev/null
+          apply_envoyreconfig
+        fi
+      fi
     else
       echo "Deploying ${app_userInput_deployment} in ${app_userInput_namespace} 🚀"
       helm install "${app_userInput_deployment}-${app_userInput_namespace}" "${app_userInput_directory}" > /dev/null
+      apply_envoyreconfig
     fi
   fi
-  apply_envoyreconfig
   echo
 
   if ! helm list | grep -q "${app_userInput_deployment}-${app_userInput_namespace}-clone"; then
@@ -109,6 +144,15 @@ ask_app_directory() {
   app_userInput_directory=${app_userInput_directory:-$app_default_directory}
   if [[ ! -d "${app_userInput_directory}" ]]; then
     echo "The given path doesn't exist"
+    ask_app_directory
+  elif [[ ! -f "${app_userInput_directory}/Chart.yaml" ]]; then
+    echo "Cannot find Chart.yaml file of your helm chart in '${app_userInput_directory}'"
+    ask_app_directory
+  elif [[ ! -d "${app_userInput_directory}/templates" ]]; then
+    echo "Cannot find templates/ directory of your helm chart in '${app_userInput_directory}'"
+    ask_app_directory
+  elif [[ ! -f "${app_userInput_directory}/values.yaml" ]]; then
+    echo "Cannot find values.yaml file of your helm chart in '${app_userInput_directory}'"
     ask_app_directory
   fi
 }
@@ -218,13 +262,19 @@ EOF
   cp envoy-config/kustomization.yaml envoy-config/temp/kustomization.yaml
 
   echo "Waiting for wasm to be deployed... ⏳"
-  kubectl wait --for=condition=complete job/init-job -n "${app_userInput_namespace}" > /dev/null
+  kubectl wait --for=condition=complete job/init-job --timeout=10s -n "${app_userInput_namespace}" > /dev/null 2>/dev/null
   if [[ $? -eq 0 ]]; then
     helm upgrade "${app_userInput_deployment}-${app_userInput_namespace}" "${app_userInput_directory}" --post-renderer ./envoy-config/temp/kustomize.sh > /dev/null
     rm -rf envoy-config/temp
-    echo "Done ✅"
+    echo "App successfully installed ✅"
     app_url=$(kubectl get virtualservice -n "${app_userInput_namespace}" -o jsonpath="{.items[0].spec.hosts[0]}" | grep "${app_userInput_deployment}")
     echo "To access your app, go to: ${app_url}"
+  else
+    echo "Something went wrong, wasm is unhealthy 🤒"
+    read -p "Do you want to continue the install (Y/N) ? " wasm_health_userInput
+    if [[ "$wasm_health_userInput" == "n" ]] || [[ "$wasm_health_userInput" == "N" ]]; then
+      exit 1
+    fi
   fi
 }
 
@@ -387,24 +437,32 @@ installLoki() {
   read -p "In what namespace to install loki (default: ${loki_default_namespace}): " loki_userInput_namespace
   loki_userInput_namespace=${loki_userInput_namespace:-$loki_default_namespace}
 
-  if kubectl get clusterrole | grep -q grafana-clusterrole; then
-    kubectl delete clusterrole grafana-clusterrole > /dev/null
+  if kubectl get clusterrole | grep grafana-app-clusterrole > /dev/null; then
+    kubectl delete clusterrole grafana-app-clusterrole > /dev/null
   fi
 
-  if kubectl get clusterrolebinding | grep -q grafana-clusterrolebinding; then
-    kubectl delete clusterrolebinding grafana-clusterrolebinding > /dev/null
+  if kubectl get clusterrolebinding | grep grafana-app-clusterrolebinding > /dev/null; then
+    kubectl delete clusterrolebinding grafana-app-clusterrolebinding > /dev/null
+  fi
+
+  if kubectl get clusterrole | grep loki-app-clusterrole > /dev/null; then
+    kubectl delete clusterrole loki-app-clusterrole > /dev/null
+  fi
+
+  if kubectl get clusterrolebinding | grep loki-app-clusterrolebinding > /dev/null; then
+    kubectl delete clusterrolebinding loki-app-clusterrolebinding > /dev/null
   fi
 
   helm repo add grafana https://grafana.github.io/helm-charts > /dev/null
   helm repo update > /dev/null
-  helm upgrade --install --create-namespace -n "${loki_userInput_namespace}" loki grafana/loki -f ./telemetry/loki-values.yaml > /dev/null
-  helm upgrade --install --create-namespace -n "${loki_userInput_namespace}" grafana grafana/grafana -f ./telemetry/grafana-values.yaml > /dev/null
+  helm upgrade --install --create-namespace -n "${loki_userInput_namespace}" loki-app grafana/loki -f ./telemetry/loki-values.yaml > /dev/null
+  helm upgrade --install --create-namespace -n "${loki_userInput_namespace}" grafana-app grafana/grafana -f ./telemetry/grafana-values.yaml > /dev/null
 
   echo "namespace: \"${loki_userInput_namespace}\"" > telemetry/values_tmp.yaml
-  helm install -f telemetry/values_tmp.yaml telemetry telemetry > /dev/null 2> /dev/null
+  helm install -f telemetry/values_tmp.yaml telemetry telemetry > /dev/null 2>/dev/null
   rm telemetry/values_tmp.yaml
 
-  secret=$(kubectl get secret -n "${loki_userInput_namespace}" grafana -o jsonpath="{.data.admin-password}")
+  secret=$(kubectl get secret -n "${loki_userInput_namespace}" grafana-app -o jsonpath="{.data.admin-password}")
   decoded_password=$(echo "${secret}" | base64 --decode)
 
   loki_url=$(kubectl get virtualservice -n "${loki_userInput_namespace}" -o jsonpath="{.items[0].spec.hosts[0]}")
@@ -415,9 +473,25 @@ installTelemetry() {
   echo "Telemetry module is missing, adding it 📦️"
   kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-manager.yaml > /dev/null
   kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-default-cr.yaml -n kyma-system > /dev/null
-  telemetry_module=$(kubectl get kyma default -n kyma-system -o jsonpath="{.spec.modules}")
-  if [[ -z "${telemetry_module}" || ! $(echo "${telemetry_module}" | grep -q 'telemetry') ]]; then
+  if ! kubectl get kyma default -n kyma-system -o jsonpath="{.spec.modules}" | grep -q 'telemetry'; then
     kubectl patch kyma default -n kyma-system --type=json -p='[{"op": "add", "path": "/spec/modules/-", "value": {"name": "telemetry"}}]' > /dev/null
   fi
+}
+installWasm(){
+  init_default_image="ghcr.io/sap/init:latest"
+  read -p "Specify if you want to use a custom image for wasm (Press enter to skip): " init_userInput_image
+  init_userInput_image=${init_userInput_image:-$init_default_image}
+  
+  wasm_health=$(kubectl get job init-job -n "${app_userInput_namespace}" -o jsonpath="{.status.succeeded}" 2>/dev/null)
+  if kubectl get jobs -n "${app_userInput_namespace}" 2>/dev/null | grep -q init-job && [[ "${wasm_health}" == "" ]]; then
+    kubectl delete job init-job -n "${app_userInput_namespace}" > /dev/null
+  fi
+  cat <<EOF > wasm/values_tmp.yaml
+namespace: "${app_userInput_namespace}"
+initimage: "${init_userInput_image}"
+EOF
+
+  helm upgrade --install -f wasm/values_tmp.yaml "wasm-${app_userInput_namespace}" wasm > /dev/null
+  rm wasm/values_tmp.yaml
 }
 main

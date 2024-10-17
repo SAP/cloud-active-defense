@@ -15,14 +15,18 @@ setlocal enabledelayedexpansion
   echo Looking for Configmanager 🔍
   for /f "tokens=*" %%i in ('helm list ^| findstr configmanager') do set configmanager_helm=%%i
   if defined configmanager_helm (
-  for /f "tokens=* delims=" %%i in ('kubectl get deployment configmanager -n config-ns -o jsonpath^="{.status.conditions[0].status}"') do set configmanager_health=%%i
-    if "!configmanager_health!"=="True" (
-      echo Configmanager is already deployed ✅
+    for /f "tokens=* delims=" %%i in ('kubectl get deployment -n config-ns 2^> nul ^| findstr configmanager') do set configmanager_up=%%i
+    if defined configmanager_up (
+      for /f "tokens=* delims=" %%i in ('kubectl get deployment configmanager -n config-ns -o jsonpath^="{.status.unavailableReplicas}"') do set configmanager_health=%%i
+      if "!configmanager_health!"=="" (
+        echo Configmanager is already deployed ✅
+      ) else (
+        echo Configmanager is unhealthy, redeploying it 🚑
+        helm upgrade --install configmanager configmanager > nul
+      )
     ) else (
-      helm uninstall configmanager > nul
-      timeout /T 4 /NOBREAK >nul
-      echo Configmanager is unhealthy, redeploying it 🚀
-      helm install configmanager configmanager > nul
+      echo Configmanager is missing, deploying it 🚀
+      helm upgrade configmanager configmanager > nul
     )
   ) else (
     echo Configmanager is missing, deploying it 🚀
@@ -41,8 +45,18 @@ setlocal enabledelayedexpansion
 
   echo Looking for Loki 🔍
   for /f "tokens=*" %%i in ('helm list ^| findstr telemetry') do set loki_helm=%%i
+  for /f "tokens=* delims=" %%i in ('helm list -A ^| findstr loki-app') do set loki_app=%%i
+  for /f "tokens=* delims=" %%i in ('helm list -A ^| findstr grafana-app') do set grafana_app=%%i
   if defined loki_helm (
-    echo Loki is already deployed ✅
+    if defined loki_app (
+      if defined grafana_app (
+        echo Loki is already deployed ✅
+      ) else (
+        call :installLoki
+      )
+    ) else (
+      call :installLoki
+    )
   ) else (
     call :installLoki
   )
@@ -53,17 +67,32 @@ setlocal enabledelayedexpansion
   if not defined app_userInput_namespace set app_userInput_namespace=%app_default_namespace%
 
   echo Deploying wasm in %app_userInput_namespace% 🚀
-  for /f "tokens=* delims=" %%A in ('helm list ^| findstr wasm-%app_userInput_namespace%') do set "wasmResult=%%A"
-  if not "%wasmResult%"=="" (
-    echo Wasm is already deployed ✅
+  for /f "tokens=* delims=" %%A in ('helm list ^| findstr "\<wasm-%app_userInput_namespace%\>"') do set "wasmResult=%%A"
+  if defined wasmResult (
+    for /f "tokens=* delims=" %%i in ('kubectl get jobs -n %app_userInput_namespace% ^| findstr init-job') do set "wasm_up=%%i"
+    if defined wasm_up (
+      for /f "tokens=* delims=" %%i in ('kubectl get job init-job -n %app_userInput_namespace% -o jsonpath^="{.status.conditions[0].type}"') do set "wasm_health=%%i"
+      if "!wasm_health!" == "Complete" (
+        echo Wasm is already deployed ✅
+      ) else (
+        echo Wasm is unhealthy, redeploying it 🚑
+        call :installWasm
+        echo Done ✅
+      )
+    ) else (
+      echo Wasm is unhealthy, redeploying it 🚑
+      call :installWasm
+      echo Done ✅
+    )
   ) else (
-    set init_default_image=ghcr.io/sap/init:latest
-    set /p init_userInput_image="Specify if you want to use a custom image for wasm (Press enter to skip): "
-    if not defined init_userInput_image set init_userInput_image=!init_default_image!
-    (echo namespace: "%app_userInput_namespace%"
-    echo initimage: "!init_userInput_image!") > wasm\values_tmp.yaml
-    helm install -f wasm\values_tmp.yaml wasm-%app_userInput_namespace% wasm > nul
-    del wasm\values_tmp.yaml
+    for /f "tokens=* delims=" %%i in ('kubectl get namespace ^| findstr "\<%app_userInput_namespace%\>"') do set "namespace_exists=%%i"
+    if defined namespace_exists (
+      echo Cannot install wasm, namespace "%app_userInput_namespace%" already exists.
+      echo Exiting...
+      exit /b
+    ) else (
+      call :installWasm
+    )
   )
   echo.
 
@@ -73,26 +102,54 @@ setlocal enabledelayedexpansion
     echo Deploying myapp demo in %app_userInput_namespace% 🚀
     for /f "tokens=* delims=" %%A in ('helm list ^| findstr myapp-%app_userInput_namespace%') do set "myappResult=%%A"
     if not "!myappResult!"=="" (
-      echo Myapp is already deployed ✅ 
+      for /f "tokens=* delims=" %%i in ('kubectl get deployments -n %app_userInput_namespace% ^| findstr myapp') do set myapp_up=%%i
+      if defined myapp_up (
+        for /f "tokens=* delims=" %%i in ('kubectl get deployment myapp -n %app_userInput_namespace% -o jsonpath^="{.status.availableReplicas}"') do set myapp_health=%%i
+        if "!myapp_health!" == "" (
+          echo Myapp is unhealthy, redeploying it 🚑
+          (echo replicaCount: 1
+          echo namespace: %app_userInput_namespace%
+          echo image: "ghcr.io/sap/myapp:latest"
+          ) > myapp\values_tmp.yaml
+          helm upgrade myapp-%app_userInput_namespace% myapp -f myapp\values_tmp.yaml > nul
+          del myapp\values_tmp.yaml
+          call :apply_envoyreconfig
+        ) else (
+          echo Myapp is already deployed ✅
+          set app_userInput_deployment=myapp
+        )
+      )
     ) else (
       (echo replicaCount: 1
       echo namespace: "%app_userInput_namespace%"
       echo image: "ghcr.io/sap/myapp:latest") > myapp\values_tmp.yaml
       helm install -f myapp\values_tmp.yaml myapp-%app_userInput_namespace% myapp > nul
       del myapp\values_tmp.yaml
+      call :apply_envoyreconfig
     )
   ) else (
     call :ask_deployment_name
     for /f "tokens=* delims=" %%A in ('helm list ^| findstr !app_userInput_deployment!-%app_userInput_namespace%') do set "deploymentResult=%%A"
     if "!deploymentResult!"=="" (
+      for /f "tokens=* delims=" %%i in ('kubectl get deployments -n %app_userInput_namespace% ^| findstr %app_userInput_deployment%') do set deployment_up=%%i
+      if defined deployment_up (
+        for /f "tokens=* delims=" %%i in ('kubectl get deployment %app_userInput_deployment% -n %app_userInput_namespace% -o jsonpath^="{.status.availableReplicas}") do set deployment_health=%%i
+        if "%deployment_health%" == "" (
+          echo Cannot update, %app_userInput_deployment% is unhealthy 🤒
+          echo exiting...
+          exit 1
+        ) else (
+          echo Updating !app_userInput_deployment! in %app_userInput_namespace% 🔄️
+          helm upgrade !app_userInput_deployment!-%app_userInput_namespace% %app_userInput_directory% > nul
+          call :apply_envoyreconfig
+        )
+      )
+    ) else (
       echo Deploying !app_userInput_deployment! in %app_userInput_namespace% 🚀
       helm install !app_userInput_deployment!-%app_userInput_namespace% %app_userInput_directory% > nul
-    ) else (
-      echo Updating !app_userInput_deployment! in %app_userInput_namespace% 🔄️
-      helm upgrade !app_userInput_deployment!-%app_userInput_namespace% %app_userInput_directory% > nul
+      call :apply_envoyreconfig
     )
   )
-  call :apply_envoyreconfig
   echo.
   for /f "tokens=*" %%A in ('helm list ^| findstr !app_userInput_deployment!-%app_userInput_namespace%-clone') do set "cloneResult=%%A"
   if not defined cloneResult (
@@ -117,6 +174,21 @@ setlocal enabledelayedexpansion
     if not exist "%app_userInput_directory%" (
       echo The given path doesn't exist
       call :ask_app_directory
+    ) else (
+      if not exist "%app_userInput_directory%\Chart.yaml" (
+        echo Cannot find Chart.yaml file of your helm chart in "%app_userInput_directory%"
+        call :ask_app_directory
+      ) else (
+        if not exist "%app_userInput_directory%\templates" (
+          echo Cannot find templates/ directory of your helm chart in "%app_userInput_directory%"
+          call :ask_app_directory
+        ) else (
+          if not exist "%app_userInput_directory%\values.yaml" (
+            echo Cannot find values.yaml of your helm chart in "%app_userInput_directory%"
+            call :ask_app_directory
+          )
+        )
+      )
     )
   )
   exit /B
@@ -221,14 +293,22 @@ setlocal enabledelayedexpansion
   copy envoy-config\kustomize.bat envoy-config\temp\kustomize.bat > nul
   copy envoy-config\kustomization.yaml envoy-config\temp\kustomization.yaml > nul
   echo Waiting for wasm to be deployed... ⏳
-  kubectl wait --for=condition=complete job/init-job -n %app_userInput_namespace% > nul
+  kubectl wait --for=condition=complete job/init-job --timeout=10s -n %app_userInput_namespace% > nul 2> nul
   if %errorlevel% equ 0 (
     helm upgrade !app_userInput_deployment!-%app_userInput_namespace% %app_userInput_directory% --post-renderer .\envoy-config\temp\kustomize.bat --dry-run >nul
     rmdir /S /Q envoy-config\temp
 
-    echo Done ✅
+    echo App successfully installed ✅
     for /F "delims=" %%i in ('kubectl get virtualservice -n %app_userInput_namespace% -o jsonpath^="{.items[0].spec.hosts[0]}" ^| findstr !app_userInput_deployment!') do set "app_url=%%i"
     echo To access your app, go to: !app_url!
+  ) else (
+    echo Something went wrong, wasm is unhealthy 🤒
+    set /p wasm_health_userInput="Do you want to continue the install (Y/N) ? "
+    if "!wasm_health_userInput!"=="n" (
+      exit 1
+    ) else if "!wasm_health_userInput!"=="N" (
+      exit 1
+    )
   )
   exit /B
 :askClone
@@ -399,25 +479,34 @@ setlocal enabledelayedexpansion
 
   set loki_default_namespace=log-sink
   set /p loki_userInput_namespace="In what namespace to install loki (default: !loki_default_namespace!): "
+
   if not defined loki_userInput_namespace set loki_userInput_namespace=!loki_default_namespace!
-  for /f "tokens=*" %%i in ('kubectl get clusterrole ^| findstr grafana-clusterrole') do set grafana_clusterrole=%%i
+  for /f "tokens=*" %%i in ('kubectl get clusterrole ^| findstr grafana-app-clusterrole') do set grafana_clusterrole=%%i
   if defined grafana_clusterrole (
-    kubectl delete clusterrole grafana-clusterrole > nul
+    kubectl delete clusterrole grafana-app-clusterrole > nul
   )
-  for /f "tokens=*" %%i in ('kubectl get clusterrolebinding ^| findstr grafana-clusterrolebinding') do set "grafana_clusterrolebinding=%%i"
+  for /f "tokens=*" %%i in ('kubectl get clusterrolebinding ^| findstr grafana-app-clusterrolebinding') do set "grafana_clusterrolebinding=%%i"
   if defined grafana_clusterrolebinding (
-    kubectl delete clusterrolebinding grafana-clusterrolebinding > nul
+    kubectl delete clusterrolebinding grafana-app-clusterrolebinding > nul
+  )
+  for /f "tokens=*" %%i in ('kubectl get clusterrole ^| findstr loki-app-clusterrole') do set loki_clusterrole=%%i
+  if defined loki_clusterrole (
+    kubectl delete clusterrole loki-app-clusterrole > nul
+  )
+  for /f "tokens=*" %%i in ('kubectl get clusterrolebinding ^| findstr loki-app-clusterrolebinding') do set "loki_clusterrolebinding=%%i"
+  if defined loki_clusterrolebinding (
+    kubectl delete clusterrolebinding loki-app-clusterrolebinding > nul
   )
 
   helm repo add grafana https://grafana.github.io/helm-charts > nul
   helm repo update > nul
-  helm upgrade --install --create-namespace -n !loki_userInput_namespace! loki grafana/loki -f ./telemetry/loki-values.yaml > nul
-  helm upgrade --install --create-namespace -n !loki_userInput_namespace! grafana grafana/grafana -f ./telemetry/grafana-values.yaml > nul
+  helm upgrade --install --create-namespace -n !loki_userInput_namespace! loki-app grafana/loki -f ./telemetry/loki-values.yaml > nul
+  helm upgrade --install --create-namespace -n !loki_userInput_namespace! grafana-app grafana/grafana -f ./telemetry/grafana-values.yaml > nul
 
   echo namespace: "!loki_userInput_namespace!" > telemetry\values_tmp.yaml
   helm install -f telemetry/values_tmp.yaml telemetry telemetry > nul 2> nul
   del telemetry\values_tmp.yaml
-  kubectl get secret -n !loki_userInput_namespace! grafana -o jsonpath="{.data.admin-password}" > temp.b64
+  kubectl get secret -n !loki_userInput_namespace! grafana-app -o jsonpath="{.data.admin-password}" > temp.b64
   certutil -decode temp.b64 temp.txt > nul
   set /p decoded_password=<temp.txt
 
@@ -431,9 +520,26 @@ setlocal enabledelayedexpansion
   echo Telemetry module is missing, adding it 📦️
   kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-manager.yaml > nul
   kubectl apply -f https://github.com/kyma-project/telemetry-manager/releases/latest/download/telemetry-default-cr.yaml -n kyma-system > nul
-  for /f "tokens=* delims=" %%i in ('kubectl get kyma default -n kyma-system -o jsonpath^="{.spec.modules[*].name}" ^| findstr telemetry') do set telemetry_module=%%i
+  for /f "tokens=* delims=" %%i in ('kubectl get kyma default -n kyma-system -o jsonpath^="{.spec.modules}" ^| findstr telemetry') do set telemetry_module=%%i
   if not defined telemetry_module (
     set "json_patch=[{\"op\":\"add\",\"path\":\"/spec/modules/-\",\"value\":{\"name\":\"telemetry\"}}]"
     kubectl patch kyma default -n kyma-system --type=json --patch=!json_patch! > nul
   )
   exit /B
+
+:installWasm
+  set init_default_image=ghcr.io/sap/init:latest
+  set /p init_userInput_image="Specify if you want to use a custom image for wasm (Press enter to skip): "
+  if not defined init_userInput_image set init_userInput_image=!init_default_image!
+  for /f "tokens=* delims=" %%i in ('kubectl get jobs -n !app_userInput_namespace! 2^>nul ^| findstr init-job') do set wasm_up=%%i
+  if defined wasm_up (
+    for /f "tokens=* delims=" %%i in ('kubectl get jobs init-job -n !app_userInput_namespace! -o jsonpath^="{.status.succeeded}" 2^> nul') do set wasm_health=%%i
+    if "%wasm_health%" == "" (
+      kubectl delete job init-job -n !app_userInput_namespace! > nul
+    )
+  )
+  
+  (echo namespace: "%app_userInput_namespace%"
+  echo initimage: "!init_userInput_image!") > wasm\values_tmp.yaml
+  helm upgrade --install -f wasm\values_tmp.yaml wasm-%app_userInput_namespace% wasm > nul
+  del wasm\values_tmp.yaml
