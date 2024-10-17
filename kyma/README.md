@@ -44,8 +44,8 @@ Now install loki and grafana (Replace `log-sink` with the same namespace you jus
 ```shell
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
-helm upgrade --install --create-namespace -n log-sink loki grafana/loki -f ./telemetry/loki-values.yaml
-helm upgrade --install --create-namespace -n log-sink grafana grafana/grafana -f ./telemetry/grafana-values.yaml
+helm upgrade --install --create-namespace -n log-sink loki-app grafana/loki -f ./telemetry/loki-values.yaml
+helm upgrade --install --create-namespace -n log-sink grafana-app grafana/grafana -f ./telemetry/grafana-values.yaml
 ```
 
 Then run the following command:
