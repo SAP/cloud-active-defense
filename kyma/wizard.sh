@@ -462,6 +462,7 @@ installLoki() {
   helm install -f telemetry/values_tmp.yaml telemetry telemetry > /dev/null 2>/dev/null
   rm telemetry/values_tmp.yaml
 
+  sleep 2
   secret=$(kubectl get secret -n "${loki_userInput_namespace}" grafana-app -o jsonpath="{.data.admin-password}")
   decoded_password=$(echo "${secret}" | base64 --decode)
 

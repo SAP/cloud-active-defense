@@ -506,6 +506,8 @@ setlocal enabledelayedexpansion
   echo namespace: "!loki_userInput_namespace!" > telemetry\values_tmp.yaml
   helm install -f telemetry/values_tmp.yaml telemetry telemetry > nul 2> nul
   del telemetry\values_tmp.yaml
+
+  sleep 2
   kubectl get secret -n !loki_userInput_namespace! grafana-app -o jsonpath="{.data.admin-password}" > temp.b64
   certutil -decode temp.b64 temp.txt > nul
   set /p decoded_password=<temp.txt
