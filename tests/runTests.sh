@@ -20,7 +20,7 @@ docker-compose up -d
 
 # Wait for docker-compose to be ready (checking the logs)
 while :; do
-  status=`docker-compose logs | grep "wasm log: read new config"`
+  status=`docker-compose logs | grep "read new config"`
   if [ "$status" == "" ]; then
     sleep 1 # wait one second before checking again
   else
