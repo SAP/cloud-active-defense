@@ -42,7 +42,6 @@ services:
 
   exhaust:
     container_name: exhaust
-    build: exhaust
     image: exhausttest
     depends_on:
       - fluent
