@@ -118,8 +118,8 @@ func (v *validator) validateDecoy(decoy DecoyType) {
   if decoy == EmptyDecoy() {
     v.addError(v.currentPlace, "can not be empty")
   }
-	if breaksRequired(decoy.Key) && breaksRequired(decoy.DynamicKey) {
-		v.addError(v.currentPlace+".key and dynamicKey", "can not both be empty ")
+	if breaksRequired(decoy.Key) && breaksRequired(decoy.DynamicKey) && breaksRequired(decoy.String) {
+		v.addError(v.currentPlace+".key, dynamicKey and string", "can not all be empty ")
 	}
 	if invalidRegex(decoy.DynamicKey) {
 		v.addError(v.currentPlace+".dynamicKey", "needs to be valid regex")
