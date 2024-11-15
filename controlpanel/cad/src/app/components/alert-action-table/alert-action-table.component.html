@@ -1,0 +1,61 @@
+<table class="action-table">
+    <thead>
+        <tr>
+            <th id="source">Source</th>
+            <th id="behavior">Behavior</th>
+            <th id="delay">Delay</th>
+            <th id="duration">Duration</th>
+            <th id="property">Property</th>
+            <th class="end-action"></th>
+        </tr>
+        <tr class="tr-separator"><td class="row-separator" colspan="6"><hr class="head-separator"/></td></tr>
+    </thead>
+    <tbody>
+        <tr *ngFor="let action of actionArray; let i = index" class="input-row">
+            <td><app-source-select [selectedSource]="sourceToArray(action.source)" (selectedSourceChange)="onSourceChange($event, i)"></app-source-select></td>
+            <td>
+                <select class="input-action-table" name="behavior" id="behavior" [(ngModel)]="action.behavior" (change)="onItemChange()">
+                    <option value="error">error</option>
+                    <option value="divert">divert</option>
+                    <option value="drop">drop</option>
+                    <option value="throttle">throttle</option>
+                </select>
+            </td>
+            <td>
+                <div class="table-form-inputception">
+                    <input class="input-action-table inner-input" type="text" name="delay" id="delay" [(ngModel)]="action.delay" (input)="onItemChange()" [disabled]="action.delayExtension == 'now'" appOnlyNumbers>
+                    <select class="inner-select" name="request" id="delayExtension" [(ngModel)]="action.delayExtension" (change)="onDelayExtensionChange(action.delayExtension, i); onItemChange()">
+                        <option value="s">s</option>
+                        <option value="m">m</option>
+                        <option value="h">h</option>
+                        <option value="now">n</option>
+                    </select>
+                </div>
+            </td>
+            <td>
+                <div class="table-form-inputception">
+                    <input class="input-action-table inner-input" type="text" name="duration" id="duration" [(ngModel)]="action.duration" (input)="onItemChange()" [disabled]="action.durationExtension == 'forever'" appOnlyNumbers>
+                    <select class="inner-select" name="durationExtension" id="durationExtension" [(ngModel)]="action.durationExtension" (change)="onDurationExtensionChange(action.durationExtension, i); onItemChange()">
+                        <option value="s">s</option>
+                        <option value="m">m</option>
+                        <option value="h">h</option>
+                        <option value="forever">f</option>
+                    </select>
+                </div>
+            </td>
+            <td><input class="input-action-table" type="text" name="property" id="property" [(ngModel)]="action.property" (input)="onItemChange()" [disabled]="action.behavior != 'throttle'" appOnlyValidRespondProperty></td>
+            <td class="end-action">
+                <button (click)="onClickDeleteAction(i)" class="action-delete-btn">
+                    <img src="delete.svg" alt="delete">
+                </button>
+            </td>
+       </tr>
+       <tr>
+        <td class="add-action" colspan="6">
+            <button class="add-action-btn" (click)="onClickAddAction()">
+                <div class="add-action-icon"></div>
+            </button>
+        </td>
+       </tr>
+    </tbody>
+</table>

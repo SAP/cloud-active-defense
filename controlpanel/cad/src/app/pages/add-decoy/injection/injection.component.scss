@@ -1,0 +1,53 @@
+@import '../../../../styles/variables.scss';
+
+.decoy-form {
+    .left-form {
+        .extra-group {
+            margin-left: 1rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            .extra-item {
+                display: flex;
+                align-items: center;
+                height: 29px;
+                width: 29px;
+                .extra-item-btn {
+                    width: 100%;
+                    height: 100%;
+                    border: 0;
+                    background-color: transparent;
+                    cursor: pointer;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+            }
+            .switch-string { 
+                margin: 40px 0;
+            }
+            .switch-regex {
+                background-color: #a5d3ff;
+                border-radius: 10px;
+            }
+        }
+        .string-container {
+            height: calc((29px*3) + 20px*4);
+            .string-input {
+                height: 100%;
+                resize: none;
+            }
+        }
+        .string-label {
+            height: 29px;
+            margin: calc(29px + (20px*3)) 0;
+        }
+        .invalid-feedback {
+            width: 90%;
+            align-content: flex-start;
+            height: 14px;
+            color: red;
+            font-size: 14px;
+        }
+    }
+}

@@ -1,0 +1,7 @@
+<ng-container *ngIf="showTooltip">
+    <div class="tooltip" [style.top]="topPosition + 'px'" [style.left]="leftPosition + 'px'" (mouseenter)="onTooltipHover()" (mouseleave)="onTooltipLeave()">
+        <h3>{{ title }}</h3>
+        <p>{{ text }}</p>
+        <a *ngIf="link" target="_blank" [href]="link">Learn more</a>
+    </div>
+</ng-container>

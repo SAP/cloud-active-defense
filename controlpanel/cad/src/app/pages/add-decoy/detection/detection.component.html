@@ -1,0 +1,147 @@
+<app-tooltip [showTooltip]="showTooltip"
+[title]="tooltipTitle"
+[text]="tooltipText"
+[link]="tooltipLink"
+[topPosition]="topPosition"
+[leftPosition]="leftPosition"
+(tooltipHover)="onHoverInfo()"
+(tooltipLeave)="onLeaveInfo()">
+</app-tooltip>
+
+<div class="decoy-form">
+    <div class="left-form">
+        <form class="form" [formGroup]="detectionForm">
+            <div class="label-group">
+                <div class="form-label">
+                    <label for="inputPath">Where to detect ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('inRequest/inResponse', 'In which endpoint the decoy should be detected, you can set to detect in the request or the in the response of this endpoint', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#inresponse', $event)"
+                    (mouseleave)="onLeaveInfo()"/>
+                </div>
+                <div class="form-label">
+                    <label for="inputVerb">With which verb ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('withVerb', 'With which verb do you want to detect, this will filter only certains request for detection', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#withverb', $event)"
+                    (mouseleave)="onLeaveInfo()"/>
+                </div>
+                <div class="form-label">
+                    <label for="inputIn">In which element to detect ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('in', 'In which part of the HTTP request/response to detect', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#in', $event)"
+                    (mouseout)="onLeaveInfo()"/>         
+                </div>
+                <div class="form-label">
+                    <label for="inputDecoyKey">What to detect ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('key', 'With what decoy key do you want to detect, it will determine in which element the detection will be done', 'https://github.com/SAP/cloud-active-defense/wiki/Decoy#key', $event)"
+                    (mouseout)="onLeaveInfo()"/>
+                </div>
+                <div class="form-label">
+                    <label for="inputDecoySeparator">How to separate ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('separator', 'The `separator` defines the key/value separator', 'https://github.com/SAP/cloud-active-defense/wiki/Decoy#separator', $event)"
+                    (mouseout)="onLeaveInfo()"/>
+                </div>
+                <div class="form-label">
+                    <label for="inputDecoyValue">With what value ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('value', 'What will be the value of the decoy, the value will be given to the key previously set', 'https://github.com/SAP/cloud-active-defense/wiki/Decoy#value', $event)"
+                    (mouseout)="onLeaveInfo()"/>
+                </div>
+            </div>
+            <div class="input-group">
+                <div class="form-input-container" [ngClass]="{ 'invalid-input-container': detectionPath.touched && detectionPath.invalid }">
+                    <i>/</i>
+                    <div class="form-inputception" [ngClass]="{ 'invalid-input': detectionPath.touched && detectionPath.invalid }">
+                        <input class="form-input inner-input" type="text" name="path" id="inputPath" formControlName="detectionPath">
+                        <select class="inner-select" name="request" id="inputRequest" formControlName="request">
+                            <option value="inRequest">inRequest</option>
+                            <option value="inResponse">inResponse</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="invalid-feedback" *ngIf="detectionPath.touched && detectionPath.invalid && detectionPath.errors">
+                    <ng-container *ngIf="detectionPath.errors['required']">
+                        The path is required
+                    </ng-container>
+                    <ng-container *ngIf="detectionPath.errors['invalidUrl'] && !detectionPath.errors['invalidRegex']">
+                        The url is invalid
+                    </ng-container>
+                    <ng-container *ngIf="detectionPath.errors['invalidRegex'] && !detectionPath.errors['invalidUrl']">
+                        Regex must be valid
+                    </ng-container>
+                    <ng-container *ngIf="detectionPath.errors['invalidRegex'] && detectionPath.errors['invalidUrl']">
+                        Url and regex are invalid
+                    </ng-container>
+                </div>
+                <div class="form-input-container">
+                    <select class="form-input" name="verb" id="inputVerb" formControlName="verb">
+                        <option value="">All verbs</option>
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="PATCH">PATCH</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="HEAD">HEAD</option>
+                        <option value="OPTIONS">OPTIONS</option>
+                    </select>
+                </div>
+                <div class="form-input-container">
+                    <select class="form-input" name="in" id="inputIn" formControlName="in">
+                        <option value="header">header</option>
+                        <option value="url">url</option>
+                        <option value="cookie">cookie</option>
+                        <option value="getParam">getParam</option>
+                        <option value="postParam">postParam</option>
+                        <option value="payload">payload</option>
+                    </select>
+                </div>
+                <div class="form-input-container" [ngClass]="{ 'invalid-input-container': key.touched && key.errors}">
+                    <input class="form-input" type="text" name="decoyKey" id="inputDecoyKey" formControlName="key" [ngClass]="{ 'invalid-input': key.touched && key.errors }">
+                </div>
+                <div class="invalid-feedback" *ngIf="key.touched && key.errors">
+                    <ng-container *ngIf="key.touched && key.errors['required']">
+                        Key is required
+                    </ng-container>
+                    <ng-container *ngIf="key.errors && key.errors['invalidRegex']">
+                        Regex must be valid
+                    </ng-container>
+                </div>
+                <div class="form-input-container">
+                    <input class="form-input" type="text" name="decoySeparator" id="inputDecoySeparator" formControlName="separator">
+                </div>
+                <div class="form-input-container"[ngClass]="{ 'invalid-input-container': value.touched && (value.errors || (detectionForm.errors && detectionForm.errors['missingValue'])) }">
+                    <input class="form-input" type="text" name="decoyValue" id="inputDecoyValue" formControlName="value" [ngClass]="{ 'invalid-input': value.touched && (value.errors || (detectionForm.errors && detectionForm.errors['missingValue'])) }">
+                </div>
+                <div class="invalid-feedback" *ngIf="value.touched && (value.errors || (detectionForm.errors && detectionForm.errors['missingValue']))">
+                    <ng-container *ngIf="value.errors && value.errors['invalidRegex']">
+                        Regex must be valid
+                    </ng-container>
+                    <ng-container *ngIf="detectionForm.errors && detectionForm.errors['missingValue']">
+                        {{ "Value must be filled if 'in' is " + this.in.value }}
+                    </ng-container>
+                </div>
+            </div>
+            <div class="extra-group">
+                <div class="extra-item" [ngClass]="{ 'switch-regex': keyRegexActive }">
+                    <button class="extra-item-btn" (click)="onRegexChange('key')">
+                        <img src="regex.svg" alt="">
+                    </button>
+                </div>
+                <div class="extra-item value-item" [ngClass]="{ 'switch-regex': valueRegexActive }">
+                    <button class="extra-item-btn" (click)="onRegexChange('value')">
+                        <img src="regex.svg" alt="">
+                    </button>
+                </div>
+                
+            </div>
+        </form>
+    </div>
+    <div class="right-container">
+        <div class="file-preview">{{ decoy | json }}</div>
+        <div class="next">
+            <button class="filled-btn" (click)="skipDetection()">Skip</button>
+            <button class="filled-btn" routerLink="../alert-action">Next step</button>
+        </div>
+    </div>
+</div>

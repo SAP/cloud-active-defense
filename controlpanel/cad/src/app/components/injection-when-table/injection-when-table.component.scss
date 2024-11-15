@@ -1,0 +1,60 @@
+@import '../../../styles/variables';
+
+.when-table {
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 1px -1px,
+                rgba(0, 0, 0, 0.14) 0px 1px 1px 0px, 
+                rgba(0, 0, 0, 0.12) 0px 1px 3px 0px;
+    border-radius: 10px;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    thead {
+        .head-separator {
+            width: 100%;
+        }
+        th {
+            text-align: start;
+            padding: 0.2rem 0.5rem;
+        }
+        .end-when {
+            box-sizing: content-box;
+            width : 30px;
+        }
+    }
+    tbody {
+        .input-row:nth-child(odd){
+            background-color: #E8E8E8;
+        }
+        .add-when {
+            padding-top: 0.2rem;
+            padding-bottom: 0.5rem;
+            text-align: center;
+            .add-when-btn {
+                width: 90%;
+                background-color: $primaryColor;
+                border: none;
+                border-radius: 5px;
+                padding: 0.2rem 0;
+                .add-when-icon {
+                    margin: 0 auto;
+                    mask: url('../../../../public/add.svg') no-repeat center; 
+                    width: 24px; 
+                    height: 24px; 
+                    background-color: #FFF;
+                }
+            }
+        }
+        .when-delete-btn {
+            cursor: pointer;
+            border: 0;
+            background-color: transparent;
+        }
+        
+    }
+    td:not(.row-separator) {
+        padding: 0 0.5rem;
+    }
+    tr:not(.tr-separator) {
+        height: 1rem;
+    }
+}

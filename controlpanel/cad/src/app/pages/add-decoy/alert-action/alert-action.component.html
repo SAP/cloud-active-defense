@@ -1,0 +1,60 @@
+<app-tooltip [showTooltip]="showTooltip"
+[title]="tooltipTitle"
+[text]="tooltipText"
+[link]="tooltipLink"
+[topPosition]="topPosition"
+[leftPosition]="leftPosition"
+(tooltipHover)="onHoverInfo()"
+(tooltipLeave)="onLeaveInfo()">
+</app-tooltip>
+
+<div class="decoy-form">
+    <div class="left-form">
+        <form class="form" [formGroup]="alertForm">
+            <div class="label-group">
+                <div class="form-label">
+                    <label for="selectWhen">When to alert ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('when', 'When to send an alert when the decoy is detected', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#whenModified', $event)"
+                    (mouseleave)="onLeaveInfo()"/>
+                </div>
+                <div class="form-label">
+                    <label for="inputSeverity">What severity ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('severity', 'Determine the severity of the detected decoy, this is just displayed as-is on the console, without further side effect', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#severity', $event)"
+                    (mouseleave)="onLeaveInfo()"/>
+                </div>
+                <div class="form-label">
+                    <label for="tableRespond">How to respond ?</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('respond', 'What action to use in response of a detected decoy', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#respond', $event)"
+                    (mouseleave)="onLeaveInfo()"/>
+                </div>
+            </div>
+            <div class="input-group">
+                <div class="form-input-container" [ngClass]="{ 'invalid-input-container': whenSelectTouched && !whenArray.length}">
+                    <app-when-alert-select [(selectedWhen)]="whenArray" (selectedWhenChange)="onWhenChange($event)" (click)="whenSelectTouched = true"></app-when-alert-select>
+                </div>
+                <div class="invalid-feedback" *ngIf="whenSelectTouched && !whenArray.length">
+                    Must have one alert condition
+                </div>
+                <div class="form-input-container">
+                    <select class="form-input" name="severity" id="inputSeverity" formControlName="severity">
+                        <option value="LOW">LOW</option>
+                        <option value="MEDIUM">MEDIUM</option>
+                        <option value="HIGH">HIGH</option>
+                    </select>
+                </div>
+            </div>
+        </form>
+        <app-alert-action-table [(actionArray)]="actionArray" (actionArrayChange)="onActionChange($event)"></app-alert-action-table>
+        <div class="invalid-feedback" *ngIf="!validRespond && actionTouched">
+            One or many responds are invalid
+        </div>
+    </div>
+    <div class="right-container">
+        <div class="file-preview">{{ decoy | json }}</div>
+        <div class="next fixed-right">
+            <button class="filled-btn" (click)="nextStep()">Next step</button>
+        </div>
+    </div>

@@ -1,0 +1,12 @@
+<div class="decoy-form">
+    <div class="left-form">
+        <h2>Description</h2>
+        <p [innerHTML]="reviewText"></p>
+    </div>
+    <div class="right-container">
+        <div class="file-preview">{{ decoy | json }}</div>
+        <div class="next fixed-right">
+            <button class="filled-btn" (click)="save()">Save</button>
+        </div>
+    </div>
+</div>

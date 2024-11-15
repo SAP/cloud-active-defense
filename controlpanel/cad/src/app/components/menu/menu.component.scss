@@ -1,0 +1,123 @@
+$menu-icon-size: 2rem;
+
+.menu {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 22rem;
+    background-color: aliceblue;
+    position: sticky;
+    box-shadow: rgba(0, 0, 0, 0.15) 1.95px 1.95px 2.6px;
+    .logo-container {
+        display: flex;
+        width: 100%;
+        .name {
+            font-size: 1.5rem;
+            align-self: center;
+            margin-left: 0.7rem;
+        }
+        .logo {
+            height: 5rem;
+            color: #000;
+            margin-left: 0.5rem;
+        }
+    }
+    .menu-list {
+        margin-top: 4rem;
+        display: flex;
+        flex-direction: column;
+        .menu-item .menu-link, .dropdown-menu-item {
+            &:hover, &:hover .dropdown {
+                background-color: bisque;
+            }
+            position: relative;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            height: 4rem;
+            padding-left: 1rem;
+            margin: 0.3rem 0;
+            text-decoration: none;
+            color: #000;
+            &:visited {
+                color: initial;
+            }
+            .menu-icon {
+                height: $menu-icon-size;
+            }
+            .menu-label {
+                margin-left: 0.8rem;
+                font-weight: 700;
+            }
+            .dropdown-arrow {
+                height: 2rem;
+                margin-left: auto;
+                margin-right: 0.7rem;
+            }
+        }
+        .dropdown {
+            right: 0;
+            top: 3.5rem;
+            background-color: aliceblue;
+            width: 100%;
+            display: flex;
+            flex-direction: row;
+            .separator {
+                width: 1px;
+                border: 1px solid #909090;
+                margin-left: calc(1rem + $menu-icon-size/2 - 0.05rem);
+            }
+            .sub-menu {
+                width: 100%;
+                list-style: none;
+                margin-left: 1.2rem;
+                margin-top: 0.3rem;
+            }
+            .sub-menu-item {
+                margin-top: 0.2rem;
+                margin-bottom: 0.2rem;
+                &:hover {
+                    background-color: bisque;
+                }
+                .sub-menu-link {
+                    &:visited {
+                        color: initial;
+                    }
+                    padding: 0.45rem 0;
+                    display: block;
+                    line-height: 1.1rem;
+                    font-weight: 700;
+                    text-decoration: none;
+                    width: 100%;
+                    color: #000;
+                }
+            }
+        }
+    }
+    .end-item {
+        margin-top: auto;
+        margin-bottom: 1rem;
+        margin-left: 1.5rem;
+        .profile {
+            display: flex;
+            .profile-icon {
+                height: 4rem;
+            }
+            .info {
+                margin-top: 0.3rem;
+                .username {
+                    font-size: 1.5rem;
+                }
+                .profile-link {
+                    padding-right: 1rem;
+                    font-weight: 700;
+                    color: #000;
+                    &:visited {
+                        color: initial;
+                    }
+                }
+            }
+        }
+    }
+}
+

@@ -1,0 +1,19 @@
+<div>
+    <h1>Add new decoy 🪤</h1>
+    <div class="progressbar">
+        <ng-container *ngFor="let tab of tabs; index as i">
+            <a class="step" [routerLink]="tab.path" [ngClass]="{ 'active-step': i <= activeIndex }">
+                <div class="circle">
+                    {{ i + 1 }}
+                </div>
+                <p>{{ tab.name }}</p>
+            </a>
+            <div class="step-separator" *ngIf="i < tabs.length - 1" [ngClass]="{ 'active-separator': i < activeIndex }">
+                <hr/>
+            </div>
+        </ng-container>
+    </div>
+    <hr class="form-separator"/>
+</div>
+
+<router-outlet></router-outlet>

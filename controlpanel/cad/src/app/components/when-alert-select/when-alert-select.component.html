@@ -1,0 +1,13 @@
+<div class="multi-select">
+    <select class="form-input when-select" #whenSelect name="when-select" id="when-select" (change)="updateSelectedItems($event)" (blur)="touched = true" [ngClass]="{ 'invalid-input': touched && !selectedWhen.length }">
+        <option *ngFor="let item of whenItems; let i = index" [value]="i">{{ item }}</option>
+    </select>
+    <div class="when-container" #whenContainer (wheel)="onScroll($event)">
+        <div class="when-item" *ngFor="let item of selectedWhen; let i = index">
+            <span>{{ item }}</span>
+            <button>
+                <img src="close_small.svg" alt="" (click)="deleteWhenItem(i)">
+            </button>
+        </div>
+    </div>
+</div>

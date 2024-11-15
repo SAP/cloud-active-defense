@@ -13,6 +13,8 @@ services:
     volumes:
     - ./configmanager/data:/data
     - configvolume:/data/blocklist
+    ports:
+      - "3000:3000"
       
   proxy:
     container_name: proxy
@@ -56,5 +58,16 @@ services:
     logging:
       driver: fluentd
   
+  controlpanel-api:
+    container_name: controlpanel-api
+    build: controlpanel/api
+    image: api
+    ports:
+      - 8050:8050
+    depends_on:
+      - config
+      - fluent
+
+
 volumes:
   configvolume: {}
