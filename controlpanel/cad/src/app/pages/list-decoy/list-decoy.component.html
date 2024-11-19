@@ -1,0 +1,58 @@
+<div>
+    <h1>Decoys list 🗒️</h1>
+    <!-- <div class="search">
+    </div> -->
+    <div class="wrapper">
+        <table class="list-container">
+            <thead>
+                <tr>
+                    <th class="decoy-head">Decoy</th>
+                    <th>inject</th>
+                    <th>Detect</th>
+                    <th>Action</th>
+                    <th class="row-options"></th>
+                </tr>
+                <tr class="tr-separator"><td class="row-separator" colspan="5"><hr class="head-separator"/></td></tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let decoy of decoys">
+                    <td>
+                        <p>{{ displayDecoy(decoy) }}</p>
+                        <p [ngClass]="{ 'sub-text': displayDecoy(decoy) }">{{ decoy.decoy.string && decoy.decoy.string }}</p>
+                    </td>
+                    <td>
+                        <ng-container *ngIf="decoy.inject; else noInject">
+                            <p>{{ decoy.inject.store.as }}</p>
+                            <p class="sub-text">{{ decoy.inject.store.inRequest || decoy.inject.store.inResponse }}</p>
+                        </ng-container>
+                        <ng-template #noInject>
+                            <p class="sub-text">/</p>
+                        </ng-template>
+                    </td>
+                    <td>
+                        <ng-container *ngIf="decoy.detect; else noDetect">
+                            <p>{{ decoy.detect.seek.in }}</p>
+                            <p class="sub-text">{{ decoy.detect.seek.inRequest || decoy.detect.seek.inResponse }}</p>
+                        </ng-container>
+                        <ng-template #noDetect>
+                            <p class="sub-text">/</p>
+                        </ng-template>
+                    </td>
+                    <td>
+                        <ng-container *ngIf="decoy.detect?.respond?.length; else noRespond">
+                            <p>{{ decoy.detect?.respond![0].behavior }}</p>
+                            <p class="sub-text">{{ decoy.detect?.respond![0].source }}</p>
+                        </ng-container>
+                        <ng-template #noRespond>
+                            <p class="sub-text">/</p>
+                        </ng-template>
+                    </td>
+                    <td class="options">
+                        <button class="option-btn"><img src="edit.svg" alt=""></button>
+                        <button class="option-btn"><img src="delete.svg" alt=""></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
