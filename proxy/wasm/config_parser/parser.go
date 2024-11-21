@@ -101,10 +101,10 @@ func (p *Parser) filterJsonToStruct(filterJs *fastjson.Value) *FilterType {
 				},
 			},
 			WhenTrue: p.conditionsJsonToStruct(
-				filterJs.Get("inject").Get("store").GetArray("whenTrue"),
+				filterJs.Get("inject").GetArray("whenTrue"),
 			),
 			WhenFalse: p.conditionsJsonToStruct(
-				filterJs.Get("inject").Get("store").GetArray("whenFalse"),
+				filterJs.Get("inject").GetArray("whenFalse"),
 			),
 		},
 		Detect: DetectType{

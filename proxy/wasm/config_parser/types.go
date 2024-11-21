@@ -173,15 +173,15 @@ func (c *DecoyConfig) MakeString() string{
 		confStr += fmt.Sprintf("filters[%d].inject.store.at.property: %s \n", filterind, filter.Inject.Store.At.Property)
 		confStr += fmt.Sprintln()
 		for condInd, cond := range filter.Inject.WhenTrue {
-			confStr += fmt.Sprintf("{\nfilters[%d].inject.store.whenTrue[%d].key: %s \n", filterind, condInd, cond.Key)
-			confStr += fmt.Sprintf("filters[%d].inject.store.whenTrue[%d].value: %s \n", filterind, condInd, cond.Value)
-			confStr += fmt.Sprintf("filters[%d].inject.store.whenTrue[%d].in: %s \n },\n", filterind, condInd, cond.In)
+			confStr += fmt.Sprintf("{\nfilters[%d].inject.whenTrue[%d].key: %s \n", filterind, condInd, cond.Key)
+			confStr += fmt.Sprintf("filters[%d].inject.whenTrue[%d].value: %s \n", filterind, condInd, cond.Value)
+			confStr += fmt.Sprintf("filters[%d].inject.whenTrue[%d].in: %s \n },\n", filterind, condInd, cond.In)
 		}
 		confStr += fmt.Sprintln()
 		for condInd, cond := range filter.Inject.WhenFalse {
-			confStr += fmt.Sprintf("{\nfilters[%d].inject.store.whenFalse[%d].key: %s \n", filterind, condInd, cond.Key)
-			confStr += fmt.Sprintf("filters[%d].inject.store.whenFalse[%d].value: %s \n", filterind, condInd, cond.Value)
-			confStr += fmt.Sprintf("filters[%d].inject.store.whenFalse[%d].in: %s \n},\n", filterind, condInd, cond.In)
+			confStr += fmt.Sprintf("{\nfilters[%d].inject.whenFalse[%d].key: %s \n", filterind, condInd, cond.Key)
+			confStr += fmt.Sprintf("filters[%d].inject.whenFalse[%d].value: %s \n", filterind, condInd, cond.Value)
+			confStr += fmt.Sprintf("filters[%d].inject.whenFalse[%d].in: %s \n},\n", filterind, condInd, cond.In)
 		}
 		confStr += fmt.Sprintln()
 		confStr += fmt.Sprintf("filters[%d].detect.seek.inRequest: %s \n", filterind, filter.Detect.Seek.InRequest)
