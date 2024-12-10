@@ -3,33 +3,35 @@ const decoysService = require('../services/decoys');
 
 const router = express.Router();
 
-router.get('/:namespace/:application', async (req, res) => {
+router.get('/:pa_id', async (req, res) => {
     try {
-        const { namespace, application } = req.params;
-        const result = await decoysService.getDecoysList(namespace, application);
-        if (result.type == 'error') {
-            return res.status(result.code).send(result.message);
-        }
-        return res.status(result.code).send(result.data);
+        const result = await decoysService.getDecoysList(req.params.pa_id);
+        return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return res.status(500).send("Server error");
+        return res.status(500).send({ type: 'error', code: 500, message: 'Server error', data: e });
+
     }
 });
 
-router.put('/:namespace/:application', async (req, res) => {
+router.patch('/state', async (req, res) => {
     try {
-        const { namespace, application } = req.params;
-        const result = await decoysService.updateDecoysList(namespace, application, req.body);
-        if (result.type == 'error') {
-            return res.status(500).send(result.data);
-        }
-        return res.status(200).send(result.data);
+        const result = await decoysService.updateDecoysStates(req.body);
+        return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return res.status(500).send("Server error");
+        return res.status(500).send({ type: 'error', code: 500, message: 'Server error', data: e });
     }
 });
 
+router.post('/', async (req, res) => {
+    try {
+        const result = await decoysService.createDecoy(req.body);
+        return res.status(result.code).send(result);
+    } catch(e) {
+        console.error(e);
+        return res.status(500).send({ type: 'error', code: 500, message: 'Server error', data: e });
+    }
+});
 
 module.exports = router;

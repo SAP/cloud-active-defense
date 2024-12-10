@@ -65,9 +65,48 @@ services:
     ports:
       - 8050:8050
     depends_on:
-      - config
-      - fluent
+      config:
+        condition: service_started
+      controlpanel-db:
+        condition: service_healthy
+      fluent:
+        condition: service_started
+    volumes:
+      - ./controlpanel/api:/app:cached
+      - /app/node_modules
 
+  controlpanel:
+    container_name: controlpanel
+    build: controlpanel/cad
+    image: controlpanel
+    ports: 
+    - 4200:4200
+    depends_on:
+      - controlpanel-api
+    volumes:
+      - ./controlpanel/cad:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+  controlpanel-db:
+    image: postgres
+    restart: always
+    container_name: controlpanel-db
+    ports:
+    - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: cad
+    volumes:
+    - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   configvolume: {}
+  postgres_data:

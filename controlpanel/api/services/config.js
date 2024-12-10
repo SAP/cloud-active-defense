@@ -1,4 +1,5 @@
 const axios = require('axios').default;
+const { CONFIGMANAGER_URL } = require('../util/variables');
 
 module.exports = {
 
@@ -7,7 +8,7 @@ module.exports = {
      */
     getConfig: async () => {
         try {
-            const response = await axios.get('http://config:3000/CHANGE/ME');
+            const response = await axios.get(`${CONFIGMANAGER_URL}/CHANGE/ME`);
             if (response.status != 200) { 
                 return { type: 'error', data: "Could not retrieve global config" };
             }
@@ -25,7 +26,7 @@ module.exports = {
             if (typeof config != 'object') {
                 return { type: 'error', data: "Payload is not JSON object" };
             }
-            const response = await axios.put('http://config:3000/CHANGE/ME', { config });
+            const response = await axios.put(`${CONFIGMANAGER_URL}/CHANGE/ME`, { config });
             if (response.status != 200) {
                 return { type: 'error', data: "Could not update global config" };
             }

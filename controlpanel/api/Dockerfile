@@ -1,7 +1,14 @@
-FROM node:21-alpine
+FROM node:21
+
 WORKDIR /app
-COPY . /app
+
+COPY package*.json ./
+
+RUN npm install -g nodemon
 RUN npm install
-USER nobody
+
+COPY . .
+
 EXPOSE 8050
-CMD [ "node", "server.js" ]
+
+CMD ["nodemon", "--watch", ".", "--legacy-watch", "server.js"]

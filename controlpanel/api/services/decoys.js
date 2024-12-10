@@ -1,53 +1,58 @@
-const { application } = require('express');
-const { isJSON } = require('../util');
-
-const axios = require('axios').default;
-
-const CONFIGMANAGER_URL = "http://localhost:3000";
+const Decoy = require('../models/Decoy-data');
+const { isUUID } = require('../util/index');
 
 module.exports = {
     /**
-    *   Return list of decoys from configmanager
+    *   Return list of decoys from Database
+    * @param {string} namespace namespace of protected app
+    * @param {string} application application's name of protected app
+    * @returns {{type: 'success' | 'error' | 'warning', code: number, data: Model, message: string}}
     */
-    getDecoysList: async (namespace, application) => {
+    getDecoysList: async (pa_id) => {
         try {
-            if (!namespace || !application) {
-                namespace = 'unknown';
-                application = 'unknown';
-            }
-            const response = await axios.get(`${CONFIGMANAGER_URL}/${namespace}/${application}`);
-            if (response.status != 200) {
-                if (response.data && response.data.decoy) {
-                    return { type: 'error', code: 404, message: 'No file found' }
-                }
-                return { type: 'error', code: 500, message: 'Could not retrieve decoys list' };
-            }
-            return { type: 'success', code: 200, data: response.data.decoy, message: 'Successful operation' }
+            if (!isUUID(pa_id)) return { type: 'error', code: 400, message: 'Invalid pa_id supplied' };
+            const decoys = await Decoy.findAll({ where: { pa_id } });
+            if (!decoys.length) return { type: 'success', code: 404, message: 'No decoys found for this app' };
+            return { type: 'success', code: 200, data: decoys, message: 'Successful operation' };
         } catch(e) {
             throw e;
         }
     },
     /**
-     * Update decoys list in configmanager
-     * @param {Object} decoys New list of decoys
+     * Update decoys state
+     * @param {Array.<{id: UUID, state: 'active' | 'inactive' | 'error'}>} decoysData list of decoys to change state
+     * @returns {{type: 'success' | 'error' | 'warning', code: number, data: Model, message: string}}
      */
-    updateDecoysList: async (namespace, application, decoys) => {
+    updateDecoysStates: async (decoysData) => {
         try {
-            if (!namespace || !application) {
-                namespace = 'unknown';
-                application = 'unknown';
-            }
-            if (isJSON(decoys)){
-                return { type: 'error', code: 422, message: "Validation exception" };
-            }
-            const response = await axios.post(`${CONFIGMANAGER_URL}/${namespace}/${application}`, { decoys });
-            if (response.status != 200) {
-                if (response.data && response.data.decoy) {
-                    return { type: 'error', code: 404, message: 'No file found' }
+            let errorInUpdate = false;
+            const decoyToUpdatePromises = [];
+
+            if (!Array.isArray(decoysData)) return { type: 'error', code: 400, message: 'Payload should be an array' };
+
+            const actualDecoy = await Decoy.findAll({ where: { id: decoysData.map(decoyData => decoyData.id) }, attributes: ['id', 'state']});
+            for (const decoyData of decoysData) {
+                if (!decoyData.state || !decoyData.id) continue;
+                if (decoyData.state === 'error') {
+                    errorInUpdate = true;
+                    continue;
                 }
-                return { type: 'error', code: 500, message: "Could not update decoys list" };
+                if (decoyData.state !== 'active' && decoyData.state !== 'inactive') {
+                    errorInUpdate = true;
+                    continue;
+                }
+                if (actualDecoy.find(decoy => decoy.id == decoyData.id).state == 'error' && decoyData.state == 'active') {
+                    errorInUpdate = true;
+                    continue;
+                }
+                decoyToUpdatePromises.push(Decoy.update({ state: decoyData.state }, { where: { id: decoyData.id }}));
             }
-            return { type: 'success', code: 201, data: "Decoys list updated" };
+            const results = await Promise.allSettled(decoyToUpdatePromises);
+            errorInUpdate = results.find(result => result.status == 'rejected');
+
+            if (!results.find(result => result.status == 'fulfilled')) return { type: 'error', code: 200, message: "No decoys have been updated" };
+            if (errorInUpdate) return { type: 'error', code: 207, message: 'Some decoys could not be updated' };
+            return { type: 'success', code: 201, message: 'Successful operation' };
         } catch(e) {
             throw e;
         }
