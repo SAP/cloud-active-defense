@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TooltipComponent } from '../../../components/tooltip/tooltip.component';
@@ -7,7 +7,7 @@ import { Decoy, isInType, isRequestType, isVerbType, RequestType, VerbType, InTy
 import { DecoyService } from '../../../services/decoy.service';
 import { CustomValidators } from '../../../validators/customValidators';
 import { ToastrService } from 'ngx-toastr';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate-decoy-form.guard';
 
 @Component({
@@ -17,7 +17,7 @@ import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate
   templateUrl: './detection.component.html',
   styleUrl: './detection.component.scss'
 })
-export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate {
+export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, OnDestroy {
   detectionForm: FormGroup
   decoy: Decoy = {decoy:{key:'', value:''}};
 
@@ -25,6 +25,9 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate {
   skip = false;
   keyRegexActive = false;
   valueRegexActive = false;
+  isEdit = true;
+  decoySubscription?: Subscription;
+  isEditSubscription?: Subscription;
 
   // For reference
   regexValidator = CustomValidators.isRegexValid();
@@ -100,6 +103,11 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate {
       }
     })
 
+    this.decoyService.isEdit$.subscribe(data => {
+      this.isEdit = data;
+      this.updateIsEdit()
+    });
+
     this.detectionForm.get('detectionPath')?.valueChanges.subscribe(newDetectionPath => {
       this.onDetectionPathChange(newDetectionPath);
     })
@@ -123,6 +131,11 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate {
       if (this.valueRegexActive) this.decoy.decoy.dynamicValue = newValue;
       else this.decoy.decoy.value = newValue
     })
+  }
+
+  ngOnDestroy(): void {
+    this.decoySubscription?.unsubscribe();
+    this.isEditSubscription?.unsubscribe();
   }
   
   get detectionPath() {
@@ -214,5 +227,10 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate {
     this.router.navigate(['../review'], {
       relativeTo: this.activatedRoute
     })
+  }
+
+  updateIsEdit() {
+    if (this.isEdit) this.detectionForm.enable();
+    else this.detectionForm.disable();
   }
 }

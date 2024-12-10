@@ -21,6 +21,7 @@ export class InjectionWhenTableComponent {
   @Input() whenArray: FormWhen[] = [{ key:'', value: '', in: 'cookie', type: true }];
   @Output() whenArrayChange = new EventEmitter<FormWhen[]>();
   validWhenArray = true;
+  @Input() isEdit = true;
   
   onClickAddWhen(){
     this.whenArray.push({ key:'', value:'', in: 'cookie', type: true });

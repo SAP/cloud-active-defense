@@ -82,7 +82,7 @@
             <div class="input-group">
                 <div class="form-input-container" [ngClass]="{ 'invalid-input-container': injectionPath.touched && injectionPath.invalid }">
                     <i>/</i>
-                    <div class="form-inputception" [ngClass]="{ 'invalid-input': injectionPath.touched && injectionPath.invalid }">
+                    <div class="form-inputception" [ngClass]="{ 'invalid-input': injectionPath.touched && injectionPath.invalid, 'form-input-disabled': !isEdit }">
                         <input class="form-input inner-input" type="text" name="path" id="inputPath" formControlName="injectionPath">
                         <select class="inner-select" name="request" id="inputRequest" formControlName="request">
                             <option value="inRequest">inRequest</option>
@@ -186,24 +186,24 @@
             </div>
             <div class="extra-group" [ngStyle]="{ 'margin-top': !this.decoy.inject?.store?.at?.method ? 'calc((20px*2) + 29px)' : 0 }">
                 <div class="extra-item" *ngIf="!displayStringInput" [ngClass]="{ 'switch-regex': keyRegexActive }">
-                    <button class="extra-item-btn" (click)="onRegexChange('key')">
+                    <button class="extra-item-btn" (click)="onRegexChange('key')" [disabled]="!isEdit">
                         <img src="regex.svg" alt="">
                     </button>
                 </div>
                 <div class="extra-item switch-string">
-                    <button class="extra-item-btn" (click)="displayStringInput=!displayStringInput">
+                    <button class="extra-item-btn" (click)="displayStringInput=!displayStringInput" [disabled]="!isEdit">
                         <img src="swap_horiz.svg" alt="">
                     </button>
                 </div>
                 <div class="extra-item" *ngIf="!displayStringInput" [ngClass]="{ 'switch-regex': valueRegexActive }">
-                    <button class="extra-item-btn" (click)="onRegexChange('value')">
+                    <button class="extra-item-btn" (click)="onRegexChange('value')" [disabled]="!isEdit">
                         <img src="regex.svg" alt="">
                     </button>
                 </div>
                 
             </div>
         </form>
-        <app-injection-when-table [(whenArray)]="whenArray" (whenArrayChange)="onWhenChange($event)"></app-injection-when-table>
+        <app-injection-when-table [(whenArray)]="whenArray" (whenArrayChange)="onWhenChange($event)" [isEdit]="isEdit"></app-injection-when-table>
         <div class="invalid-feedback" *ngIf="whenArrayTouched && !isWhenArrayValid">
             One or many when True/False condition are invalid
         </div>

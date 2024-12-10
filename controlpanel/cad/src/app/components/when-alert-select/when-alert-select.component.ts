@@ -16,6 +16,7 @@ export class WhenAlertSelectComponent {
   @Input() selectedWhen: string[] = [];
   @Output() selectedWhenChange = new EventEmitter<string[]>();
   touched = false;
+  @Input() isEdit = true;
   
   updateSelectedItems(event: Event) {
     const selectedIndex = Number((event.target as HTMLSelectElement).value);

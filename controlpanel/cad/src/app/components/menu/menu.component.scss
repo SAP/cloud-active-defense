@@ -1,3 +1,4 @@
+@import '../../../styles/variables.scss';
 $menu-icon-size: 2rem;
 
 .menu {
@@ -22,8 +23,50 @@ $menu-icon-size: 2rem;
             margin-left: 0.5rem;
         }
     }
+    .app-selector {
+        background-color: #FFF;
+        margin: 1rem;
+        height: 2.5rem;
+        border: 1px solid lightgray;
+        display: flex;
+        flex-direction: row;
+        cursor: pointer;
+        position: relative;
+        .selected-app {
+            width: 90%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+        }
+        .drop-down-icon {
+            padding: 1.5% 0;
+            width: 10%;
+        }
+        .sub-selection {
+            position: absolute;
+            background-color: #FFF;
+            width: 100%;
+            max-height: 80vh;
+            top: 2.5rem;
+            z-index: 1;
+            padding: 0.5rem 0;
+            box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px, 
+                        rgba(0, 0, 0, 0.14) 0px 3px 4px 0px, 
+                        rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
+            border-radius: 10px;
+            overflow-y: auto;
+            p {
+                font-size: 18px;
+                padding: 0.2rem 0.5rem;
+                &:hover {
+                    background-color: $backgroundPrimaryColor;
+                }
+            }
+        }
+    }
     .menu-list {
-        margin-top: 4rem;
+        margin-top: 1rem;
         display: flex;
         flex-direction: column;
         .menu-item .menu-link, .dropdown-menu-item {

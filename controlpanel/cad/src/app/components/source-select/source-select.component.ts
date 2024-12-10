@@ -15,6 +15,7 @@ export class SourceSelectComponent {
   sourceItems: string[] = ['session', 'userAgent', 'ip'];
   @Input() selectedSource: string[] = [];
   @Output() selectedSourceChange = new EventEmitter<string[]>();
+  @Input() isEdit = true;
   
   updateSelectedItems(event: Event) {
     const selectedIndex = Number((event.target as HTMLSelectElement).value);

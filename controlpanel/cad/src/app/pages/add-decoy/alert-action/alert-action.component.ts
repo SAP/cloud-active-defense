@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TooltipComponent } from '../../../components/tooltip/tooltip.component';
@@ -7,7 +7,7 @@ import { Decoy, isInType, isRequestType, isVerbType, RequestType, VerbType, InTy
 import { DecoyService } from '../../../services/decoy.service';
 import { WhenAlertSelectComponent } from '../../../components/when-alert-select/when-alert-select.component';
 import { AlertActionTableComponent, FormRespond } from '../../../components/alert-action-table/alert-action-table.component';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate-decoy-form.guard';
 import { CustomValidators } from '../../../validators/customValidators';
@@ -19,7 +19,7 @@ import { CustomValidators } from '../../../validators/customValidators';
   templateUrl: './alert-action.component.html',
   styleUrl: './alert-action.component.scss'
 })
-export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate {
+export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate, OnDestroy {
   alertForm: FormGroup
   decoy: Decoy = {decoy:{key:'', value:''}};
   whenArray: string[] = [];
@@ -29,6 +29,9 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
   whenSelectTouched = false;
   validRespond = false;
   actionTouched = false;
+  isEdit = true;
+  decoySubscription?: Subscription;
+  isEditSubscription?: Subscription;
 
 //#region Tooltip
   tooltipTitle = '';
@@ -82,7 +85,7 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
   }
 
   ngOnInit(): void {
-    this.decoyService.decoy$.subscribe(data => {
+    this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
       if (!this.isUpdating){
         this.isUpdating = true
         this.decoy = data;
@@ -92,9 +95,19 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
       }
     })
 
+    this.isEditSubscription = this.decoyService.isEdit$.subscribe(data => {
+      this.isEdit = data;
+      this.updateIsEdit()
+    });
+
     this.alertForm.get('severity')?.valueChanges.subscribe(newSeverity => {
       this.onSeverityChange(newSeverity);
     })
+  }
+
+  ngOnDestroy(): void {
+    this.decoySubscription?.unsubscribe();
+    this.isEditSubscription?.unsubscribe();
   }
 
   onWhenChange(newWhen: string[]) {
@@ -187,5 +200,10 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
     this.router.navigate(['../review'], {
       relativeTo: this.activatedRoute
     });
+  }
+
+  updateIsEdit() {
+    if (this.isEdit) this.alertForm.enable();
+    else this.alertForm.disable();
   }
 }

@@ -80,6 +80,13 @@
             border: 0;
             background-color: transparent;
         }
+        .action-delete-icon {
+            margin: 0 auto;
+            mask: url('../../../../public/delete.svg') no-repeat center; 
+            width: 24px; 
+            height: 24px; 
+            background-color: black;
+        }
         
     }
     td:not(.row-separator) {

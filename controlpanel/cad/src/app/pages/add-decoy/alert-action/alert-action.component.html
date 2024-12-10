@@ -33,7 +33,7 @@
             </div>
             <div class="input-group">
                 <div class="form-input-container" [ngClass]="{ 'invalid-input-container': whenSelectTouched && !whenArray.length}">
-                    <app-when-alert-select [(selectedWhen)]="whenArray" (selectedWhenChange)="onWhenChange($event)" (click)="whenSelectTouched = true"></app-when-alert-select>
+                    <app-when-alert-select [(selectedWhen)]="whenArray" (selectedWhenChange)="onWhenChange($event)" (click)="whenSelectTouched = true" [isEdit]="isEdit"></app-when-alert-select>
                 </div>
                 <div class="invalid-feedback" *ngIf="whenSelectTouched && !whenArray.length">
                     Must have one alert condition
@@ -47,7 +47,7 @@
                 </div>
             </div>
         </form>
-        <app-alert-action-table [(actionArray)]="actionArray" (actionArrayChange)="onActionChange($event)"></app-alert-action-table>
+        <app-alert-action-table [(actionArray)]="actionArray" (actionArrayChange)="onActionChange($event)" [isEdit]="isEdit"></app-alert-action-table>
         <div class="invalid-feedback" *ngIf="!validRespond && actionTouched">
             One or many responds are invalid
         </div>

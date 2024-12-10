@@ -2,11 +2,11 @@ import { Component, inject } from '@angular/core';
 import { DecoyService } from '../../../services/decoy.service';
 import { Decoy } from '../../../models/decoy';
 import { CommonModule } from '@angular/common';
-import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate-decoy-form.guard';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 import { ReturnBackReviewDeactivate } from '../../../guards/deactivate/return-back-review.guard';
 import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute, Router } from '@angular/router';
+import { UUID } from '../../../models/types';
 
 @Component({
   selector: 'app-review',
@@ -18,11 +18,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 export class ReviewComponent implements ReturnBackReviewDeactivate {
   decoy: Decoy = {decoy:{}};
   reviewText = "";
+  decoySubscription?: Subscription;
+  decoyId: UUID = "";
 
   constructor(private decoyService: DecoyService, private toastr: ToastrService, private router: Router, private activatedRoute: ActivatedRoute) {
-    this.decoyService.decoy$.subscribe(data => {
+    this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
         this.decoy = data;
     })
+    this.activatedRoute.parent?.params.subscribe(async params => this.decoyId = params['id']);
     if (!this.decoy.detect && !this.decoy.inject) this.router.navigate(['../injection'], { relativeTo: this.activatedRoute });
     this.reviewText = `Your configuration ${this.generateInjectText()} ${this.decoy.inject && this.decoy.detect ? ', it also' : ''} ${this.generateDetectText()}`
   }
@@ -210,7 +213,15 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
     return `send an ${this.decoy.detect?.alert?.severity} alert when ${injectIn} ${decoyKey} ${whenAlertText} ${request} ${respondText.length ? 'and ' + respondText.join(' or ') : ''}`;
   }
 
-  save() {
-    return;
+  async save() {
+    if (!this.decoyId) {
+      const apiResponse = await this.decoyService.addNewDecoy();
+      if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving decoy");
+      else this.toastr.success(apiResponse.message, 'Successfully created Decoy');
+    } else {
+      const apiResponse = await this.decoyService.saveDecoy(this.decoyId, this.decoy);
+      if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving decoy");
+      else this.toastr.success(apiResponse.message, 'Successfully saved Decoy');
+    }
   }
 }

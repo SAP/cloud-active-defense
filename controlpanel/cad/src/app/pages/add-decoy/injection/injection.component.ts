@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { TooltipComponent } from '../../../components/tooltip/tooltip.component';
@@ -9,7 +9,7 @@ import { DecoyService } from '../../../services/decoy.service';
 import { CustomValidators } from '../../../validators/customValidators';
 import { ToastrService } from 'ngx-toastr';
 import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate-decoy-form.guard';
-import { Observable } from 'rxjs';
+import { Observable, Subscription } from 'rxjs';
 
 
 @Component({
@@ -20,14 +20,13 @@ import { Observable } from 'rxjs';
     CommonModule, 
     TooltipComponent, 
     ReactiveFormsModule, 
-    RouterOutlet, 
     InjectionWhenTableComponent, 
     RouterLink
   ],
   templateUrl: './injection.component.html',
   styleUrl: './injection.component.scss'
 })
-export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate {
+export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, OnDestroy {
   injectionForm: FormGroup
   whenArray: FormWhen[] = [];
   decoy: Decoy = {decoy:{}};
@@ -39,6 +38,9 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate {
   whenArrayTouched = false;
   keyRegexActive = false;
   valueRegexActive = false;
+  isEdit = true;
+  private decoySubscription?: Subscription;
+  private isEditSubscription?: Subscription;
 
   // For reference
   regexValidator = CustomValidators.isRegexValid();
@@ -107,7 +109,7 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate {
   }
   
   ngOnInit(): void {
-    this.decoyService.decoy$.subscribe(data => {
+    this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
       if (!this.isUpdating){
         this.isUpdating = true
         this.decoy = data;
@@ -116,6 +118,11 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate {
         this.isUpdating = false;
       }
     })
+    
+    this.isEditSubscription = this.decoyService.isEdit$.subscribe(data => {
+      this.isEdit = data;
+      this.updateIsEdit()
+    });
 
     this.injectionForm.get('injectionPath')?.valueChanges.subscribe(newInjectionPath => {
       this.onInjectionPathChange(newInjectionPath);
@@ -149,6 +156,11 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate {
     this.injectionForm.get('atProperty')?.valueChanges.subscribe(newAtProperty => {
       this.onAtPropertyChange(newAtProperty);
     })
+  }
+
+  ngOnDestroy(): void {
+    this.decoySubscription?.unsubscribe();
+    this.isEditSubscription?.unsubscribe();
   }
   
   //#region Getter/Setter
@@ -295,5 +307,10 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate {
     this.router.navigate(['../detection'], {
       relativeTo: this.activatedRoute
     })
+  }
+
+  updateIsEdit() {
+    if (this.isEdit) this.injectionForm.enable();
+    else this.injectionForm.disable();
   }
 }

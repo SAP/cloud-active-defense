@@ -21,7 +21,8 @@ export interface FormRespond extends RespondType {
 export class AlertActionTableComponent {
   @Input() actionArray: FormRespond[] = [];
   @Output() actionArrayChange = new EventEmitter<FormRespond[]>();
-  
+  @Input() isEdit = true;
+
   onClickAddAction() {
     this.actionArray.push({ source: '', behavior: 'error', delayExtension: 's', durationExtension: 's' });
     this.actionArrayChange.emit(this.actionArray);

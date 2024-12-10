@@ -11,10 +11,10 @@
     </thead>
     <tbody>
         <tr *ngFor="let when of whenArray; let i = index" class="input-row">
-            <td><input class="input-table" type="text" [(ngModel)]="when.key" (input)="onItemChange()"/></td>
-            <td><input class="input-table" type="text" [(ngModel)]="when.value" (input)="onItemChange()" /></td>
+            <td><input class="input-table" type="text" [(ngModel)]="when.key" (input)="onItemChange()" [disabled]="!isEdit"/></td>
+            <td><input class="input-table" type="text" [(ngModel)]="when.value" (input)="onItemChange()" [disabled]="!isEdit"/></td>
             <td>
-                <select class="input-table" name="in" id="in" [(ngModel)]="when.in" (change)="onItemChange()">
+                <select class="input-table" name="in" id="in" [(ngModel)]="when.in" (change)="onItemChange()" [disabled]="!isEdit">
                     <option value="cookie">cookie</option>
                     <option value="header">header</option>
                     <option value="url">url</option>
@@ -23,16 +23,16 @@
                     <option value="payload">payload</option>
                 </select>
             </td>
-            <td class="when-type"><input class="" type="checkbox" name="type" id="type" [(ngModel)]="when.type" (change)="onItemChange()"></td>
+            <td class="when-type"><input class="" type="checkbox" name="type" id="type" [(ngModel)]="when.type" (change)="onItemChange()" [disabled]="!isEdit"></td>
             <td class="end-when">
-                <button (click)="onClickDeleteWhen(i)" class="when-delete-btn">
-                    <img src="delete.svg" alt="delete">
+                <button (click)="onClickDeleteWhen(i)" class="when-delete-btn" [disabled]="!isEdit">
+                    <div class="when-delete-icon" [ngStyle]="{ backgroundColor: !isEdit ? 'grey' : 'black' }"></div>
                 </button>
             </td>
        </tr>
        <tr>
         <td class="add-when" colspan="5">
-            <button class="add-when-btn" (click)="onClickAddWhen()">
+            <button class="add-when-btn" (click)="onClickAddWhen()" [disabled]="!isEdit">
                 <div class="add-when-icon"></div>
             </button>
         </td>

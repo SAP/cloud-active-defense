@@ -52,7 +52,7 @@
             <div class="input-group">
                 <div class="form-input-container" [ngClass]="{ 'invalid-input-container': detectionPath.touched && detectionPath.invalid }">
                     <i>/</i>
-                    <div class="form-inputception" [ngClass]="{ 'invalid-input': detectionPath.touched && detectionPath.invalid }">
+                    <div class="form-inputception" [ngClass]="{ 'invalid-input': detectionPath.touched && detectionPath.invalid, 'form-input-disabled': !isEdit }">
                         <input class="form-input inner-input" type="text" name="path" id="inputPath" formControlName="detectionPath">
                         <select class="inner-select" name="request" id="inputRequest" formControlName="request">
                             <option value="inRequest">inRequest</option>
@@ -124,12 +124,12 @@
             </div>
             <div class="extra-group">
                 <div class="extra-item" [ngClass]="{ 'switch-regex': keyRegexActive }">
-                    <button class="extra-item-btn" (click)="onRegexChange('key')">
+                    <button class="extra-item-btn" (click)="onRegexChange('key')" [disabled]="!isEdit">
                         <img src="regex.svg" alt="">
                     </button>
                 </div>
                 <div class="extra-item value-item" [ngClass]="{ 'switch-regex': valueRegexActive }">
-                    <button class="extra-item-btn" (click)="onRegexChange('value')">
+                    <button class="extra-item-btn" (click)="onRegexChange('value')" [disabled]="!isEdit">
                         <img src="regex.svg" alt="">
                     </button>
                 </div>

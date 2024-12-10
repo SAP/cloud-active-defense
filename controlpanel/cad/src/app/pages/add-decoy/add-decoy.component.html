@@ -1,17 +1,26 @@
 <div>
     <h1>Add new decoy 🪤</h1>
-    <div class="progressbar">
-        <ng-container *ngFor="let tab of tabs; index as i">
-            <a class="step" [routerLink]="tab.path" [ngClass]="{ 'active-step': i <= activeIndex }">
-                <div class="circle">
-                    {{ i + 1 }}
+    <div class="top-bar">
+        <div class="progressbar">
+            <ng-container *ngFor="let tab of tabs; index as i">
+                <a class="step" [routerLink]="tab.path" [ngClass]="{ 'active-step': i <= activeIndex }">
+                    <div class="circle">
+                        {{ i + 1 }}
+                    </div>
+                    <p>{{ tab.name }}</p>
+                </a>
+                <div class="step-separator" *ngIf="i < tabs.length - 1" [ngClass]="{ 'active-separator': i < activeIndex }">
+                    <hr/>
                 </div>
-                <p>{{ tab.name }}</p>
-            </a>
-            <div class="step-separator" *ngIf="i < tabs.length - 1" [ngClass]="{ 'active-separator': i < activeIndex }">
-                <hr/>
-            </div>
-        </ng-container>
+            </ng-container>
+        </div>
+        <div class="edit">
+            <label class="switch">
+                <input type="checkbox" (change)="updateEditStatus()" [ngModel]="isEdit">
+                <span class="slider round"></span>
+            </label>
+            <p>Edit</p>
+        </div>
     </div>
     <hr class="form-separator"/>
 </div>

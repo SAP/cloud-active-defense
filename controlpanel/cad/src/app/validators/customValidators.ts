@@ -1,6 +1,7 @@
 import { AbstractControl, FormControl, ValidationErrors, ValidatorFn } from "@angular/forms";
 import { FormWhen } from "../components/injection-when-table/injection-when-table.component";
 import { FormRespond } from "../components/alert-action-table/alert-action-table.component";
+import { isValidRegex } from "../utils";
 
 export class CustomValidators {
     static isValidURL(control: FormControl): ValidationErrors | null {
@@ -10,11 +11,7 @@ export class CustomValidators {
         const pathPattern = /^[a-zA-Z0-9-._~:\/?#[\]@!$&'()*+,;=]+$/;
         if (!pathPattern.test(control.value)) result.invalidUrl = true
 
-        try {
-            new RegExp(control.value);
-        } catch {
-            result.invalidRegex = true
-        }
+        result.invalidRegex = !isValidRegex(control.value);
 
         if (result.invalidUrl || result.invalidRegex) {
             return result
@@ -43,12 +40,8 @@ export class CustomValidators {
     }
     static isRegexValid(): ValidatorFn {
         return (control: AbstractControl): ValidationErrors | null => {
-            try {
-                new RegExp(control.value);
-                return null
-            } catch {
-                return { invalidRegex: true };
-            }
+            if (!isValidRegex(control.value)) return { invalidRegex: true };
+            return null;
         }
     }
     static expectValueWithKey(): ValidatorFn {
@@ -77,13 +70,8 @@ export class CustomValidators {
                 if (isNaN(property?.value)) return { invalidNumber: true };
             }
             else if (method?.value == 'replace' || method?.value == 'always' || method?.value == 'after' || method?.value == 'before'){
-                try {
-                    new RegExp(property?.value);
-                    return null
-                }
-                catch {
-                    return { invalidRegex: true };
-                }
+                if (!isValidRegex(property?.value)) return { invalidRegex: true };
+                return null;
             }
             return null
         }

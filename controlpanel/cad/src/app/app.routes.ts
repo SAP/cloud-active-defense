@@ -7,7 +7,7 @@ import { AlertActionComponent } from './pages/add-decoy/alert-action/alert-actio
 import { ReviewComponent } from './pages/add-decoy/review/review.component';
 import { validateDecoyFormGuard } from './guards/deactivate/validate-decoy-form.guard';
 import { returnBackReviewGuard } from './guards/deactivate/return-back-review.guard';
-import { RawDecoyComponent } from './pages/raw-decoy/raw-decoy.component';
+import { LogsComponent } from './pages/logs/logs.component';
 
 export const routes: Routes = [{
     path: 'decoy',
@@ -45,7 +45,36 @@ export const routes: Routes = [{
         component: ListDecoyComponent
     },
     {
-        path: 'raw',
-        component: RawDecoyComponent
+        path: 'logs',
+        component: LogsComponent
+    },
+    {
+        path: ':id',
+        component: AddDecoyComponent,
+        children: [{
+            path: '',
+            redirectTo: 'injection',
+            pathMatch: 'full',
+        },
+        {
+            path: 'injection',
+            component: InjectionComponent,
+            canDeactivate: [validateDecoyFormGuard]
+        }, 
+        {
+            path: 'detection',
+            component: DetectionComponent,
+            canDeactivate: [validateDecoyFormGuard]
+        },
+        {
+            path: 'alert-action',
+            component: AlertActionComponent,
+            canDeactivate: [validateDecoyFormGuard]
+        },
+        {
+            path: 'review',
+            component: ReviewComponent,
+            canDeactivate: [returnBackReviewGuard]
+        }]
     }]
 }];

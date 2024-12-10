@@ -2,6 +2,10 @@
 .wrapper {
     width: 100%;
     padding: 0 4%;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;
     .list-container {
         width: 100%;
         border-radius: 20px;
@@ -11,6 +15,7 @@
                     rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
         table-layout: fixed;
         border-collapse: collapse;
+        padding-bottom: 10px;
         thead {
             .head-separator {
                 width: 100%;
@@ -29,10 +34,16 @@
         }
         tbody {
             tr {
+                cursor: pointer;
+                box-sizing: border-box;
                 td {
                     padding: 0.8rem 1rem;
                     .sub-text {
                         color: gray;
+                    }
+                    .deployed-checkbox {
+                        width: 1.5rem;
+                        height: 1.5rem;
                     }
                 }
                 .options {
@@ -48,9 +59,35 @@
                     }
                 }
             }
-            tr:nth-child(odd){
+            tr:nth-child(odd) {
                 background-color: #E8E8E8;
             }
+            .empty-list {
+                background-color: white !important;
+                text-align: center;
+                td {
+                    padding-top: 1.5rem;
+                    font-weight: 600;
+                }
+            }
+            .end-space {
+                border: 0;
+                background-color: transparent !important;
+                td {
+                    height: 1rem;
+                    padding: 0;
+                }
+            }
+            .error-line {
+                background-color: #FFCCCC;
+            }
         }
+    }
+    .buttons {
+        display: flex;
+        flex-direction: row;
+        justify-content: end;
+        margin-top: 1rem;
+        margin-bottom: 2rem;
     }
 }

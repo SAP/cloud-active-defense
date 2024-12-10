@@ -1,64 +1,137 @@
 @import '../../../styles/variables.scss';
 
-.progressbar {
-    margin-left: 2rem;
+.top-bar {
     display: flex;
     flex-direction: row;
-    height: 70px;
-    align-items: center;
-    .step {
+
+    .progressbar {
+        margin-left: 2rem;
+        display: flex;
+        flex-direction: row;
+        height: 70px;
+        align-items: center;
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-wrap: nowrap;
+            width: 30px;
+            margin: 0 10px;
+            text-decoration: none;
+            .circle {
+                padding: 5px 10px;
+                width: fit-content;
+                background-color: white;
+                border-radius: 100px;
+                border: solid lightgray 1px;
+                color: #4EAAFF;
+            }
+            p {
+                width: max-content;
+                color: grey;
+            }
+        }
+        .active-step {
+            .circle {
+                background-color: $primaryColor;
+                color: white;
+                border-color: $primaryColor;
+            }
+            p {
+                color: $primaryColor;
+            }
+        }
+        .active-separator {
+            hr {
+                border-top-color: $primaryColor !important;
+            }
+        }
+        .done {
+            .circle {
+                background-color: #4EAAFF;
+                color: white;
+                border: 0;
+                padding: 6px 11px;
+            }
+            color: cornflowerblue
+        }
+        .step-separator {
+            display: flex;
+            justify-content: end;
+            margin-bottom: 20px;
+            hr {
+                border: none;
+                border-top: 2px solid lightgray;
+                width: 200px;
+            }
+        }
+    }
+    .edit {
+        margin-left: 3rem;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        flex-wrap: nowrap;
-        width: 30px;
-        margin: 0 10px;
-        text-decoration: none;
-        .circle {
-            padding: 5px 10px;
-            width: fit-content;
-            background-color: white;
-            border-radius: 100px;
-            border: solid lightgray 1px;
-            color: #4EAAFF;
+        justify-content: center;
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 30px;
+            
+            input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+            
+            .slider {
+                position: absolute;
+                cursor: pointer;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background-color: white;
+                border: #767676 solid 1px;
+                transition: 0.4s;
+                border-radius: 34px;
+                
+                &:before {
+                    position: absolute;
+                    content: '';
+                    height: 16px;
+                    width: 16px;
+                    left: 4px;
+                    bottom: 7px;
+                    background-color: rgb(83, 83, 83);
+                    transition: 0.4s;
+                    border-radius: 50%;
+                }
+            }
+            input:checked + .slider {
+            background-color: #2196F3;
+            border: #2196F3 solid 1px;
+            }
+            input:checked + .slider:before {
+                transform: translateX(20px);
+                width: 22px;
+                height: 22px;
+                bottom: 4px;
+                background-color: white;
+            }
+            
+            .switch input:checked + .slider:before {
+                box-shadow: 0 0 1px #2196F3;
+            }
+            
+            .switch input:disabled + .slider {
+                background-color: white;
+            }
         }
         p {
-            width: max-content;
+            margin-top: 0.2rem;
+            text-align: center;
             color: grey;
-        }
-    }
-    .active-step {
-        .circle {
-            background-color: $primaryColor;
-            color: white;
-            border-color: $primaryColor;
-        }
-        p {
-            color: $primaryColor;
-        }
-    }
-    .active-separator {
-        hr {
-            border-top-color: $primaryColor !important;
-        }
-    }
-    .done {
-        .circle {
-            background-color: #4EAAFF;
-            color: white;
-            border: 0;
-            padding: 6px 11px;
-        }
-        color: cornflowerblue
-    }
-    .step-separator {
-        display: flex;
-        justify-content: end;
-        margin-bottom: 20px;
-        hr {
-            border: none;
-            border-top: 2px solid lightgray;
-            width: 200px;
         }
     }
 }
@@ -93,6 +166,10 @@
                 outline: 1px solid black;
             }
         }
+        .form-input-disabled {
+            color: #aaaaaa;
+            border-color: #7676764d;
+        }
     }
     .right-container {
         .file-preview {
@@ -122,3 +199,8 @@
         }
     }
 }
+
+
+  
+  
+  
