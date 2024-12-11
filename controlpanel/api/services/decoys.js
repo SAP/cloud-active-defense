@@ -1,11 +1,11 @@
 const Decoy = require('../models/Decoy-data');
 const { isUUID } = require('../util/index');
+const { DataTypes } = require('sequelize')
 
 module.exports = {
     /**
     *   Return list of decoys from Database
-    * @param {string} namespace namespace of protected app
-    * @param {string} application application's name of protected app
+    * @param {DataTypes.UUID} pa_id protected app id
     * @returns {{type: 'success' | 'error' | 'warning', code: number, data: Model, message: string}}
     */
     getDecoysList: async (pa_id) => {
