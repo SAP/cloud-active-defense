@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const { isUUID, isJSON } = require('../util');
 const Decoy = require('../models/Decoy-data');
-const { validateDecoyFilter } = require('../util/validator');
+const { validateDecoyFilter } = require('../util/decoy-validator');
 const ProtectedApp = require('../models/ProtectedApp');
 
 module.exports = {

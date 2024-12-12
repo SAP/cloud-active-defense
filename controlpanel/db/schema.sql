@@ -19,3 +19,14 @@ CREATE TABLE cad.protectedApps (
     createdAt TIMESTAMPTZ NOT NULL,
     updatedAt TIMESTAMPTZ NOT NULL
 );
+
+CREATE TABLE cad.config (
+    id UUID PRIMARY KEY NOT NULL,
+    pad_id UUID NOT NULL,
+    config JSON NOT NULL,
+    createdAt TIMESTAMPTZ NOT NULL,
+    updatedAt TIMESTAMPTZ NOT NULL,
+    CONSTRAINT fk_pa_id
+        FOREIGN KEY (pa_id)
+        REFERENCES protectedApps(id)
+);

@@ -170,5 +170,10 @@ module.exports = {
     validateDetect,
     validateSeek,
     validateAlert,
-    validateWhenType
+    validateWhenType,
+    isSourceType,
+    isBehaviorType,
+    isDelayType,
+    isDurationType,
+    isValidRespondProperty
 }
