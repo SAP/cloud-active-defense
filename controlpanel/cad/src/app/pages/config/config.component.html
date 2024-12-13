@@ -1,0 +1,121 @@
+<app-tooltip [showTooltip]="showTooltip"
+[title]="tooltipTitle"
+[text]="tooltipText"
+[link]="tooltipLink"
+[topPosition]="topPosition"
+[leftPosition]="leftPosition"
+(tooltipHover)="onHoverInfo()"
+(tooltipLeave)="onLeaveInfo()">
+</app-tooltip> 
+
+<h1>Config 🔧</h1>
+
+<div class="config-form">
+    <div class="left-form">
+        <form class="form" [formGroup]="configForm">
+            <div class="label-group">
+                <div class="session-section">
+                    <div class="form-label">
+                        <label for="inputSessionIn">In what element to find session in ?</label>
+                        <img class="info-icon" src="info.svg"
+                        (mouseenter)="onHoverInfo('session.in', 'Session is used to retrieve session token of the user that triggered the decoy, .in will determine to look either in cookie or header', 'https://github.com/SAP/cloud-active-defense/wiki/Session', $event)"
+                        (mouseleave)="onLeaveInfo()"/>
+                    </div>
+                    <div class="form-label">
+                        <label for="inputSessionKey">Where to look for session ?</label>
+                        <img class="info-icon" src="info.svg"
+                        (mouseenter)="onHoverInfo('session.key', 'Session is used to retrieve session token of the user that triggered the decoy, .key will determine in which cookie or header to retrieve the token', 'https://github.com/SAP/cloud-active-defense/wiki/Session', $event)"
+                        (mouseleave)="onLeaveInfo()"/>
+                    </div>
+                </div>
+                <div class="username-section">
+                    <div class="form-label">
+                        <label for="inputUsernameIn">In what element to find username in ?</label>
+                        <img class="info-icon" src="info.svg"
+                        (mouseenter)="onHoverInfo('username.in', 'Username is used to possibly find the user name, .in will determine look either in cookie, header or payload', 'https://github.com/SAP/cloud-active-defense/wiki/Username', $event)"
+                        (mouseleave)="onLeaveInfo()"/>
+                    </div>
+                    <div class="form-label">
+                        <label for="inputUsernameKey">Where to look for username ?</label>
+                        <img class="info-icon" src="info.svg"
+                        (mouseenter)="onHoverInfo('username.key', 'Username is used to possibly find the user name, .key will determine in which cookie or header to retrieve the username', 'https://github.com/SAP/cloud-active-defense/wiki/Username', $event)"
+                        (mouseleave)="onLeaveInfo()"/>
+                    </div>
+                    <div class="form-label">
+                        <label for="inputUsernameValue">What value username looks like ?</label>
+                        <img class="info-icon" src="info.svg"
+                        (mouseenter)="onHoverInfo('username.value', 'Username is used to possibly find the user name, .value can refine what exactly to use as username value', 'https://github.com/SAP/cloud-active-defense/wiki/Username', $event)"
+                        (mouseleave)="onLeaveInfo()"/>
+                    </div>
+                </div>
+                <div class="other-section">
+                    <div class="form-label">
+                        <label for="inputServer">What value for server ?</label>
+                        <img class="info-icon" src="info.svg"
+                        (mouseenter)="onHoverInfo('server', 'Set the default value for server (to display in alerts) when the application cannot retrieve it by itself', 'https://github.com/SAP/cloud-active-defense/wiki/Server', $event)"
+                        (mouseleave)="onLeaveInfo()"/>
+                    </div>
+                    <div class="form-label">
+                        <label for="inputBlocklistReload">How often to reload blacklist ?</label>
+                        <img class="info-icon" src="info.svg"
+                        (mouseenter)="onHoverInfo('blocklistReload', 'Determine each time the proxy will reload the blocklist from the configmanager', 'https://github.com/SAP/cloud-active-defense/wiki/BlocklistReload', $event)"
+                        (mouseleave)="onLeaveInfo()"/>
+                        <p class="debug">(Debug)</p>
+                    </div>
+                </div>
+                <div class="form-label">
+                    <label>Global actions</label>
+                    <img class="info-icon" src="info.svg"
+                    (mouseenter)="onHoverInfo('respond', 'What action to use in response of a detected decoy, global respond will is the default response if no local respond are found in decoys', 'https://github.com/SAP/cloud-active-defense/wiki/Respond', $event)"
+                    (mouseleave)="onLeaveInfo()"/>
+                </div>
+            </div>
+            <div class="input-group">
+                <div class="session-section">
+                    <div class="form-input-container">
+                        <select class="form-input" name="sessionIn" id="inputSessionIn" formControlName="sessionIn">
+                            <option value=""></option>
+                            <option value="cookie">cookie</option>
+                            <option value="header">header</option>
+                        </select>
+                    </div>
+                    <div class="form-input-container">
+                        <input class="form-input" type="text" name="sessionKey" id="inputSessionKey" formControlName="sessionKey">
+                    </div>
+                </div>
+                <div class="username-section">
+                    <div class="form-input-container">
+                        <select class="form-input" name="usernameIn" id="inputUsernameIn" formControlName="usernameIn">
+                            <option value=""></option>
+                            <option value="cookie">cookie</option>
+                            <option value="header">header</option>
+                            <option value="payload">payload</option>
+                        </select>
+                    </div>
+                    <div class="form-input-container" >
+                        <input class="form-input" type="text" name="usernameKey" id="inputUsernameKey" formControlName="usernameKey">
+                    </div>
+                    <div class="form-input-container" >
+                        <input class="form-input" type="text" name="usernameValue" id="inputUsernameValue" formControlName="usernameValue">
+                    </div>
+                </div>
+                <div class="other-section">
+                    <div class="form-input-container">
+                        <input class="form-input" type="text" name="server" id="inputServer" formControlName="server">
+                    </div>
+                    <div class="form-input-container">
+                        <input class="form-input" type="text" name="blocklistReload" id="inputBlocklistReload" formControlName="blocklistReload" appOnlyNumbers>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+        <app-alert-action-table [(actionArray)]="actionArray" (actionArrayChange)="onActionChange($event)"></app-alert-action-table>
+    </div>
+    <div class="right-container">
+        <div class="file-preview">{{ config | json }}</div>
+        <div class="next">
+            <button class="filled-btn" (click)="save()">Save</button>
+        </div>
+    </div>
+</div>

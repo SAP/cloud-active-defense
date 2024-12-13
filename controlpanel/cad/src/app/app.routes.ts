@@ -8,6 +8,7 @@ import { ReviewComponent } from './pages/add-decoy/review/review.component';
 import { validateDecoyFormGuard } from './guards/deactivate/validate-decoy-form.guard';
 import { returnBackReviewGuard } from './guards/deactivate/return-back-review.guard';
 import { LogsComponent } from './pages/logs/logs.component';
+import { ConfigComponent } from './pages/config/config.component';
 
 export const routes: Routes = [{
     path: 'decoy',
@@ -45,10 +46,6 @@ export const routes: Routes = [{
         component: ListDecoyComponent
     },
     {
-        path: 'logs',
-        component: LogsComponent
-    },
-    {
         path: ':id',
         component: AddDecoyComponent,
         children: [{
@@ -77,4 +74,12 @@ export const routes: Routes = [{
             canDeactivate: [returnBackReviewGuard]
         }]
     }]
+},
+{
+    path: 'logs',
+    component: LogsComponent
+},
+{
+    path: 'config',
+    component: ConfigComponent
 }];

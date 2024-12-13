@@ -15,7 +15,7 @@ export class OnlyNumbersDirective {
     input.value = initialValue.replace(/[^0-9]*/g, '');
     
     const valueToSet = input.value === '' ? undefined : input.value;
-    this.control.control?.setValue(valueToSet, { emitEvent: false });
+    this.control.control?.setValue(valueToSet, { emitEvent: true });
 
     if (initialValue !== input.value) {
       event.stopPropagation();

@@ -15,3 +15,6 @@ export function isValidRegex(str: string | undefined) {
         return false
     }
 }
+export function isEmptyObject<T extends Object>(o: T) {
+    return Object.keys(o).length === 0 && o.constructor === Object;
+}
