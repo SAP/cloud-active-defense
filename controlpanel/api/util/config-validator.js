@@ -32,10 +32,10 @@ function validateSession(session) {
 function validateUsername(username) {
     if (typeof username != 'object') return [".username must be an object"];
     const errors = [];
-    if (username.key && (username.in == 'cookie' || username.in == 'header')) errors.push(".key is mandatory for cookie, or header in .username");
-    if (isInUsername(username.in)) errors.push(".in need to be cookie, header or payload for .username");
-    if (username.value && username.in == 'payload') errors.push(".value is mandatory for payload for .username");
-    if (isValidRegex(username.value)) errors.push(".value needs to be a valid regex");
+    if (!username.key && (username.in == 'cookie' || username.in == 'header')) errors.push(".key is mandatory for cookie, or header in .username");
+    if (!isInUsername(username.in)) errors.push(".in need to be cookie, header or payload for .username");
+    if (!username.value && username.in == 'payload') errors.push(".value is mandatory for payload for .username");
+    if (!isValidRegex(username.value)) errors.push(".value needs to be a valid regex");
     return errors;
 }
 
