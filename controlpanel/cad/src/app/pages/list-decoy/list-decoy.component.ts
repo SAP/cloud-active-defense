@@ -9,6 +9,7 @@ import { GlobalStateService } from '../../services/global-state.service';
 import { isProtectedAppEmpty } from '../../models/protected-app';
 import { RouterLink } from '@angular/router';
 import { UUID } from '../../models/types';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-list-decoy',
@@ -19,17 +20,19 @@ import { UUID } from '../../models/types';
 })
 export class ListDecoyComponent implements OnInit, OnDestroy {
   decoys: DecoyData[] = [];
+  globalStateSubscription?: Subscription;
 
   constructor(private decoyService: DecoyService, private toastr: ToastrService, private globalState: GlobalStateService) { }
 
   async ngOnInit() {
-    this.globalState.selectedApp$.subscribe(data => {
+    this.globalStateSubscription = this.globalState.selectedApp$.subscribe(data => {
       if (isProtectedAppEmpty(data)) return;
       this.getDecoyList();
     });
   }
 
   ngOnDestroy(): void {
+    this.globalStateSubscription?.unsubscribe();
     this.save();
   }
 
