@@ -62,7 +62,7 @@ export class DecoyService {
       const apiResponse = await lastValueFrom(this.decoyApi.putDecoy(decoyId, decoy));
       return apiResponse;
     } catch(e) {
-      return { message: "Error when deleting decoy", type: 'error' };
+      return { message: "Error when saving decoy", type: 'error' };
     }
   }
 
