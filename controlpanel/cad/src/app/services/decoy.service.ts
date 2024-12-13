@@ -65,6 +65,14 @@ export class DecoyService {
       return { message: "Error when saving decoy", type: 'error' };
     }
   }
+  async updateDecoyState(decoy: DecoyData): Promise<ApiResponse> {
+    try {
+      const apiResponse = await lastValueFrom(this.decoyApi.patchDecoyState(decoy));
+      return apiResponse;
+    } catch(e) {
+      return { message: "Error when saving decoy", type: 'error' };
+    }
+  }
 
   async getDecoys(): Promise<ApiResponse> {
     try {
