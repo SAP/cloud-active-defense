@@ -5,7 +5,7 @@ function validateConfig(config) {
     if (typeof config != 'object') return ["config must be a json"];
     const errors = [];
     if (config.alert) errors.push(...validateAlert(config.alert));
-    if (config.respond.length) {
+    if (config.respond && config.respond.length) {
         for (const respondItem of config.respond) {
             errors.push(...validateRespond(respondItem))
         }
