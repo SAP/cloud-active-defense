@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv').config({ path: __dirname + '/.env' });
 const { CONFIGMANAGER_URL } = require('./util/variables');
 const { CONTROLPANEL_URL } = require('./util/variables');
+const { sendDataToConfigmanager } = require('./services/configmanager');
 
 const configmanager = require('./routes/configmanager');
 const decoys = require('./routes/decoys');
@@ -39,6 +40,7 @@ app.listen(8050, async () => {
         // CONFIGMANAGER URL
         await fetch(CONFIGMANAGER_URL);
         console.log("Successfully connected to configmanager !")
+        setInterval(async () => await sendDataToConfigmanager(), 60 * 60 * 1000)
     } catch(e) {
         console.error("Configmanager is not up, please (re)start configmanager");
     }

@@ -281,7 +281,8 @@ app.get('/throttlelist', (req, res) => {
   })
 })
 // Start the server
-app.listen(3000, () => {
+app.listen(3000, async () => {
+  console.log('Config manager started');
   try {
     if (!fs.existsSync('/data/cad-default.json')) fs.cpSync('/app/cad-default.json', '/data/cad-default.json');
     if (!fs.existsSync('/data/config-default.json')) fs.cpSync('/app/config-default.json', '/data/config-default.json');
@@ -295,5 +296,15 @@ app.listen(3000, () => {
   } catch(e) {
     console.error(`Could not create blacklist files: ${e}`);
   }
-  console.log('Config manager started');
+  loop = 0
+  while (loop < 5) {
+    try {
+      await fetch("http://controlpanel-api:8050/configmanager/sync");
+      break;
+    } catch(e) {
+      loop++;
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait for 5 seconds before retrying
+    }
+  }
+  if (loop == 5) console.log('Cannot connect to api')
 });

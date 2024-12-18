@@ -10,6 +10,7 @@ import { isProtectedAppEmpty } from '../../models/protected-app';
 import { RouterLink } from '@angular/router';
 import { UUID } from '../../models/types';
 import { Subscription } from 'rxjs';
+import { ConfigmanagerApiService } from '../../services/api/configmanager-api.service';
 
 @Component({
   selector: 'app-list-decoy',
@@ -22,7 +23,7 @@ export class ListDecoyComponent implements OnInit, OnDestroy {
   decoys: DecoyData[] = [];
   globalStateSubscription?: Subscription;
 
-  constructor(private decoyService: DecoyService, private toastr: ToastrService, private globalState: GlobalStateService) { }
+  constructor(private decoyService: DecoyService, private toastr: ToastrService, private globalState: GlobalStateService, private configmanagerApi: ConfigmanagerApiService) { }
 
   async ngOnInit() {
     this.globalStateSubscription = this.globalState.selectedApp$.subscribe(data => {
@@ -68,10 +69,11 @@ export class ListDecoyComponent implements OnInit, OnDestroy {
     }
   }
 
-  // async save() {
-  //   if (!this.decoys.length) return;
-  //   const saveResponse = await this.decoyService.updateDecoysState(this.decoys);
-  //   if (saveResponse.type == 'error') this.toastr.error(saveResponse.message, "Error saving");
-  //   else this.toastr.success("Successfully saved decoys states", "Saved");
-  // }
+  async save() {
+    if (!this.decoys.length) return;
+    const saveResponse = await this.configmanagerApi.updateConfigmanagerDecoys(this.globalState.selectedApp.namespace, this.globalState.selectedApp.application, this.decoys.filter(decoyData => decoyData.state == 'active').map(decoyData => decoyData.decoy))
+    if (saveResponse.type == 'error') this.toastr.error(saveResponse.message, "Error Synchronizing");
+    else if (saveResponse.type == 'warning') this.toastr.warning(saveResponse.message, "Warning");
+    else this.toastr.success("Successfully synchronized with configmanager", "Synchronized");
+  }
 }

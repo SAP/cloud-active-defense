@@ -50,5 +50,15 @@ router.put('/config/:namespace/:application', async (req, res) => {
     }
 })
 
+router.get('/sync', async (req, res) => {
+    try {
+        const result = await configmanagerService.sendDataToConfigmanager();
+        return res.status(result.code).send(result);
+    } catch(e) {
+        console.error(e);
+        return res.status(500).send("Server error");
+    }
+})
+
 
 module.exports = router;

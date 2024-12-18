@@ -1,6 +1,9 @@
 const { validateDecoyFilter } = require('../util/decoy-validator');
 const { validateConfig } = require('../util/config-validator');
 const { CONFIGMANAGER_URL } = require('../util/variables');
+const ProtectedApp = require('../models/ProtectedApp')
+const Config = require('../models/Config-data')
+const Decoy = require('../models/Decoy-data')
 
 const axios = require('axios');
 
@@ -31,12 +34,13 @@ module.exports = {
      * Update decoys list in configmanager
      * @param {Object} decoys New list of decoys
      */
-    updateDecoysList: async (namespace, application, decoys) => {
+    updateDecoysList: async (namespace, application, decoys) => { 
         try {
             if (!namespace || !application) {
                 namespace = 'unknown';
                 application = 'unknown';
             }
+            if (!decoys.length) return { type: 'warning', code: 200, message: "Decoys list is empty or full of inactive decoy, cannot sync" };
             for (const decoy of decoys) {
                 if (validateDecoyFilter(decoy).length) return { type: 'error', code: 422, message: "There are errors in one of the decoys, cannot send to configmanager" }
             }
@@ -103,4 +107,17 @@ module.exports = {
             throw e;
         }
     },
+
+    sendDataToConfigmanager: async () => {
+        try {
+            const protectedApps = await ProtectedApp.findAll({ include: [{ model: Decoy, as: 'decoys', attributes: ['decoy', 'state'] }, { model: Config, as: 'configs', attributes: ['config'] }] })
+            for (const pa of protectedApps) {
+                module.exports.updateDecoysList(pa.namespace, pa.application, pa.decoys.map(decoyData => decoyData.state == 'active' && decoyData.decoy))
+                module.exports.updateConfig(pa.namespace, pa.application, pa.configs);
+            }
+            return { type: 'success', message: "Successful operation", code: 200 };
+        } catch(e) {
+            return { type: 'error', message: "Server error", data: e, code: 500 };
+        }
+    }
 }
