@@ -3,8 +3,8 @@ import { Injectable } from '@angular/core';
 import { lastValueFrom } from 'rxjs';
 import { ApiResponse } from '../../models/api-response';
 import { GlobalStateService } from '../global-state.service';
-import { Decoy } from '../../models/decoy';
 import { Config } from '../../models/config';
+import { UUID } from '../../models/types';
 
 @Injectable({
   providedIn: 'root'
@@ -13,9 +13,9 @@ export class ConfigmanagerApiService {
 
   constructor(private http: HttpClient, private globalState: GlobalStateService) { }
 
-  async updateConfigmanagerDecoys(namespace: string, application: string, decoys: Decoy[]) {
+  async updateConfigmanagerDecoys(pa_id: UUID) {
     try {
-      return await lastValueFrom(this.http.put<ApiResponse>(`${this.globalState.API_URL}/configmanager/decoys/${namespace}/${application}`, decoys));
+      return await lastValueFrom(this.http.put<ApiResponse>(`${this.globalState.API_URL}/configmanager/decoys/${pa_id}`, ''));
     } catch (e) {
       console.error(e);
       return { message: 'Cannot synchronize decoys with configmanager', type: 'error' };

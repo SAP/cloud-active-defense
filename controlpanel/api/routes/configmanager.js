@@ -14,14 +14,13 @@ router.get('/decoys/:namespace/:application', async (req, res) => {
     }
 });
 
-router.put('/decoys/:namespace/:application', async (req, res) => {
+router.put('/decoys/:pa_id', async (req, res) => {
     try {
-        const { namespace, application } = req.params;
-        const result = await configmanagerService.updateDecoysList(namespace, application, req.body);
+        const result = await configmanagerService.updateDecoysList(req.params.pa_id, req.body);
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return res.status(500).send("Server error");
+        return res.status(500).send({ type: 'error', code: 500, message: "Server error", data: e });
     }
 });
 

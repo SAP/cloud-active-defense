@@ -20,6 +20,10 @@ const Decoy = sequelize.define("decoy", {
         },
         allowNull: false
     },
+    deployed: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false
+    },
     decoy: {
         type: DataTypes.JSON,
         allowNull: false

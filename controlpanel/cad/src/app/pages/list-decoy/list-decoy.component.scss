@@ -45,6 +45,18 @@
                         width: 1.5rem;
                         height: 1.5rem;
                     }
+                    .status-true {
+                        mask: url('../../../../public/check.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: green;
+                    }
+                    .status-false {
+                        mask: url('../../../../public/close_small.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: red;
+                    }
                 }
                 .options {
                     text-align: center;

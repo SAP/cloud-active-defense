@@ -54,11 +54,18 @@ export class ListDecoyComponent implements OnInit, OnDestroy {
     else return false;
   }
   async setDeployed(decoyData: DecoyData) {
+    const oldState = decoyData.state;
     if (decoyData.state == 'active') decoyData.state = 'inactive';
     else decoyData.state = 'active';
     const updateResponse = await this.decoyService.updateDecoyState(decoyData);
-    if (updateResponse.type == 'error') this.toastr.error(updateResponse.message, "Error updating state");
-    else this.toastr.success("Successfully updated decoy state", "Saved");
+    if (updateResponse.type == 'error') {
+      this.toastr.error(updateResponse.message, "Error updating state");
+      decoyData.state = oldState;
+    }
+    else {
+      this.toastr.success("Successfully updated decoy state", "Saved");
+      decoyData.deployed = false;
+    }
   }
   async deleteDecoy(decoyId: UUID) {
     const saveResponse = await this.decoyService.deleteDecoy(decoyId);
@@ -71,9 +78,12 @@ export class ListDecoyComponent implements OnInit, OnDestroy {
 
   async save() {
     if (!this.decoys.length) return;
-    const saveResponse = await this.configmanagerApi.updateConfigmanagerDecoys(this.globalState.selectedApp.namespace, this.globalState.selectedApp.application, this.decoys.filter(decoyData => decoyData.state == 'active').map(decoyData => decoyData.decoy))
+    const saveResponse = await this.configmanagerApi.updateConfigmanagerDecoys(this.globalState.selectedApp.id)
     if (saveResponse.type == 'error') this.toastr.error(saveResponse.message, "Error Synchronizing");
     else if (saveResponse.type == 'warning') this.toastr.warning(saveResponse.message, "Warning");
-    else this.toastr.success("Successfully synchronized with configmanager", "Synchronized");
+    else {
+      this.toastr.success("Successfully synchronized with configmanager", "Synchronized");
+      this.getDecoyList()
+    }
   }
 }

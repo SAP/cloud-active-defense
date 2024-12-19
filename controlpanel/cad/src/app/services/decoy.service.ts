@@ -25,6 +25,7 @@ export class DecoyService {
       const decoyData: DecoyData = {
         state: 'active',
         pa_id: this.globalState.selectedApp.id,
+        deployed: false,
         decoy: this.decoy
       }
       return await lastValueFrom(this.decoyApi.postDecoy(decoyData));

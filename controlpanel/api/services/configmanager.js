@@ -4,6 +4,7 @@ const { CONFIGMANAGER_URL } = require('../util/variables');
 const ProtectedApp = require('../models/ProtectedApp')
 const Config = require('../models/Config-data')
 const Decoy = require('../models/Decoy-data')
+const { isUUID } = require('../util/index')
 
 const axios = require('axios');
 
@@ -34,17 +35,17 @@ module.exports = {
      * Update decoys list in configmanager
      * @param {Object} decoys New list of decoys
      */
-    updateDecoysList: async (namespace, application, decoys) => { 
+    updateDecoysList: async (pa_id) => { 
         try {
-            if (!namespace || !application) {
-                namespace = 'unknown';
-                application = 'unknown';
-            }
-            if (!decoys.length) return { type: 'warning', code: 200, message: "Decoys list is empty or full of inactive decoy, cannot sync" };
-            for (const decoy of decoys) {
+            const protectedApp = await ProtectedApp.findByPk(pa_id);
+            if (!protectedApp || !isUUID(pa_id)) return { type: 'error', code: 400, message: 'Invalid protectedApp id provided' };
+            const decoys = await Decoy.update({ deployed: true }, { where: { pa_id }, returning: true});
+            const activeDecoys = decoys[1].filter(decoyData => decoyData.state == 'active').map(decoyData => decoyData.decoy);
+            if (!activeDecoys.length) return { type: 'warning', code: 200, message: "Decoys list is empty or full of inactive decoy, cannot sync" };
+            for (const decoy of activeDecoys) {
                 if (validateDecoyFilter(decoy).length) return { type: 'error', code: 422, message: "There are errors in one of the decoys, cannot send to configmanager" }
             }
-            const response = await axios.post(`${CONFIGMANAGER_URL}/${namespace}/${application}`,{ decoys: { filters: decoys }});
+            const response = await axios.post(`${CONFIGMANAGER_URL}/${protectedApp.namespace}/${protectedApp.application}`,{ decoys: { filters: activeDecoys }});
             if (response.status != 200) {
                 if (response.data && response.data.decoy) {
                     return { type: 'error', code: 404, message: 'No file found' }
@@ -76,7 +77,7 @@ module.exports = {
                 }
                 return { type: 'error', code: 500, message: 'Could not retrieve global config' };
             }
-            return { type: 'success', code: 200, data: response.data.config, message: 'Successful operation' }
+            return { type: 'success', code: 200, data: response.data.config.config, message: 'Successful operation' }
         } catch(e) {
             throw e;
         }
@@ -113,7 +114,7 @@ module.exports = {
             const protectedApps = await ProtectedApp.findAll({ include: [{ model: Decoy, as: 'decoys', attributes: ['decoy', 'state'] }, { model: Config, as: 'configs', attributes: ['config'] }] })
             for (const pa of protectedApps) {
                 module.exports.updateDecoysList(pa.namespace, pa.application, pa.decoys.map(decoyData => decoyData.state == 'active' && decoyData.decoy))
-                module.exports.updateConfig(pa.namespace, pa.application, pa.configs);
+                module.exports.updateConfig(pa.namespace, pa.application, pa.configs[0]);
             }
             return { type: 'success', message: "Successful operation", code: 200 };
         } catch(e) {

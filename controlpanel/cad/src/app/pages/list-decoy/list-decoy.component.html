@@ -10,9 +10,10 @@
                 <th>Detect</th>
                 <th>Action</th>
                 <th>Active</th>
+                <th>Status</th>
                 <th class="row-options"></th>
             </tr>
-            <tr class="tr-separator"><td class="row-separator" colspan="6"><hr class="head-separator"/></td></tr>
+            <tr class="tr-separator"><td class="row-separator" colspan="7"><hr class="head-separator"/></td></tr>
         </thead>
         <tbody>
             <tr *ngFor="let decoyData of decoys" [ngClass]="{ 'error-line': decoyData.state == 'error'}" [routerLink]="'/decoy/' + decoyData.id">
@@ -50,8 +51,10 @@
                 <td>
                     <input class="deployed-checkbox" type="checkbox" name="state" id="state" [disabled]="decoyData.state == 'error'" [ngModel]="isDeployed(decoyData.state)" (change)="setDeployed(decoyData)" (click)="$event.stopPropagation()">
                 </td>
+                <td>
+                    <div [ngClass]="{ 'status-true': decoyData.deployed, 'status-false': !decoyData.deployed}"></div>
+                </td>
                 <td class="options">
-                    <button class="option-btn"><img src="edit.svg" alt=""></button>
                     <button class="option-btn"><img src="delete.svg" alt="" (click)="$event.stopPropagation(); deleteDecoy(decoyData.id!)"></button>
                 </td>
             </tr>

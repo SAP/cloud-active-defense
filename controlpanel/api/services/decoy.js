@@ -88,7 +88,7 @@ module.exports = {
             if (!isUUID(decoyData.id)) return { type: 'error', code: 400, message: 'Invalid decoy id supplied' };
             if (!decoyData.state) return { type: 'error', code: 422, message: 'No state provided' };
             if (!['active', 'inactive', 'error'].includes(decoyData.state)) return { type: 'error', code: 422, message: 'Invalid state provided' };
-            const updatedDecoy = await Decoy.update({ state: decoyData.state }, { where: { id: decoyData.id }});
+            const updatedDecoy = await Decoy.update({ state: decoyData.state, deployed: false }, { where: { id: decoyData.id }});
             if (!updatedDecoy['0']) return { type: 'success', code: 404, message: 'Decoy not found' };
             return { type: 'success', code: 200, message: 'Successful operation' };
         } catch(e) {
