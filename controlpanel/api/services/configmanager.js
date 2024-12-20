@@ -89,14 +89,14 @@ module.exports = {
      * @param {Object} config
      * @return {{type: 'success' | 'error' | 'warning', code: number, data: JSON, message: string}}
      */
-    updateConfig: async (namespace, application, config) => {
+    updateConfig: async (pa_id) => {
         try {
-            if (!namespace || !application) {
-                namespace = 'unknown';
-                application = 'unknown';
-            }
-            if (validateConfig(config).length) return { type: 'error', code: 422, message: "There are errors in the global config, cannot send to configmanager" };
-            const response = await axios.post(`${CONFIGMANAGER_URL}/${namespace}/${application}`,{ config });
+            const protectedApp = await ProtectedApp.findByPk(pa_id);
+            if (!protectedApp || !isUUID(pa_id)) return { type: 'error', code: 400, message: 'Invalid protectedApp id provided' };
+            const config = await Config.update({ deployed: true }, { where: { pa_id }, returning: true });
+            if (!config[1].length) return { type: 'warning', code: 200, message: "Global config is empty or not saved, cannot sync" };
+            if (validateConfig(config[1][0].config).length) return { type: 'error', code: 422, message: "There are errors in the global config, cannot send to configmanager" };
+            const response = await axios.post(`${CONFIGMANAGER_URL}/${protectedApp.namespace}/${protectedApp.application}`,{ config: config[1][0].config });
             if (response.status != 200) {
                 if (response.data && response.data.config) {
                     return { type: 'error', code: 404, message: 'No file found' };

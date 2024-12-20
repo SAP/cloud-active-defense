@@ -28,20 +28,16 @@ router.get('/config/:namespace/:application', async (req, res) => {
     try {
         const { namespace, application } = req.params;
         const result = await configmanagerService.getConfig(namespace, application);
-        if (result.type == 'error') {
-            return res.status(500).send(result.data);
-        }
-        return res.status(200).send(result.data);
+        return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);
         return res.status(500).send("Server error");
     }
 });
 
-router.put('/config/:namespace/:application', async (req, res) => {
+router.put('/config/:pa_id', async (req, res) => {
     try {
-        const { namespace, application } = req.params;
-        const result = await configmanagerService.updateConfig(namespace, application, req.body);
+        const result = await configmanagerService.updateConfig(req.params.pa_id);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);

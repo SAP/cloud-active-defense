@@ -21,21 +21,12 @@ export class ConfigmanagerApiService {
       return { message: 'Cannot synchronize decoys with configmanager', type: 'error' };
     }
   }
-  async updateConfigmanagerConfig(namespace: string, application: string, config: Config) {
+  async updateConfigmanagerConfig(pa_id: UUID) {
     try {
-      return await lastValueFrom(this.http.put<ApiResponse>(`${this.globalState.API_URL}/configmanager/config/${namespace}/${application}`, config));
+      return await lastValueFrom(this.http.put<ApiResponse>(`${this.globalState.API_URL}/configmanager/config/${pa_id}`, ''));
     } catch (e) {
       console.error(e);
       return { message: 'Cannot synchronize config with configmanager', type: 'error' };
     }
   }
-  async getConfigmanagerDecoys(namespace: string, application: string) {
-    try {
-      return await lastValueFrom(this.http.get<ApiResponse>(`${this.globalState.API_URL}/configmanager/decoys/${namespace}/${application}`));
-    } catch (e) {
-      console.error(e);
-      return { message: 'Cannot synchronize config with configmanager', type: 'error' };
-    }
-  }
-  
 }

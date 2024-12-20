@@ -16,6 +16,10 @@ const Config = sequelize.define("config", {
         },
         allowNull: false
     },
+    deployed: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false
+    },
     config: {
         type: DataTypes.JSON,
         allowNull: false

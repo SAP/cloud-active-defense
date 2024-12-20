@@ -4,5 +4,6 @@ import { UUID } from "./types";
 export interface ConfigData {
     id?: UUID,
     pa_id: UUID
+    deployed: boolean
     config: Config
 }

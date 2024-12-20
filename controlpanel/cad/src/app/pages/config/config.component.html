@@ -9,7 +9,12 @@
 </app-tooltip> 
 
 <h1>Config 🔧</h1>
-
+<div class="top-bar">
+    <div class="right">
+        <div [ngClass]="{ 'status-true': isSync, 'status-false': !isSync}"></div>
+        <p [ngStyle]="{ color: isSync ? 'green' : 'red' }">{{ isSync ? 'Sync' : 'Not sync' }}</p>
+    </div>
+</div>
 <div class="config-form">
     <div class="left-form">
         <form class="form" [formGroup]="configForm">
