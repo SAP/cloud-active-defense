@@ -4,6 +4,8 @@ const fs = require('fs');
 const hsts = require('hsts')
 const path = require('path')
 
+const API_URL = "http://controlpanel-api:8050";
+
 app.use(hsts({
   maxAge: 31536000,
   includeSubDomains: true
@@ -35,6 +37,7 @@ app.get('/:namespace/:application', (req, res) => {
   // Check if the file exists
   fs.access(filePath, fs.constants.F_OK, (err) => {
     if (err) {
+      if (namespace != 'unknown' && application != 'unknown') addApplication(namespace, application);
       // If the file does not exist, try to return the default config file
       fs.access(defaultFilePath, fs.constants.F_OK, (err) => {
         if (err) {
@@ -111,6 +114,7 @@ app.get('/:namespace/:application', (req, res) => {
         // Check if the file exists
         fs.access(configFilePath, fs.constants.F_OK, err => {
           if(err) {
+            if (namespace != 'unknown' && application != 'unknown') addApplication(namespace, application);
             fs.access(defaultConfigFilePath, fs.constants.F_OK, err => {
               if (err) { return res.json({ decoy: decoysJson }) }
               fs.readFile(defaultConfigFilePath, 'utf8', (err, config) => {
@@ -280,6 +284,33 @@ app.get('/throttlelist', (req, res) => {
     return res.json(throttlelist)
   })
 })
+
+app.post('/file', (req, res) => {
+  try {
+    const { namespace, application } = req.body;
+    if (!namespace || !application) return res.send({ status: 'error', message: 'Namespace or application field is missing' });
+    var filePath = '', configFilePath = ''
+    if (!namespace.match(/^[a-zA-Z0-9-]+$/) || !application.match(/^[a-zA-Z0-9-]+$/)) {
+      return res.send({ status: 'error', message: `Bad path provided for decoys config file: ${namespace}, ${application}` });
+    } else {
+      filePath = path.resolve(`/data/cad-${namespace}-${application}.json`);
+      configFilePath = path.resolve(`/data/config-${namespace}-${application}.json`);
+    }
+    if(!fs.existsSync(filePath)) fs.writeFileSync(filePath, '');
+    if(!fs.existsSync(configFilePath)) fs.writeFileSync(configFilePath, '');
+    return res.send({ status: 'success', message: 'Files created'});
+  } catch(e) {
+    return res.status(500).send({ status: 'error', message: "Error when creating the files" });
+  }
+})
+
+function addApplication(namespace, application) {
+  try {
+    fetch(`${API_URL}/protected-app`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ namespace, application })})
+  } catch(err) {
+    console.error("Error when creating the protected app in the api: ", err);
+  }
+}
 // Start the server
 app.listen(3000, async () => {
   console.log('Config manager started');
@@ -299,7 +330,7 @@ app.listen(3000, async () => {
   loop = 0
   while (loop < 5) {
     try {
-      await fetch("http://controlpanel-api:8050/configmanager/sync");
+      await fetch(`${API_URL}/configmanager/sync`);
       break;
     } catch(e) {
       loop++;

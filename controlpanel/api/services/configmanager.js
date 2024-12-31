@@ -120,5 +120,22 @@ module.exports = {
         } catch(e) {
             return { type: 'error', message: "Server error", data: e, code: 500 };
         }
+    },
+    /**
+     * 
+     * @param {DataType.UUID} pa_id UUID of the protected app
+     * @returns {{type: 'success' | 'error' | 'warning', code: number, data?: Error, message: string}}
+     */
+    createFile: async (pa_id) => {
+        try {
+            if (!isUUID(pa_id)) return { type: 'error', code: 400, message: 'Invalid protected app id supplied' };
+            const protectedApp = await ProtectedApp.findOne({ where: { id: pa_id } });
+            if (!protectedApp) return { type: 'error', code: 404, message: 'Protected app not found' };
+            const response = await axios.post(`${CONFIGMANAGER_URL}/file`, { namespace: protectedApp.namespace, application: protectedApp.application });
+            if (response.data.status == 'error') return { type: 'error', code: 500, message: response.data.message };
+            return { type: 'success', code: 200 , message: response.data.message };
+        } catch(e) {
+            return { type: 'error', message: "Server error", data: e, code: 500 };
+        }
     }
 }
