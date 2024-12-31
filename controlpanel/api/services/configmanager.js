@@ -113,8 +113,8 @@ module.exports = {
         try {
             const protectedApps = await ProtectedApp.findAll({ include: [{ model: Decoy, as: 'decoys', attributes: ['decoy', 'state'] }, { model: Config, as: 'configs', attributes: ['config'] }] })
             for (const pa of protectedApps) {
-                module.exports.updateDecoysList(pa.namespace, pa.application, pa.decoys.map(decoyData => decoyData.state == 'active' && decoyData.decoy))
-                module.exports.updateConfig(pa.namespace, pa.application, pa.configs[0]);
+                module.exports.updateDecoysList(pa.id)
+                module.exports.updateConfig(pa.id);
             }
             return { type: 'success', message: "Successful operation", code: 200 };
         } catch(e) {
