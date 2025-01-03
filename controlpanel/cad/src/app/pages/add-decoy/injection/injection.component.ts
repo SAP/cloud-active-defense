@@ -247,10 +247,10 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   onWhenChange(newWhen: FormWhen[]) {
     this.whenArrayTouched = true;
     if (!this.decoy.inject) this.decoy.inject = { store: { as: 'header' } }
-    this.decoy.inject.store.whenTrue = newWhen.filter(when => when.type === true).map(({ type, ...rest }) => rest as WhenType);
-    this.decoy.inject.store.whenFalse = newWhen.filter(when => when.type === false).map(({ type, ...rest }) => rest as WhenType);
-    if (this.decoy.inject.store.whenTrue.length === 0) delete this.decoy.inject.store.whenTrue;
-    if (this.decoy.inject.store.whenFalse.length === 0 ) delete this.decoy.inject.store.whenFalse;
+    this.decoy.inject.whenTrue = newWhen.filter(when => when.type === true).map(({ type, ...rest }) => rest as WhenType);
+    this.decoy.inject.whenFalse = newWhen.filter(when => when.type === false).map(({ type, ...rest }) => rest as WhenType);
+    if (this.decoy.inject.whenTrue.length === 0) delete this.decoy.inject.whenTrue;
+    if (this.decoy.inject.whenFalse.length === 0 ) delete this.decoy.inject.whenFalse;
     this.isWhenArrayValid = CustomValidators.isValidWhenTrueFalse(newWhen);
   }
   onRegexChange(inputName: string) {
@@ -293,11 +293,11 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
       atMethod: decoyData.inject?.store.at?.method || '',
       atProperty: decoyData.inject?.store.at?.property || ''
     })
-    if (decoyData.inject?.store.whenFalse){
-      this.whenArray = [...this.whenArray, ...decoyData.inject.store.whenFalse.map(item => ({ ...item, type: false }))];
+    if (decoyData.inject?.whenFalse){
+      this.whenArray = [...this.whenArray, ...decoyData.inject.whenFalse.map(item => ({ ...item, type: false }))];
     }
-    if (decoyData.inject?.store.whenTrue){
-      this.whenArray = [...this.whenArray, ...decoyData.inject.store.whenTrue.map(item => ({ ...item, type: true }))];
+    if (decoyData.inject?.whenTrue){
+      this.whenArray = [...this.whenArray, ...decoyData.inject.whenTrue.map(item => ({ ...item, type: true }))];
     }
   }
 

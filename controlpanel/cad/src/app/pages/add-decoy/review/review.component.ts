@@ -88,8 +88,8 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
     }
 
     let whenTrue: string[] = [];
-    if (this.decoy.inject.store.whenTrue) {
-      for (const when of this.decoy.inject.store.whenTrue) {
+    if (this.decoy.inject.whenTrue) {
+      for (const when of this.decoy.inject.whenTrue) {
         let whenIn;
         if (when.in == 'payload') whenIn = "in the payload";
         else whenIn = `the ${when.in}`;
@@ -104,8 +104,8 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
     }
 
     let whenFalse: string[] = [];
-    if (this.decoy.inject.store.whenFalse) {
-      for (const when of this.decoy.inject.store.whenFalse) {
+    if (this.decoy.inject.whenFalse) {
+      for (const when of this.decoy.inject.whenFalse) {
         let whenIn;
         if (when.in == 'payload') whenIn = "in the payload";
         else whenIn = `the ${when.in}`;

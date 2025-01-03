@@ -2,9 +2,7 @@ import { isValidRegex } from "../utils";
 
 export interface Decoy {
     decoy: DecoyType
-    inject?: {
-        store: StoreType
-    },
+    inject?: InjectType
     detect?: DetectType
 }
 
@@ -16,6 +14,11 @@ export type DecoyType = {
   dynamicValue?: string,
   string?: string
 }
+export type InjectType = {
+  store: StoreType,
+  whenTrue?: WhenType[],
+  whenFalse?: WhenType[]
+}
 export type StoreType = {
   inRequest?: string,
   inResponse?: string,
@@ -25,8 +28,6 @@ export type StoreType = {
       method: AtMethodType,
       property: string
   },
-  whenTrue?: WhenType[],
-  whenFalse?: WhenType[]
 }
 export type WhenType = {
     key: string,
