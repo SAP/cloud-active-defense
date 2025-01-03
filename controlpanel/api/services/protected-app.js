@@ -4,6 +4,7 @@ const configmanager = require("./configmanager");
 module.exports = {
     /**
      * Returns a list of protected apps
+     * @returns {{type: 'success' | 'error' | 'warning', code: number, data: Model, message: string}}
      */
     getProtectedApps: async () => {
         try {

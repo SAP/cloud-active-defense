@@ -12,6 +12,9 @@ const axios = require('axios');
 module.exports = {
     /**
     *   Return list of decoys from configmanager
+    *   @param {string} namespace namespace of app
+    *   @param {string} application name of app
+    *   @returns {{type: 'success' | 'error' | 'warning', code: number, data: JSON, message: string}}
     */
     getDecoysList: async (namespace, application) => {
         try {
@@ -33,7 +36,8 @@ module.exports = {
     },
     /**
      * Update decoys list in configmanager
-     * @param {Object} decoys New list of decoys
+     * @param {DataType.UUID} pa_id UUID of the protected app
+     * @returns {{type: 'success' | 'error' | 'warning', code: number, data: JSON, message: string}}
      */
     updateDecoysList: async (pa_id) => { 
         try {
@@ -41,7 +45,7 @@ module.exports = {
             if (!protectedApp || !isUUID(pa_id)) return { type: 'error', code: 400, message: 'Invalid protectedApp id provided' };
             const decoys = await Decoy.update({ deployed: true }, { where: { pa_id }, returning: true});
             const activeDecoys = decoys[1].filter(decoyData => decoyData.state == 'active').map(decoyData => decoyData.decoy);
-            if (!activeDecoys.length) return { type: 'warning', code: 200, message: "Decoys list is empty or full of inactive decoy, cannot sync" };
+            if (!activeDecoys.length) return { type: 'warning', code: 404, message: "Decoys list is empty or full of inactive decoy, cannot sync" };
             for (const decoy of activeDecoys) {
                 if (validateDecoyFilter(decoy).length) return { type: 'error', code: 422, message: "There are errors in one of the decoys, cannot send to configmanager" }
             }
@@ -84,9 +88,7 @@ module.exports = {
     },
     /**
      * Update global config in configmanager
-     * @param {string} namespace namespace of app
-     * @param {string} application name of app
-     * @param {Object} config
+     * @param {DataType.UUID} pa_id of the protected app
      * @return {{type: 'success' | 'error' | 'warning', code: number, data: JSON, message: string}}
      */
     updateConfig: async (pa_id) => {
@@ -108,7 +110,10 @@ module.exports = {
             throw e;
         }
     },
-
+    /**
+     * Synchronize database data (decoy, global config) with configmanager for every protected apps
+     * @returns {{type: 'success' | 'error' | 'warning', code: number, data: JSON, message: string}}
+     */
     sendDataToConfigmanager: async () => {
         try {
             const protectedApps = await ProtectedApp.findAll({ include: [{ model: Decoy, as: 'decoys', attributes: ['decoy', 'state'] }, { model: Config, as: 'configs', attributes: ['config'] }] })

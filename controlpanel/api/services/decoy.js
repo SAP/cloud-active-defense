@@ -80,6 +80,7 @@ module.exports = {
     },
     /**
      * @param {JSON} decoyData
+     * @returns {{type: 'success' | 'error' | 'warning', code: number, message: string}}
      */
     updateDecoyState: async (decoyData) => {
         try {
