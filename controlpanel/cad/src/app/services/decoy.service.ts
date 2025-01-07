@@ -37,6 +37,9 @@ export class DecoyService {
   get decoy(): Decoy {
     return this.decoySubject.value;
   }
+  set decoy(v: Decoy) {
+    this.decoySubject.next(v);
+  }
   updateDecoy(newDecoy: Decoy) {
     this.decoySubject.next(newDecoy);
   }

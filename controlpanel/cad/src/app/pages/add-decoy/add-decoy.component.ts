@@ -64,6 +64,7 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
       } else {
         this.decoyService.isEdit = true;
         this.isEdit = true;
+        this.decoyService.decoy = {decoy:{}};
       }
     });
   }
