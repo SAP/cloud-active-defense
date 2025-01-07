@@ -19,4 +19,14 @@ router.post('/:type', async (req, res) => {
     }
 })
 
+router.post('/', async (req, res) => {
+    try {
+        const result = await logsService.createLogs(req.body);
+        return res.status(result.code).send(result);
+    } catch(e) {
+        console.error(e);
+        return res.status(500).send({ code: 500, type: 'error', message: 'Server error' });
+    }
+})
+
 module.exports = router;

@@ -1,3 +1,5 @@
+const Logs = require('../models/Logs');
+const { isJSON } = require('../util');
 
 module.exports = {
     /**
@@ -12,4 +14,37 @@ module.exports = {
             throw e;
         }
     },
+    /**
+     * Create log in db
+     * @param {[{date?: number, log: string}]} logs logs array input (.log must be stringified JSON)
+     * @returns {{type: 'success' | 'error' | 'warning', code: number, message: string, data?: []}}
+     */
+    createLogs: async (logs) => {
+        try {
+            errors = [];
+            if (!logs.length) return { code: 400, type: 'error', message: 'No logs provided' };
+            for (const log of logs) {
+                if (!log.log) {
+                    errors.push({ log, error: '.log attribute is missing or empty' }); 
+                    continue;
+                }
+                if (typeof log.date != 'number') {
+                    errors.push({ log, error: '.data is not a number' });
+                }
+                if (!isJSON(log.log)) {
+                    errors.push({ log, error: '.log attribute is not a JSON' });
+                    continue;
+                }
+                const logContent = JSON.parse(log.log);
+                if (!logContent.type) {
+                    errors.push({ log, error: '.type attribute in .log is missing or empty' });
+                    continue;
+                }
+                Logs.create({ date: log.date, type: logContent.type, content: logContent.content });
+            }
+            return { code: 200, type: 'success', message: 'Successful operation', data: errors };
+        } catch(e) {
+            throw e;
+        }
+    }
 }
