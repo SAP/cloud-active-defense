@@ -17,9 +17,6 @@ export class DecoyApiService {
   getDecoys(protectedApp: ProtectedApp) {
     return this.http.get<ApiResponse>(`${this.globalState.API_URL}/decoys/${protectedApp.id}`);
   }
-  patchDecoysState(decoys: DecoyData[]) {
-    return this.http.patch<ApiResponse>(`${this.globalState.API_URL}/decoys/state`, decoys);
-  }
 
   getDecoy(id: UUID) {
     return this.http.get<ApiResponse>(`${this.globalState.API_URL}/decoy/${id}`);

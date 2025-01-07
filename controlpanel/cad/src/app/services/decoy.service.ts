@@ -87,14 +87,6 @@ export class DecoyService {
       return { message: "Error when fetching decoys list", type: 'error' };
     }
   }
-  async updateDecoysState(decoys: DecoyData[]): Promise<ApiResponse> {
-    try {
-      return await lastValueFrom(this.decoyApi.patchDecoysState(decoys));
-    } catch (e) {
-      console.error(e);
-      return { message: "Error when updating decoys list", type: 'error' };
-    }
-  }
 
   get isEdit(): boolean {
     return this.isEditSubject.value;
