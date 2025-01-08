@@ -155,12 +155,9 @@ app.get('/:namespace/:application', (req, res) => {
 app.post('/:namespace/:application', (req, res) => {
   if (req.headers['content-type'] != 'application/json') return res.status(400).send("Invalid JSON");
   const { namespace, application } = req.params;
-  console.log(req.body)
   const body = JSON.stringify(req.body)
-  console.log(body)
   try {
     const parsedBody = JSON.parse(body);
-    console.log(parsedBody)
     const newDecoys = parsedBody.decoys;
     const newConfig = parsedBody.config;
     var filePath = '', configFilePath = ''
