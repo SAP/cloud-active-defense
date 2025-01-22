@@ -1,15 +1,66 @@
+const { Op } = require('sequelize');
 const Logs = require('../models/Logs');
 const { isJSON } = require('../util');
 
 module.exports = {
     /**
-     * Return logs collected and filtered with `filter`
-     * @param {Object} filter 
+     * Return logs collected and filtered with `query`
+     * @param {Object} query query filter
+     * @returns {{type: 'success' | 'error' | 'warning', code: number, message: string, data: [Model]}}
+     * 
+     * Examples:
+     * 
+     *      getLogs('126f2bd9-9431-4590-a18b-3f980479953a', {type: 'alert', DecoyKey: 'like:some decoy'})
+     *      getLogs('126f2bd9-9431-4590-a18b-3f980479953a', {type: 'event', Delay: 'equal:120'})
      */
-    getLogs : async (filter) => {
+    getLogs : async (pa_id, query) => {
         try {
-            //TODO
-            return { type:'success',data:[{"Time":1715956535,"RequestID":"f916b220-3c2c-493d-9ff4-a543bc39816c","DestinationIP":"172.19.0.5:8000","Url":"localhost:8000","Server":"myapp","SourceIP":"172.19.0.1:35692","Authenticated":true,"Session":"c32272b9-99d8-4687-b57e-a606952ae870","Username":"Bob","Useragent":"Mozilla/5.0(X11;Ubuntu;Linuxx86_64;rv:125.0)Gecko/20100101Firefox/125.0","Path":"/","Method":"GET","DecoyType":"KeyValueModified","DecoyKey":"role","DecoyExpectedValue":"user","DecoyInjectedValue":"admin","Severity":"HIGH" }] }
+            filter = { pa_id };
+            allowedFields = [];
+            if (query.type) {
+                filter.type = query.type;
+                if (query.type == 'alert') {
+                    allowedFields = ['RequestID', 'Destination', 'Url', 'Server', 'SourceIp',
+                        'Authenticated', 'Session', 'Username', 'UserAgent', 'Path', 'Method',
+                        'DecoyType', 'DecoyKey', 'DecoyExpectedValue', 'DecoyInjectedValue', 'Severity'];
+                }
+                else if (query.type == 'event') {
+                    allowedFields = ['Behavior', 'Source', 'Delay', 'Duration'];
+                }
+            }
+            if (query.date && !isNaN(query.date)) filter.date = query.date
+
+            for (const key in query) {
+                if (!allowedFields.includes(key)) continue;
+                else filter.content = {};
+                const value = query[key];
+                if (key == 'severity' || key == 'behavior') {
+                    filter.content[key] = value.split(',');
+                    continue;
+                }
+                const [ operator, operand ] = value.split(':');
+                if (operand == undefined ) {
+                    filter.content[key] = operator;
+                    continue;
+                } 
+                switch (operator) {
+                    case 'equal':
+                        filter.content[key] = operator
+                        break;
+                    case 'like':
+                        filter.content[key] = { [Op.like]: `%${operand}%` };
+                        break;
+                    case 'notequal':
+                        filter.content[key] = { [Op.ne]: operand };
+                        break;
+                    case 'notlike':
+                        filter.content[key] = { [Op.notLike]: operand };
+                    default:
+                        continue;
+                }
+            }
+            const logs = await Logs.findAll({ where: filter });
+            return { code: 200, type: 'success', message: 'Successful operation', data: logs };
         } catch (e) {
             throw e;
         }

@@ -12,12 +12,16 @@ const Logs = sequelize.define("logs", {
         defaultValue: Math.floor(new Date().getTime() / 1000),
         allowNull: false
     },
+    pa_id: {
+        type: DataTypes.UUID,
+        allowNull: false
+    },
     type: {
         type: DataTypes.STRING,
         allowNull: false
     },
     content: {
-        type: DataTypes.JSON,
+        type: DataTypes.JSONB,
         allowNull: false
     }
 });
