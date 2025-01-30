@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const Logs = require('../models/Logs');
 const { isJSON } = require('../util');
+const sequelize = require('../models');
 
 module.exports = {
     /**
@@ -15,51 +16,93 @@ module.exports = {
      */
     getLogs : async (pa_id, query) => {
         try {
-            filter = { pa_id };
-            allowedFields = [];
-            if (query.type) {
-                filter.type = query.type;
-                if (query.type == 'alert') {
-                    allowedFields = ['RequestID', 'Destination', 'Url', 'Server', 'SourceIp',
+            // filter = { pa_id };
+            alertFields = ['Time', 'RequestID', 'Destination', 'Url', 'Server', 'SourceIp',
                         'Authenticated', 'Session', 'Username', 'UserAgent', 'Path', 'Method',
                         'DecoyType', 'DecoyKey', 'DecoyExpectedValue', 'DecoyInjectedValue', 'Severity'];
+            eventFields = ['Behavior', 'SourceIp', 'UserAgent', 'Session', 'Delay', 'Duration'];
+            filter = { [Op.and]: [] };
+            allowedFields = [];
+            if (query.type) {
+                if (query.type == 'applog') filter.type = ['debug', 'system'];
+                else filter.type = query.type;
+                if (query.type == 'alert') {
+                    allowedFields.push(...alertFields);
                 }
                 else if (query.type == 'event') {
-                    allowedFields = ['Behavior', 'Source', 'Delay', 'Duration'];
+                    allowedFields.push(...eventFields);
                 }
             }
-            if (query.date && !isNaN(query.date)) filter.date = query.date
+            if (query.time && ['h', 'd', 'm'].includes(query.time[query.time.length-1]) && !isNaN(query.time.slice(0, -1))) {
+                switch (query.time[query.time.length - 1]) {
+                    case 'h':
+                        filter.date = { [Op.gte]: Math.floor(new Date(new Date() - query.time.slice(0, -1) * 60 * 60 * 1000).getTime() / 1000) };
+                        break;
+                    case 'd':
+                        filter.date = { [Op.gt]: Math.floor(new Date(new Date() - query.time.slice(0, -1) * 24 * 60 * 60 * 1000).getTime() / 1000) };
+                        break;
+                    case 'm':
+                        filter.date = { [Op.gt]: Math.floor(new Date(new Date() - query.time.slice(0, -1) * 30 * 24 * 60 * 60 * 1000).getTime() / 1000) };
+                        break;
+                    default:
+                        break;
+                }
+            }
 
             for (const key in query) {
                 if (!allowedFields.includes(key)) continue;
                 else filter.content = {};
                 const value = query[key];
-                if (key == 'severity' || key == 'behavior') {
-                    filter.content[key] = value.split(',');
-                    continue;
-                }
-                const [ operator, operand ] = value.split(':');
+                if (!value) continue;
+                // if (key == 'severity' || key == 'behavior') {
+                //     filter.content[key] = value.split(',');
+                //     continue;
+                // }
+                const [ operator, operand ] = value.includes(':') ? value.split(':') : `equal:${value}`.split(':');
                 if (operand == undefined ) {
                     filter.content[key] = operator;
                     continue;
                 } 
                 switch (operator) {
                     case 'equal':
-                        filter.content[key] = operator
+                        if (eventFields.includes(key)) filter[Op.and].push({
+                            [Op.or]:[
+                                { content:{ [Op.contains]:{ action:[{[key]:operand}]}}},
+                                { content:{ [Op.contains]:{ throttle:[{[key]:operand}]}}}
+                            ]});
+                        else filter.content[key] = operand;
                         break;
                     case 'like':
-                        filter.content[key] = { [Op.like]: `%${operand}%` };
+                        if (eventFields.includes(key)) filter[Op.and].push({
+                                [Op.or]:[
+                                    sequelize.where(sequelize.cast(sequelize.col('content'), 'text'), {[Op.iRegexp]: `"${key}"\\s*:\\s*".*${operand}.*"`}),
+                                ]
+                            });
+                        else filter.content[key] = { [Op.like]: `%${operand}%` };
                         break;
                     case 'notequal':
-                        filter.content[key] = { [Op.ne]: operand };
+                        if (eventFields.includes(key)) filter[Op.and].push({
+                            [Op.not]: {
+                                [Op.or]:[
+                                    { content: { [Op.contains]:{ action: [{[key]:operand}]}}},
+                                    { content: { [Op.contains]:{ throttle: [{[key]:operand}]}}}
+                                ]
+                            }});
+                        else filter.content[key] = { [Op.ne]: operand };
                         break;
                     case 'notlike':
-                        filter.content[key] = { [Op.notLike]: operand };
+                        if (eventFields.includes(key)) filter[Op.and].push({
+                            [Op.not]: {
+                                [Op.or]:[
+                                    sequelize.where(sequelize.cast(sequelize.col('content'), 'text'), {[Op.regexp]: `"${key}"\\s*:\\s*".*${operand}.*"`})
+                                ]
+                            }});
+                        else filter.content[key] = { [Op.notLike]: operand };
                     default:
                         continue;
                 }
             }
-            const logs = await Logs.findAll({ where: filter });
+            const logs = await Logs.findAll({ where: filter, order: [['date', 'DESC']] });
             return { code: 200, type: 'success', message: 'Successful operation', data: logs };
         } catch (e) {
             throw e;
