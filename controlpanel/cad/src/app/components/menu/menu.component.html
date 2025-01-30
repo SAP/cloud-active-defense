@@ -45,7 +45,13 @@
                 <p class="menu-label">Logs</p>
             </a>
         </li>
-        <li class="dropdown-menu-item" (click)="showSettingsSubMenu = !showSettingsSubMenu">
+        <li class="menu-item">
+            <a routerLink="/config" class="menu-link">
+                <img class="menu-icon" src="settings.svg" alt="logs">
+                <p class="menu-label">Config</p>
+            </a>
+        </li>
+        <!-- <li class="dropdown-menu-item" (click)="showSettingsSubMenu = !showSettingsSubMenu">
             <img class="menu-icon" src="settings.svg" alt="settings">
             <p class="menu-label">Systems & Services</p>
             <img class="dropdown-arrow" src="keyboard_arrow_down.svg" alt="keyboard_arrow_down">
@@ -60,7 +66,7 @@
                     <a routerLink="/config" class="sub-menu-link">Config</a>
                 </li>
             </ul>
-        </div>
+        </div> -->
         <li class="menu-item">
             <a class="menu-link" href="https://github.com/SAP/cloud-active-defense">
                 <img class="menu-icon" src="contact_support.svg" alt="help">
