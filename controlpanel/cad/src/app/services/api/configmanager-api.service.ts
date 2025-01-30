@@ -16,8 +16,9 @@ export class ConfigmanagerApiService {
   async updateConfigmanagerDecoys(pa_id: UUID) {
     try {
       return await lastValueFrom(this.http.put<ApiResponse>(`${this.globalState.API_URL}/configmanager/decoys/${pa_id}`, ''));
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      if (e.error.type == 'warning') return { message: e.error.message, type: 'warning' };
       return { message: 'Cannot synchronize decoys with configmanager', type: 'error' };
     }
   }

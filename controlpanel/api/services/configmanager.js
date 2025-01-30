@@ -43,8 +43,8 @@ module.exports = {
         try {
             const protectedApp = await ProtectedApp.findByPk(pa_id);
             if (!protectedApp || !isUUID(pa_id)) return { type: 'error', code: 400, message: 'Invalid protectedApp id provided' };
-            const decoys = await Decoy.update({ deployed: true }, { where: { pa_id }, returning: true});
-            const activeDecoys = decoys[1].filter(decoyData => decoyData.state == 'active').map(decoyData => decoyData.decoy);
+            const decoys = await Decoy.findAll({ where: { pa_id }, attributes: ['decoy', 'state'] });
+            const activeDecoys = decoys.filter(decoyData => decoyData.state == 'active').map(decoyData => decoyData.decoy);
             if (!activeDecoys.length) return { type: 'warning', code: 404, message: "Decoys list is empty or full of inactive decoy, cannot sync" };
             for (const decoy of activeDecoys) {
                 if (validateDecoyFilter(decoy).length) return { type: 'error', code: 422, message: "There are errors in one of the decoys, cannot send to configmanager" }
@@ -56,6 +56,7 @@ module.exports = {
                 }
                 return { type: 'error', code: 500, message: "Could not update decoys list" };
             }
+            Decoy.update({ deployed: true }, { where: { pa_id }, returning: true});
             return { type: 'success', code: 201, message: "Decoys list updated" };
         } catch(e) {
             throw e;
