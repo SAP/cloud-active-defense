@@ -1,0 +1,245 @@
+@import '../../../styles/variables.scss';
+
+.wrapper {
+    width: 100%;
+    padding: 0 4%;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;
+
+    .search-container {
+        width: 100%;
+        padding: 1rem 0;
+        .filter-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: flex-end;
+            .filter-buttons {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                position: relative;
+                .filter-btn {
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    background-color: #FFF;
+                    border: 0;
+                    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 1px -1px,
+                                rgba(0, 0, 0, 0.14) 0px 1px 1px 0px,
+                                rgba(0, 0, 0, 0.12) 0px 1px 3px 0px;
+                    border-radius: 6px;
+                    padding: 0.2rem 0.8rem;
+                    font-weight: 500;
+                    margin-left: 2rem;
+                    color: $primaryColor;
+                    cursor: pointer;
+                    .filter-icon {
+                        margin: 0 auto;
+                        mask: url('../../../../public/filter.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: $primaryColor;
+                    }
+                    p {
+                        color: $primaryColor;
+                    }
+                }
+                .filter-details {
+                    width: 25rem;
+                    padding: 1rem 1.7rem;
+                    position: absolute;
+                    top: 125%;
+                    right: 0;
+                    border-radius: 5px;
+                    box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 5px -1px,
+                                rgba(0, 0, 0, 0.14) 0px 6px 10px 0px,
+                                rgba(0, 0, 0, 0.12) 0px 1px 18px 0px;
+                    z-index: 2;
+                    background-color: #FFF;
+                    .filter-container {
+                        display: flex;
+                        flex-direction: column;
+                        .checkboxes {
+                            display: flex;
+                            flex-direction: row;
+                            margin-top: 0.6rem;
+                            margin-bottom: 0.8rem;
+                            flex-wrap: wrap;
+                            .checkbox-filter {
+                                display: flex;
+                                flex-direction: row;
+                                align-items: center;
+                                border: $inputBorder 1px solid;
+                                border-radius: 20px;
+                                padding: 0.2rem 0.6rem 0.2rem 0.2rem;
+                                height: fit-content;
+                                margin: 0.3rem 0.5rem;
+                                width: max-content;
+                                app-round-checkbox {
+                                    margin-right: 0.8rem;
+                                }
+                            }
+                        }
+                        .search-values-container, .filter-search-container {
+                            display: flex;
+                            margin-top: 0.9rem;
+                            flex-direction: row;
+                            .search-values {
+                                flex: 1;
+                                display: flex;
+                                border-radius: 6px;
+                                border: $inputBorder 1px solid;
+                                :first-child {
+                                    border-radius: 6px 0 0 6px;
+                                }
+                                :last-child {
+                                    border-radius: 0 6px 6px 0;
+                                }
+                                .search-input {
+                                    padding: 2px 3px;
+                                    font-size: 14px;
+                                    border: 0;
+                                    background-color: #F5F5F5;
+                                    width: 100%;
+                                }
+                                .select-operator {
+                                    width: 70%;
+                                    border-right: solid $inputBorder 1px;
+                                    border-left: solid $inputBorder 1px;
+                                }
+                                .delete-btn {
+                                    padding: 2px 1px;
+                                    cursor: pointer;
+                                    border: 0;
+                                    border-left: solid $inputBorder 1px;
+                                    background-color: #F6F6F6;
+                                    .delete-icon {
+                                        margin: 0 auto;
+                                        mask: url('../../../../public/close_small.svg') no-repeat center;
+                                        width: 17px;
+                                        height: 17px;
+                                        background-color: #747474;
+                                    }
+                                }
+                            }
+                            .add-search-value {
+                                background-color: $primaryColor;
+                                padding: 0 0.5rem;
+                                border: 0;
+                                color: #FFF;
+                                font-size: 14px;
+                                border-radius: 6px;
+                                cursor: pointer;
+                                margin-left: 0.7rem;
+                            }
+                        }
+                        .filter-search-container {
+                            flex-direction: column;
+                            .search-values {
+                                margin-bottom: 0.4rem;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .list-container {
+        width: 100%;
+        border-radius: 20px;
+        background-color: white;
+        box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px,
+                    rgba(0, 0, 0, 0.14) 0px 3px 4px 0px,
+                    rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        padding-bottom: 10px;
+
+        thead {
+            .head-separator {
+                width: 100%;
+            }
+            th {
+                text-align: start;
+                padding: 1rem 1rem;
+            }
+            .log-type {
+                width: 6%;
+            }
+            .row-options {
+                width: 5%;
+            }
+            .head-log-content {
+                width: 72%;
+            }
+        }
+        tbody {
+            tr {
+                cursor: pointer;
+                box-sizing: border-box;
+                td {
+                    padding: 0.8rem 1rem;
+                    .sub-text {
+                        color: gray;
+                    }
+                }
+                .options {
+                    text-align: center;
+                    .option-btn {
+                        border: 0;
+                        background-color: transparent;
+                        margin: 0 0.5rem;
+                        cursor: pointer;
+                        transition: 300ms ease-out;
+                        img {
+                            width: 2rem;
+                        }
+                    }
+                }
+                .log-content {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    -webkit-line-clamp: 3; /* Number of lines to show before truncation */
+                    line-clamp: 3;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    max-width: 100%; /* Adjust as needed */
+                }
+                &:nth-child(odd) {
+                    background-color: #E8E8E8;
+                }
+                &:last-child {
+                    td {
+                        &:first-child {
+                            border-bottom-left-radius: 20px;
+                        }
+                        &:last-child {
+                            border-bottom-right-radius: 20px;
+                        }
+                    }
+                }
+            }
+            .open-log-content {
+                .log-content {
+                    display: block;
+                    white-space: pre-wrap;
+                    word-wrap: break-word;
+                }
+                .option-btn { 
+                    transform: rotateZ(180deg);
+                }
+            }
+            .empty-list {
+                background-color: white !important;
+                text-align: center;
+                td {
+                    padding-top: 1.5rem;
+                    font-weight: 600;
+                }
+            }
+        }
+    }
+}
