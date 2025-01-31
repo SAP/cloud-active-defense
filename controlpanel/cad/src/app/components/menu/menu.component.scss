@@ -63,6 +63,11 @@ $menu-icon-size: 2rem;
                     background-color: $backgroundPrimaryColor;
                 }
             }
+            .app-separator {
+                margin: 0 0.5rem;
+                border: none;
+                border-bottom: 1px solid $inputBorder;
+            }
         }
     }
     .menu-list {

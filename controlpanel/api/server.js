@@ -13,6 +13,9 @@ const logs = require('./routes/logs');
 const config = require('./routes/config');
 const user = require('./routes/user');
 const protectedApp = require('./routes/protected-app');
+const { createProtectedApp } = require('./services/protected-app');
+const { createDecoy } = require('./services/decoy');
+const { updateConfig } = require('./services/config');
 
 const app = express();
 app.use(express.json());
@@ -45,4 +48,7 @@ app.listen(8050, async () => {
         console.error("Configmanager is not up, please (re)start configmanager");
     }
     require('./models/index');
+    const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default' }); 
+    createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
+    updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
 });

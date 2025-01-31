@@ -22,6 +22,7 @@ export class MenuComponent implements OnInit{
 
   showSubAppSelector = false;
   applist: ProtectedApp[] = [];
+  defaultApp: ProtectedApp = { id: '', namespace: '', application: '' };
   selectedApp: ProtectedApp = { id: '', namespace: '', application: '' };
 
   constructor(private applistService: AppListService, private toastr: ToastrService, private globalState: GlobalStateService, private decoyService: DecoyService) { }
@@ -30,7 +31,8 @@ export class MenuComponent implements OnInit{
     const response = await this.applistService.getAppList();
     if (response.type == 'error') this.toastr.error(response.message, 'Error fetching data');
     else {
-      this.applist = response.data as ProtectedApp[];
+      this.defaultApp = (response.data as ProtectedApp[]).filter(app => app.namespace == 'default' && app.application == 'default')[0] as ProtectedApp;
+      this.applist = (response.data as ProtectedApp[]).filter(app => app.namespace != 'default' && app.application != 'default');
     }
 
     this.globalState.selectedApp$.subscribe(data => {

@@ -38,8 +38,16 @@ module.exports = {
             const validationErrors = validateDecoyFilter(decoy);
             if (validationErrors.length) return { type: 'error', code: 422, message: 'Bad json provided, there are errors in the decoy object', data: validationErrors };
             
-            const savedDecoy = await Decoy.create({ ...decoyData, deployed: false, state: 'inactive' });
-            return { type: 'success', code: 201, message: 'Successful operation', data: savedDecoy };
+            const [savedDecoy, created] = await Decoy.findOrCreate({
+                where: { pa_id: decoyData.pa_id, decoy: decoyData.decoy },
+                defaults: { ...decoyData, deployed: false, state: 'inactive' }
+            });
+            
+            if (created) {
+                return { type: 'success', code: 201, message: 'Successful operation', data: savedDecoy };
+            } else {
+                return { type: 'error', code: 409, message: 'Decoy already exists, cannot create', data: savedDecoy };
+            }
         } catch(e) {
             throw e;
         }

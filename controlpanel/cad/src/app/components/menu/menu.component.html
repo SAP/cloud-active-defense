@@ -4,9 +4,12 @@
         <div class="name">Cloud Active Defense</div>
     </div>
     <div class="app-selector" (click)="showSubAppSelector = !showSubAppSelector">
-        <p class="selected-app">{{ selectedApp.application && selectedApp.namespace ? selectedApp.namespace + '/' + selectedApp.application : '' }}</p>
+        <p class="selected-app">{{ selectedApp.namespace == 'default' && selectedApp.application == 'default' ? 'Default' : 
+            (selectedApp.application && selectedApp.namespace ? selectedApp.namespace + '/' + selectedApp.application : '') }}</p>
         <img class="drop-down-icon" src="arrow_drop_down.svg" alt="">
         <div class="sub-selection" *ngIf="showSubAppSelector">
+            <p (click)="updateSelectedApp(defaultApp)">Default</p>
+            <hr class="app-separator"/>
             <p *ngFor="let app of applist" (click)="updateSelectedApp(app)">{{ app.namespace }}/{{ app.application }}</p>
         </div>
     </div>
