@@ -1,6 +1,5 @@
 const { validateDecoyFilter } = require('../util/decoy-validator');
 const { validateConfig } = require('../util/config-validator');
-const { CONFIGMANAGER_URL } = require('../util/variables');
 const ProtectedApp = require('../models/ProtectedApp')
 const Config = require('../models/Config-data')
 const Decoy = require('../models/Decoy-data')
@@ -22,7 +21,7 @@ module.exports = {
                 namespace = 'unknown';
                 application = 'unknown';
             }
-            const response = await axios.get(`${CONFIGMANAGER_URL}/${namespace}/${application}`);
+            const response = await axios.get(`${process.env.CONFIGMANAGER_URL}/${namespace}/${application}`);
             if (response.status != 200) {
                 if (response.data && response.data.decoy) {
                     return { type: 'error', code: 404, message: 'No file found' }
@@ -49,7 +48,7 @@ module.exports = {
             for (const decoy of activeDecoys) {
                 if (validateDecoyFilter(decoy).length) return { type: 'error', code: 422, message: "There are errors in one of the decoys, cannot send to configmanager" }
             }
-            const response = await axios.post(`${CONFIGMANAGER_URL}/${protectedApp.namespace}/${protectedApp.application}`,{ decoys: { filters: activeDecoys }});
+            const response = await axios.post(`${process.env.CONFIGMANAGER_URL}/${protectedApp.namespace}/${protectedApp.application}`,{ decoys: { filters: activeDecoys }});
             if (response.status != 200) {
                 if (response.data && response.data.decoy) {
                     return { type: 'error', code: 404, message: 'No file found' }
@@ -75,7 +74,7 @@ module.exports = {
                 namespace = 'unknown';
                 application = 'unknown';
             }
-            const response = await axios.get(`${CONFIGMANAGER_URL}/${namespace}/${application}`);
+            const response = await axios.get(`${process.env.CONFIGMANAGER_URL}/${namespace}/${application}`);
             if (response.status != 200) {
                 if (response.data && response.data.config) {
                     return { type: 'error', code: 404, message: 'No file found' }
@@ -99,7 +98,7 @@ module.exports = {
             const config = await Config.update({ deployed: true }, { where: { pa_id }, returning: true });
             if (!config[1].length) return { type: 'warning', code: 200, message: "Global config is empty or not saved, cannot sync" };
             if (validateConfig(config[1][0].config).length) return { type: 'error', code: 422, message: "There are errors in the global config, cannot send to configmanager" };
-            const response = await axios.post(`${CONFIGMANAGER_URL}/${protectedApp.namespace}/${protectedApp.application}`,{ config: config[1][0].config });
+            const response = await axios.post(`${process.env.CONFIGMANAGER_URL}/${protectedApp.namespace}/${protectedApp.application}`,{ config: config[1][0].config });
             if (response.status != 200) {
                 if (response.data && response.data.config) {
                     return { type: 'error', code: 404, message: 'No file found' };
@@ -137,7 +136,7 @@ module.exports = {
             if (!isUUID(pa_id)) return { type: 'error', code: 400, message: 'Invalid protected app id supplied' };
             const protectedApp = await ProtectedApp.findOne({ where: { id: pa_id } });
             if (!protectedApp) return { type: 'error', code: 404, message: 'Protected app not found' };
-            const response = await axios.post(`${CONFIGMANAGER_URL}/file`, { namespace: protectedApp.namespace, application: protectedApp.application });
+            const response = await axios.post(`${process.env.CONFIGMANAGER_URL}/file`, { namespace: protectedApp.namespace, application: protectedApp.application });
             if (response.data.status == 'error') return { type: 'error', code: 500, message: response.data.message };
             return { type: 'success', code: 200 , message: response.data.message };
         } catch(e) {
