@@ -17,7 +17,7 @@ const { updateConfig } = require('./services/config');
 
 const app = express();
 app.use(express.json());
-app.use(cors({ origin: CONTROLPANEL_URL }));
+app.use(cors({ origin: process.env.CONTROLPANEL_FRONTEND_URL }));
 
 app.use('/configmanager', configmanager);
 app.use('/decoys', decoys);
