@@ -25,7 +25,7 @@ module.exports = {
             if (!protectedApp.namespace || !protectedApp.application) return { type: 'error', code: 400, message: 'namespace and/or application are missing' };
             const existingProtectedApp = await ProtectedApp.findOne({ where: { namespace: protectedApp.namespace, application: protectedApp.application }})
             if(existingProtectedApp) {
-                if(existingProtectedApp.namespace != 'default' && newProtectedApp.application != 'default') configmanager.createFile(existingProtectedApp.id);
+                if(existingProtectedApp.namespace != 'default' && existingProtectedApp.application != 'default') configmanager.createFile(existingProtectedApp.id);
                 return { type: 'error', message: 'Protected app alredy exists, cannot create protected app duplicates', code: 409, data: existingProtectedApp };
             }
             const newProtectedApp = await ProtectedApp.create({ namespace: protectedApp.namespace, application: protectedApp.application }, { returning: true });
