@@ -1,8 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config({ path: __dirname + '/.env' });
-const { CONFIGMANAGER_URL } = require('./util/variables');
-const { CONTROLPANEL_URL } = require('./util/variables');
 const { sendDataToConfigmanager } = require('./services/configmanager');
 
 const configmanager = require('./routes/configmanager');
@@ -41,9 +39,12 @@ app.listen(8050, async () => {
     console.log("Control panel API started on port 8050 !");
     try {
         // CONFIGMANAGER URL
-        await fetch(CONFIGMANAGER_URL);
+        await fetch(process.env.CONFIGMANAGER_URL);
         console.log("Successfully connected to configmanager !")
-        setInterval(async () => await sendDataToConfigmanager(), 60 * 60 * 1000)
+        let cron_minutes = 60;
+        if (isNaN(Number(process.env.CRON_CONFIGMANAGER)) || !process.env.CRON_CONFIGMANAGER) console.error("CRON_CONFIGMANAGER environment variable is not a number, cron will be set to 60 minutes");
+        else cron_minutes = Number(process.env.CRON_CONFIGMANAGER); 
+        setInterval(async () => await sendDataToConfigmanager(), 60 * cron_minutes * 1000)
     } catch(e) {
         console.error("Configmanager is not up, please (re)start configmanager");
     }
