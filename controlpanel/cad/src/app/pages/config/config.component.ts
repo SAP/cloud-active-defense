@@ -77,6 +77,7 @@ onLeaveInfo() {
   }
 
   ngOnInit() {
+    this.configForm.valueChanges.subscribe(() => { if(!this.isUpdating) this.isSync = false})
     this.globalState.selectedApp$.subscribe(async selectedApp => {
       const apiResponse = await this.configService.getConfig(selectedApp.id)
       if (apiResponse.type == 'error') {
@@ -93,7 +94,6 @@ onLeaveInfo() {
           this.config = data;
           this.fillForm(this.config);
           this.isUpdating = false;
-          this.configForm.valueChanges.subscribe(() => this.isSync = false)
         }
       })
     })
