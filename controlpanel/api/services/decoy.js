@@ -38,7 +38,7 @@ module.exports = {
             const validationErrors = validateDecoyFilter(decoy);
             if (validationErrors.length) return { type: 'error', code: 422, message: 'Bad json provided, there are errors in the decoy object', data: validationErrors };
             
-            const savedDecoy = await Decoy.create(decoyData);
+            const savedDecoy = await Decoy.create({ ...decoyData, deployed: false, state: 'inactive' });
             return { type: 'success', code: 201, message: 'Successful operation', data: savedDecoy };
         } catch(e) {
             throw e;
@@ -71,7 +71,7 @@ module.exports = {
             const validationErrors = validateDecoyFilter(decoy);
             if (validationErrors.length) return { type: 'error', code: 422, message: 'Bad json provided, there are errors in the decoy object', data: validationErrors };
             
-            const updatedDecoy = await Decoy.update({ decoy }, { where: { id }});
+            const updatedDecoy = await Decoy.update({ decoy, deployed: false, state: 'inactive' }, { where: { id }});
             if (!updatedDecoy['0']) return { type: 'success', code: 404, message: 'Decoy not found' };
             return { type: 'success', code: 200, message: 'Successful operation' };
         } catch(e) {
