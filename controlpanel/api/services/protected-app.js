@@ -1,3 +1,4 @@
+const Decoy = require("../models/Decoy-data");
 const ProtectedApp = require("../models/ProtectedApp");
 const configmanager = require("./configmanager");
 
@@ -29,7 +30,14 @@ module.exports = {
                 return { type: 'error', message: 'Protected app alredy exists, cannot create protected app duplicates', code: 409, data: existingProtectedApp };
             }
             const newProtectedApp = await ProtectedApp.create({ namespace: protectedApp.namespace, application: protectedApp.application }, { returning: true });
-            if(newProtectedApp.namespace != 'default' && newProtectedApp.application != 'default') configmanager.createFile(newProtectedApp.id);
+            if(newProtectedApp.namespace != 'default' && newProtectedApp.application != 'default') {
+                configmanager.createFile(newProtectedApp.id);
+                const defaultApp = await ProtectedApp.findOne({ where: { namespace: 'default', application: 'default' }});
+                const defaultDecoy = await Decoy.findAll({ where: { pa_id: defaultApp.id }, attributes: ['decoy'] });
+                Decoy.bulkCreate(defaultDecoy.map(decoy => {
+                    return { state: 'inactive', deployed: false, decoy: decoy.decoy, pa_id: newProtectedApp.id };
+                }));
+            }
             return { type: 'success', code: 201, message: 'successful operation', data: newProtectedApp };
         } catch (e) {
             throw e;
