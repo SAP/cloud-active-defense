@@ -1,7 +1,8 @@
 const { Op } = require('sequelize');
 const Logs = require('../models/Logs');
-const { isJSON } = require('../util');
+const { isJSON, isUUID } = require('../util');
 const sequelize = require('../models');
+const ProtectedApp = require('../models/ProtectedApp');
 
 module.exports = {
     /**
@@ -17,11 +18,12 @@ module.exports = {
     getLogs : async (pa_id, query) => {
         try {
             // filter = { pa_id };
+            if (!isUUID(pa_id)) return { code: 400, type: 'error', message: 'Invalid pa_id supplied' };
             alertFields = ['Time', 'RequestID', 'Destination', 'Url', 'Server', 'SourceIp',
                         'Authenticated', 'Session', 'Username', 'UserAgent', 'Path', 'Method',
                         'DecoyType', 'DecoyKey', 'DecoyExpectedValue', 'DecoyInjectedValue', 'Severity'];
             eventFields = ['Behavior', 'SourceIp', 'UserAgent', 'Session', 'Delay', 'Duration'];
-            filter = { [Op.and]: [] };
+            filter = { [Op.and]: [{pa_id}] };
             allowedFields = [];
             if (query.type) {
                 if (query.type == 'applog') filter.type = ['debug', 'system'];
@@ -110,7 +112,7 @@ module.exports = {
     },
     /**
      * Create log in db
-     * @param {[{date?: number, log: string}]} logs logs array input (.log must be stringified JSON)
+     * @param {[{date?: number, log: string, namespace: string, application: string}]} logs logs array input (.log must be stringified JSON)
      * @returns {{type: 'success' | 'error' | 'warning', code: number, message: string, data?: []}}
      */
     createLogs: async (logs) => {
@@ -134,7 +136,16 @@ module.exports = {
                     errors.push({ log, error: '.type attribute in .log is missing or empty' });
                     continue;
                 }
-                Logs.create({ date: log.date, type: logContent.type, content: logContent.content });
+                if (!log.namespace && !log.application){
+                    errors.push({ log, error: 'Either .namespace or .application attribute is missing or empty' });
+                    continue;
+                }
+                const protectedApp = await ProtectedApp.findOne({ where: { namespace: log.namespace, application: log.application } });
+                if (!protectedApp) {
+                    errors.push({ log, error: 'Protected app not found' });
+                    continue;
+                }
+                Logs.create({ date: log.date, type: logContent.type, content: logContent.content, pa_id: protectedApp.id });
             }
             return { code: 200, type: 'success', message: 'Successful operation', data: errors };
         } catch(e) {
