@@ -1,0 +1,14 @@
+FROM node:21
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install -g nodemon
+RUN npm install
+
+COPY . .
+
+EXPOSE 8050
+
+CMD ["nodemon", "--watch", ".", "--legacy-watch", "server.js"]

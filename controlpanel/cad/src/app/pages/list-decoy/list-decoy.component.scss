@@ -1,0 +1,105 @@
+@import '../../../styles/variables.scss';
+.wrapper {
+    width: 100%;
+    padding: 0 4%;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: space-between;
+    .list-container {
+        width: 100%;
+        border-radius: 20px;
+        background-color: white;
+        box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px,
+                    rgba(0, 0, 0, 0.14) 0px 3px 4px 0px,
+                    rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
+        table-layout: fixed;
+        border-collapse: collapse;
+        padding-bottom: 10px;
+        thead {
+            .head-separator {
+                width: 100%;
+            }
+            th {
+                text-align: start;
+                padding: 1rem 1rem;
+                width: 20%;
+            }
+            .decoy-head {
+                width: 35%;
+            }
+            .row-options {
+                width: 15%;
+            }
+        }
+        tbody {
+            tr {
+                cursor: pointer;
+                box-sizing: border-box;
+                td {
+                    padding: 0.8rem 1rem;
+                    .sub-text {
+                        color: gray;
+                    }
+                    .deployed-checkbox {
+                        width: 1.5rem;
+                        height: 1.5rem;
+                    }
+                    .status-true {
+                        mask: url('../../../../public/check.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: green;
+                    }
+                    .status-false {
+                        mask: url('../../../../public/close_small.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: red;
+                    }
+                }
+                .options {
+                    text-align: center;
+                    .option-btn {
+                        border: 0;
+                        background-color: transparent;
+                        margin: 0 0.5rem;
+                        cursor: pointer;
+                        img {
+                            width: 2rem;
+                        }
+                    }
+                }
+            }
+            tr:nth-child(odd) {
+                background-color: #E8E8E8;
+            }
+            .empty-list {
+                background-color: white !important;
+                text-align: center;
+                td {
+                    padding-top: 1.5rem;
+                    font-weight: 600;
+                }
+            }
+            .end-space {
+                border: 0;
+                background-color: transparent !important;
+                td {
+                    height: 1rem;
+                    padding: 0;
+                }
+            }
+            .error-line {
+                background-color: #FFCCCC;
+            }
+        }
+    }
+    .buttons {
+        display: flex;
+        flex-direction: row;
+        justify-content: end;
+        margin-top: 1rem;
+        margin-bottom: 2rem;
+    }
+}

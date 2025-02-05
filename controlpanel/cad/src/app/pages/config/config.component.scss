@@ -1,0 +1,71 @@
+.top-bar {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 1rem;
+    .right {
+        margin-left: auto;
+        margin-right: 2rem;
+        display: flex;
+        align-items: center;
+        .status-true {
+            mask: url('../../../../public/check.svg') no-repeat center; 
+            width: 24px; 
+            height: 24px; 
+            background-color: green;
+        }
+        .status-false {
+            mask: url('../../../../public/close_small.svg') no-repeat center; 
+            width: 24px; 
+            height: 24px; 
+            background-color: red;
+        }
+    }
+}
+
+.config-form {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-left: 4rem;
+    .left-form {
+        width: 60%;
+        .session-section, .username-section, .other-section {
+            width: 100%;
+            margin: 1rem 0;
+        }
+        .debug {
+            color: #b4b4b4;
+            font-size: small;
+            height: fit-content;
+            margin-left: 4px;
+        }
+    }
+
+    .right-container {
+        .file-preview {
+            margin-right: 2rem;
+            height: 500px;
+            background-color: #242424;
+            color: white;
+            padding: 20px;
+            width: 340px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            font-size: 14px;
+            overflow-y: scroll;
+        }
+        .next {
+            margin-top: 2rem;
+            margin-right: 2rem;
+            height: 6rem;
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            height: fit-content;
+        }
+        .fixed-right {
+            justify-content: flex-end;
+        }
+    }
+}

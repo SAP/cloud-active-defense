@@ -1,0 +1,151 @@
+<h1>Logs 🪵</h1>
+<div class="wrapper">
+    <div class="search-container">
+        <div class="filter-container">
+            <div class="filter-buttons">
+                <button class="filter-btn" (click)="clearFilters()">
+                    <p>Clear filters</p>
+                </button>
+                <button class="filter-btn" (click)="this.toggleFilter = !this.toggleFilter">
+                    <div class="filter-icon"></div>
+                    <p>Filter</p>
+                </button>
+                <select [(ngModel)]="filter['time'].value" class="filter-btn" (change)="this.getLogList()">
+                    <option value="1h">Last hour</option>
+                    <option value="2h">Last 2 hours</option>
+                    <option value="12h">Last 12 hours</option>
+                    <option value="1d">Last day</option>
+                    <option value="2d">Last 2 days</option>
+                    <option value="7d">Last 7 days</option>
+                    <option value="1m">Last month</option>
+                    <option value="12m">Last 12 month</option>
+                </select>
+                <div class="filter-details" *ngIf="this.toggleFilter">
+                    <div class="filter-container">
+                        <p>Log Type</p>
+                        <hr>
+                        <div class="checkboxes">
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='alert' [checked]="isChecked('type', 'alert')" (checkedChange)="onSelectType('alert')"/>
+                                Alert
+                            </div>
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='event' [checked]="isChecked('type', 'event')" (checkedChange)="onSelectType('event')"/>                                
+                                Event
+                            </div>
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='applog' [checked]="isChecked('type', 'applog')" (checkedChange)="onSelectType('applog')"/>
+                                App logs
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-container" *ngIf="filter['type'] && filter['type'].value == 'alert'">
+                        <p>Log Severity</p>
+                        <hr>
+                        <div class="checkboxes">
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='LOW' [checked]="isChecked('Severity', 'LOW')" (checkedChange)="onSelectSeverity('LOW')"/>
+                                LOW
+                            </div>
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='MEDIUM' [checked]="isChecked('Severity', 'MEDIUM')" (checkedChange)="onSelectSeverity('MEDIUM')"/>
+                                MEDIUM
+                            </div>
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='HIGH' [checked]="isChecked('Severity', 'HIGH')" (checkedChange)="onSelectSeverity('HIGH')"/>
+                                HIGH
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-container" *ngIf="filter['type'] && filter['type'].value == 'event'">
+                        <p>Event Behavior</p>
+                        <hr>
+                        <div class="checkboxes">
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='error' [checked]="isChecked('Behavior', 'error')" (checkedChange)="onSelectBehavior('error')"/>
+                                Error
+                            </div>
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='throttle' [checked]="isChecked('Behavior', 'throttle')" (checkedChange)="onSelectBehavior('throttle')"/>
+                                Throttle
+                            </div>
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='divert' [checked]="isChecked('Behavior', 'divert')" (checkedChange)="onSelectBehavior('divert')"/>
+                                Divert
+                            </div>
+                            <div class="checkbox-filter">
+                                <app-round-checkbox value='drop' [checked]="isChecked('Behavior', 'drop')" (checkedChange)="onSelectBehavior('drop')"/>
+                                Drop
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-container" *ngIf="filter['type']">
+                        <p>Filter values</p>
+                        <hr>
+                        <div class="filter-search-container" *ngIf="filterKeys.length">
+                            <div class="search-values" *ngFor="let key of filterKeys">
+                                <input class="search-input" [value]="key" [readonly]="true" />
+                                <select class="search-input select-operator" [(ngModel)]="filter[key].operator" name="operator" (change)="this.getLogList()">
+                                    <option value="equal">=</option>
+                                    <option value="notequal">≠</option>
+                                    <option value="like">Like</option>
+                                    <option value="notlike">Not like</option>
+                                </select>
+                                <input class="search-input" [(ngModel)]="filter[key].value" type="text" (input)="this.getLogList()"/>
+                                <button class="delete-btn" (click)="removeFilter(key)"><div class="delete-icon"></div></button>
+                            </div>
+                        </div>
+                        <div class="search-values-container">
+                            <div class="search-values">
+                                <select class="search-input" [(ngModel)]="currentValueFilter.key" name="key" id="key">
+                                <option *ngFor="let searchValue of allowedSearchOnce" [value]="searchValue">{{ searchValue }}</option>
+                                </select>
+                                <select class="search-input select-operator" [(ngModel)]="currentValueFilter.operator" name="operator" id="operator">
+                                <option value="equal">=</option>
+                                <option value="notequal">≠</option>
+                                <option value="like">Like</option>
+                                <option value="notlike">Not like</option>
+                                </select>
+                                <input class="search-input" [(ngModel)]="currentValueFilter.value" type="text">
+                            </div>
+                            <button class="add-search-value" (click)="onAddValuesFilter()">+</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <table class="list-container">
+        <thead>
+            <tr>    
+                <th>Timestamp</th>
+                <th class="log-type">Type</th>
+                <th class="head-log-content">Log</th>
+                <th class="row-options"></th>
+            </tr>
+            <tr class="tr-separator"><td class="row-separator" colspan="4"><hr class="head-separator"/></td></tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let log of logs" (click)="toggleMoreLog($event)">
+                <td>
+                    <p>{{ log.date * 1000 | date:'H:mm:ss d/MM/yy' }}</p>
+                    <p class="sub-text">{{ log.date }}</p>
+                </td>
+                <td>
+                    {{ log.type }}
+                </td>
+                <td>
+                    <div class="log-content">
+                        {{ log.content | json }}
+                    </div>
+                </td>
+                <td class="options">
+                    <button class="option-btn"><img src="keyboard_arrow_down.svg" alt=""></button>
+                </td>
+            </tr>
+            <tr class="empty-list" *ngIf="!logs.length">
+                <td colspan="4">No logs in list</td>
+            </tr>
+        </tbody>
+    </table>
+</div>

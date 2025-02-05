@@ -1,0 +1,98 @@
+@import '../../../styles/variables';
+
+.action-table {
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 2px 1px -1px,
+                rgba(0, 0, 0, 0.14) 0px 1px 1px 0px, 
+                rgba(0, 0, 0, 0.12) 0px 1px 3px 0px;
+    border-radius: 10px;
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    thead {
+        .head-separator {
+            width: 100%;
+        }
+        th {
+            text-align: start;
+            padding: 0.2rem 0.5rem;
+        }
+        .end-action {
+            box-sizing: content-box;
+            width : 30px;
+        }
+        #source {
+            width: 25%;
+        }
+    }
+    ::ng-deep tbody {
+        .input-row:nth-child(odd){
+            background-color: #E8E8E8;
+        }
+        .input-action-table {
+            padding: 4px 2px;
+            border: 1px solid #bababa;
+            border-radius: 2px;
+            font-size: 16px;
+            width: 100%;
+            font-weight: 400;
+        }
+        .table-form-inputception {
+            display: flex;
+            flex-direction: row;
+            border: 1px solid #bababa;
+            border-radius: 2px;
+            width: 90%;
+            .inner-input {
+                width: 100%;
+                border: none;
+                &:focus {
+                    outline: none;
+                }
+            }
+            .inner-select {
+                margin: 2px 2px 2px 0;
+            }
+            &:focus-within {
+                outline: 1px solid black;
+            }
+        }
+        .add-action {
+            padding-top: 0.2rem;
+            padding-bottom: 0.5rem;
+            text-align: center;
+            .add-action-btn {
+                width: 90%;
+                background-color: $primaryColor;
+                border: none;
+                border-radius: 5px;
+                padding: 0.2rem 0;
+                .add-action-icon {
+                    margin: 0 auto;
+                    mask: url('../../../../public/add.svg') no-repeat center; 
+                    width: 24px; 
+                    height: 24px; 
+                    background-color: #FFF;
+                }
+            }
+        }
+        .action-delete-btn {
+            cursor: pointer;
+            border: 0;
+            background-color: transparent;
+        }
+        .action-delete-icon {
+            margin: 0 auto;
+            mask: url('../../../../public/delete.svg') no-repeat center; 
+            width: 24px; 
+            height: 24px; 
+            background-color: black;
+        }
+        
+    }
+    td:not(.row-separator) {
+        padding: 0 0.5rem;
+    }
+    tr:not(.tr-separator) {
+        height: calc(29px + 6px);
+    }
+}

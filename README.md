@@ -264,6 +264,13 @@ If, upon detection of an attack, envoy detects that the request to divert is aut
 
 Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki/Detect#respond) for details.
 
+### Frontend Angular
+
+The frontend is where you can control and manage the decoys you set and have a better view of the alerts sent by fluentbit. This controlpanel provides a way to add/modify, enable or disable a decoy and display the decoys in a list.
+
+### Api
+Server side of what you are able to see in the frontend. The api can interact with the configmanager to set the decoy config. The api is also connected to a database to store all of the decoys and logs
+
 # Configuration and advanced topics
 Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki) page to learn about decoys in details, and about how to modify the source code.
 

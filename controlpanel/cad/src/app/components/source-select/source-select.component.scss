@@ -1,0 +1,49 @@
+@import '../../../styles/variables.scss';
+
+.multi-select {
+    position: relative;
+    width: 100%;
+    .source-select {
+        width: 100%;
+        position: relative;
+        z-index: 1;
+    }
+    .source-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        margin: 4px 2px;
+        width: auto;
+        max-width: 84%;
+        height: calc(100% - (4px*2));
+        background-color: white;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        overflow-x: auto;
+        scrollbar-width: none;
+        scroll-behavior: smooth;
+        .source-item {
+            border: 2px solid $primaryColor;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            margin: 0 2px;
+            
+            span {
+                font-size: 1rem;
+                font-weight: 400;
+                padding-left: 2px;
+            }
+            button {
+                height: 19px;
+                border: 0;
+                background-color: white;
+                cursor: pointer;
+                img {
+                    height: 100%;
+                }
+            }
+        }
+      }
+}

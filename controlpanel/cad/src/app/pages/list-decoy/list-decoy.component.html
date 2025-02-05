@@ -1,0 +1,72 @@
+<h1>Decoys list 🗒️</h1>
+<!-- <div class="search">
+</div> -->
+<div class="wrapper">
+    <table class="list-container">
+        <thead>
+            <tr>
+                <th class="decoy-head">Decoy</th>
+                <th>Inject</th>
+                <th>Detect</th>
+                <th>Action</th>
+                <th>Active</th>
+                <th>Synched</th>
+                <th class="row-options"></th>
+            </tr>
+            <tr class="tr-separator"><td class="row-separator" colspan="7"><hr class="head-separator"/></td></tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let decoyData of decoys" [ngClass]="{ 'error-line': decoyData.state == 'error'}" [routerLink]="'/decoy/' + decoyData.id">
+                <td>
+                    <p>{{ displayDecoy(decoyData.decoy) }}</p>
+                    <p [ngClass]="{ 'sub-text': displayDecoy(decoyData.decoy) }">{{ decoyData.decoy.decoy.string && decoyData.decoy.decoy.string }}</p>
+                </td>
+                <td>
+                    <ng-container *ngIf="decoyData.decoy.inject; else noInject">
+                        <p>{{ decoyData.decoy.inject.store.as }}</p>
+                        <p class="sub-text">{{ decoyData.decoy.inject.store.inRequest || decoyData.decoy.inject.store.inResponse }}</p>
+                    </ng-container>
+                    <ng-template #noInject>
+                        <p class="sub-text">/</p>
+                    </ng-template>
+                </td>
+                <td>
+                    <ng-container *ngIf="decoyData.decoy.detect; else noDetect">
+                        <p>{{ decoyData.decoy.detect.seek.in }}</p>
+                        <p class="sub-text">{{ decoyData.decoy.detect.seek.inRequest || decoyData.decoy.detect.seek.inResponse }}</p>
+                    </ng-container>
+                    <ng-template #noDetect>
+                        <p class="sub-text">/</p>
+                    </ng-template>
+                </td>
+                <td>
+                    <ng-container *ngIf="decoyData.decoy.detect?.respond?.length; else noRespond">
+                        <p>{{ decoyData.decoy.detect?.respond![0].behavior }}</p>
+                        <p class="sub-text">{{ decoyData.decoy.detect?.respond![0].source }}</p>
+                    </ng-container>
+                    <ng-template #noRespond>
+                        <p class="sub-text">/</p>
+                    </ng-template>
+                </td>
+                <td>
+                    <input class="deployed-checkbox" type="checkbox" name="state" id="state" [disabled]="decoyData.state == 'error'" [ngModel]="isDeployed(decoyData.state)" (change)="setDeployed(decoyData)" (click)="$event.stopPropagation()">
+                </td>
+                <td>
+                    <div [ngClass]="{ 'status-true': decoyData.deployed, 'status-false': !decoyData.deployed}"></div>
+                </td>
+                <td class="options">
+                    <button class="option-btn"><img src="delete.svg" alt="" (click)="$event.stopPropagation(); deleteDecoy(decoyData.id!)"></button>
+                </td>
+            </tr>
+            <tr class="empty-list" *ngIf="!decoys.length">
+                <td colspan="6">No decoy in list, try to add a new decoy</td>
+            </tr>
+            <tr class="end-space">
+                <td colspan="6"></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="buttons">
+        <button class="filled-btn" (click)="save()">Sync</button>
+    </div>
+</div>

@@ -1,0 +1,12 @@
+.form-input-container {
+    app-when-alert-select {
+        width: 90%;
+    }
+}
+.invalid-feedback {
+    width: 90%;
+    align-content: flex-start;
+    height: 14px;
+    color: red;
+    font-size: 14px;
+}

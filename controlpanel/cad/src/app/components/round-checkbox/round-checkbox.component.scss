@@ -1,0 +1,43 @@
+.round-checkbox {
+  display: flex; /* Updated to flex for alignment */
+  align-items: center; /* Center align items vertically */
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+}
+
+.round-checkbox input {
+  display: none; /* Hide the default checkbox */
+}
+
+.round-checkbox span {
+  display: inline-block; /* Adjusted to inline-block */
+  height: 20px;
+  width: 20px;
+  background-color: #ccc;
+  border-radius: 50%;
+  transition: background-color 0.3s;
+  position: relative; /* Ensure it's positioned relative */
+  top: 0; /* Reset any unexpected positioning */
+}
+
+.round-checkbox input:checked + span {
+  background-color: #2196f3;
+}
+
+.round-checkbox span:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 50%; /* centered horizontally */
+  top: 50%; /* centered vertically */
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: translate(-50%, -50%) rotate(45deg); /* Center and rotate the checkmark */
+}
+
+.round-checkbox input:checked + span:after {
+  display: block;
+}
