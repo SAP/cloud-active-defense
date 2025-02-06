@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config({ path: __dirname + '/.env' });
 const { sendDataToConfigmanager } = require('./services/configmanager');
+const { initializeDatabase } = require('./models/index');
 
 const configmanager = require('./routes/configmanager');
 const decoys = require('./routes/decoys');
@@ -48,7 +49,7 @@ app.listen(8050, async () => {
     } catch(e) {
         console.error("Configmanager is not up, please (re)start configmanager");
     }
-    require('./models/index');
+    await initializeDatabase();
     const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default' }); 
     createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
     updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
