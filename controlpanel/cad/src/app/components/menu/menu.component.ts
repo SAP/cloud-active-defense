@@ -6,6 +6,7 @@ import { ToastrService } from 'ngx-toastr';
 import { GlobalStateService } from '../../services/global-state.service';
 import { isProtectedAppEmpty, ProtectedApp } from '../../models/protected-app';
 import { DecoyService } from '../../services/decoy.service';
+import { isEmptyObject } from '../../utils';
 
 
 
@@ -36,7 +37,8 @@ export class MenuComponent implements OnInit{
     }
 
     this.globalState.selectedApp$.subscribe(data => {
-        this.selectedApp = data;
+      if (isEmptyObject(data)) this.selectedApp = this.defaultApp;
+      else this.selectedApp = data;
         this.updateSelectedApp(this.selectedApp);
         // Reset decoy
         this.decoyService.updateDecoy({decoy: {}});
@@ -44,9 +46,6 @@ export class MenuComponent implements OnInit{
   }
   updateSelectedApp(app: ProtectedApp) {
     if (app === this.globalState.selectedApp && !isProtectedAppEmpty(app)) return;
-    if (this.applist.length) {
-      if (isProtectedAppEmpty(app)) this.selectedApp = this.applist[0];
-      else this.globalState.selectedApp = app;
-    }
+    else this.globalState.selectedApp = app;
   }
 }
