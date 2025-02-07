@@ -4,10 +4,11 @@ WORKDIR /app
 
 COPY package*.json ./
 
+RUN npm install -g nodemon
 RUN npm install
 
 COPY . .
 
 EXPOSE 8050
 
-CMD ["node", "server.js"]
+CMD ["nodemon", "--watch", ".", "--legacy-watch", "server.js"]

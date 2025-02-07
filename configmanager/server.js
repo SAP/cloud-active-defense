@@ -4,7 +4,7 @@ const fs = require('fs');
 const hsts = require('hsts')
 const path = require('path')
 
-const API_URL = "http://controlpanel-api:8050";
+const API_URL = process.env.CONTROLPANEL_API_URL;
 
 app.use(hsts({
   maxAge: 31536000,

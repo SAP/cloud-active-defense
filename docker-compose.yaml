@@ -15,6 +15,8 @@ services:
     - configvolume:/data/blocklist
     ports:
       - "3000:3000"
+    environment:
+      - CONTROLPANEL_API_URL=http://controlpanel-api:8050
       
   proxy:
     container_name: proxy
@@ -39,6 +41,8 @@ services:
     ports:
       - "24224:24224"
       - "24224:24224/udp"
+    environment:
+      - CONTROLPANEL_API_URL=controlpanel-api
 
   clone:
     container_name: clone
@@ -58,10 +62,47 @@ services:
     logging:
       driver: fluentd
   
+  # controlpanel-api-dev:
+  #   container_name: controlpanel-api-dev
+  #   build: 
+  #     context: controlpanel/api
+  #     dockerfile: Dockerfile-dev
+  #   image: api-dev
+  #   ports:
+  #     - 8050:8050
+  #   depends_on:
+  #     config:
+  #       condition: service_started
+  #     controlpanel-db:
+  #       condition: service_healthy
+  #     fluent:
+  #       condition: service_started
+  #   volumes:
+  #     - ./controlpanel/api:/app:cached
+  #     - /app/node_modules
+
+  # controlpanel-dev:
+  #   container_name: controlpanel-dev
+  #   build: 
+  #     context: controlpanel/cad
+  #     dockerfile: Dockerfile-dev
+  #   image: controlpanel-dev
+  #   ports: 
+  #   - 4200:4200
+  #   depends_on:
+  #     - controlpanel-api-dev
+  #   volumes:
+  #     - ./controlpanel/cad:/app
+  #     - /app/node_modules
+  #   environment:
+  #     - CHOKIDAR_USEPOLLING=true
+
   controlpanel-api:
     container_name: controlpanel-api
-    build: controlpanel/api
-    image: api
+    build: 
+      context: controlpanel/api
+      dockerfile: Dockerfile
+    # image: ghcr.io/sap/controlpanel-api:latest
     ports:
       - 8050:8050
     depends_on:
@@ -71,23 +112,27 @@ services:
         condition: service_healthy
       fluent:
         condition: service_started
-    volumes:
-      - ./controlpanel/api:/app:cached
-      - /app/node_modules
+    environment:
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_HOST=controlpanel-db
+      - DB_PORT=5432
+      - CRON_CONFIGMANAGER=60
+      - CONTROLPANEL_FRONTEND_URL=http://localhost
+      - CONFIGMANAGER_URL=http://configmanager:3000
 
   controlpanel:
     container_name: controlpanel
-    build: controlpanel/cad
-    image: controlpanel
+    build:
+      context: controlpanel/cad
+      dockerfile: Dockerfile
+    # image: ghcr.io/sap/controlpanel-frontend:latest
     ports: 
-    - 4200:4200
+    - 80:80
     depends_on:
       - controlpanel-api
-    volumes:
-      - ./controlpanel/cad:/app
-      - /app/node_modules
     environment:
-      - CHOKIDAR_USEPOLLING=true
+      - CONTROLPANEL_API_URL=http://localhost:8050
 
   controlpanel-db:
     image: postgres
@@ -102,7 +147,7 @@ services:
     volumes:
     - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready"]
       interval: 10s
       timeout: 5s
       retries: 5

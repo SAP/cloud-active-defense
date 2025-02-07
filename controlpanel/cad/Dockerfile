@@ -1,14 +1,25 @@
-FROM node:21
+FROM node:21 AS build
 
 WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install -g @angular/cli
-RUN npm install
+RUN npm ci
 
 COPY . .
 
-EXPOSE 4200
+RUN npm run build --prod
 
-CMD [ "ng", "serve", "--host", "0.0.0.0", "--port", "4200", "--poll", "1000"]
+FROM nginx:alpine
+
+RUN rm /etc/nginx/conf.d/default.conf
+
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build /app/dist/cad/browser /usr/share/nginx/html
+COPY replace-env.sh /docker-entrypoint.d/99-replace-env.sh
+
+RUN chmod +x /docker-entrypoint.d/99-replace-env.sh
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
