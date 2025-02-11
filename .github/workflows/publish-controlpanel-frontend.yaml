@@ -1,0 +1,47 @@
+name: Create and publish Docker image for controlpanel Frontend to ghcr.io
+
+on:
+  release:
+    types: ['published']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: SAP/controlpanel-frontend
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    environment: ghcr:cloud-active-defense
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v3.2.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Extract metadata of controlpanel frontend
+        id: meta
+        uses: docker/metadata-action@v5.5.1
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image of controlpanel frontend
+        id: push
+        uses: docker/build-push-action@v5.3.0
+        with:
+          context: ./controlpanel/cad
+          push: true
+          file: ./controlpanel/cad/Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }} 
