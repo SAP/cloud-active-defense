@@ -113,8 +113,8 @@ services:
       fluent:
         condition: service_started
     environment:
-      - DB_USER=postgres
-      - DB_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
       - DB_HOST=controlpanel-db
       - DB_PORT=5432
       - CRON_CONFIGMANAGER=60

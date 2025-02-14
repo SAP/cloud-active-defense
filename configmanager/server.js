@@ -293,8 +293,8 @@ app.post('/file', (req, res) => {
       filePath = path.resolve(`/data/cad-${namespace}-${application}.json`);
       configFilePath = path.resolve(`/data/config-${namespace}-${application}.json`);
     }
-    if(!fs.existsSync(filePath)) fs.writeFileSync(filePath, '');
-    if(!fs.existsSync(configFilePath)) fs.writeFileSync(configFilePath, '');
+    if(!fs.existsSync(filePath)) fs.writeFileSync(filePath, '{"filters":[]}');
+    if(!fs.existsSync(configFilePath)) fs.writeFileSync(configFilePath, '{}');
     return res.send({ status: 'success', message: 'Files created'});
   } catch(e) {
     return res.status(500).send({ status: 'error', message: "Error when creating the files" });
