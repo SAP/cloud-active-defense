@@ -31,6 +31,9 @@ spec:
           volumeMounts:
           - name: config
             mountPath: /data
+          env:
+            - name: CONTROLPANEL_API_URL
+              value: http://controlpanel-api-service.controlpanel.svc.cluster.local
       volumes:
       - name: config
         persistentVolumeClaim:
