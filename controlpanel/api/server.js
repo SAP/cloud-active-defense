@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config({ path: __dirname + '/.env' });
-const { sendDataToConfigmanager } = require('./services/configmanager');
 const { initializeDatabase } = require('./models/index');
 
 const configmanager = require('./routes/configmanager');
@@ -38,17 +37,6 @@ app.use((err, req, res, next) => {
 
 app.listen(8050, async () => {
     console.log("Control panel API started on port 8050 !");
-    try {
-        // CONFIGMANAGER URL
-        await fetch(process.env.CONFIGMANAGER_URL);
-        console.log("Successfully connected to configmanager !")
-        let cron_minutes = 60;
-        if (isNaN(Number(process.env.CRON_CONFIGMANAGER)) || !process.env.CRON_CONFIGMANAGER) console.error("CRON_CONFIGMANAGER environment variable is not a number, cron will be set to 60 minutes");
-        else cron_minutes = Number(process.env.CRON_CONFIGMANAGER); 
-        setInterval(async () => await sendDataToConfigmanager(), 60 * cron_minutes * 1000)
-    } catch(e) {
-        console.error("Configmanager is not up, please (re)start configmanager");
-    }
     await initializeDatabase();
     const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default' }); 
     createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});

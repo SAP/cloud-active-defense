@@ -64,18 +64,18 @@ static_resources:
               socket_address:
                 address: myapp
                 port_value: 3000
-  - name: configmanager
+  - name: controlpanel-api
     type: strict_dns
     lb_policy: round_robin
     load_assignment:
-      cluster_name: configmanager
+      cluster_name: controlpanel-api
       endpoints:
       - lb_endpoints:
         - endpoint:
             address:
               socket_address:
-                address: configmanager
-                port_value: 3000
+                address: controlpanel-api
+                port_value: 8050
 
   - name: clone
     type: strict_dns
