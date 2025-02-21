@@ -15,7 +15,15 @@ module.exports = {
         try {
             if (!namespace || !application) return { type: 'error', code: 400, message: 'Invalid namespace or application supplied' };
             const protectedApp = await ProtectedApp.findOne({ where: { namespace, application } });
-            if (!protectedApp) return { type: 'error', code: 404, message: 'Invalid namespace or application supplied' };
+            if (!protectedApp) {
+                const defaultApp = await ProtectedApp.findOne({ where: { namespace: 'default', application: 'default' } });
+                const decoys = await Decoy.findAll({ where: { pa_id: defaultApp.id } });
+                const config = await Config.findOne({ where: { pa_id: defaultApp.id } });
+                const newProtectedApp = await ProtectedApp.create({ namespace, application });
+                Decoy.create({ ...decoys, pa_id: newProtectedApp.id });
+                Config.create({ ...config, pa_id: newProtectedApp.id });
+                return { type: 'error', code: 404, message: 'Invalid namespace or application supplied' };
+            }
             const decoys = await Decoy.findAll({ where: { pa_id: protectedApp.id, deployed: true } });
             const config = await Config.findOne({ where: { pa_id: protectedApp.id, deployed: true } });
             return { type: 'success', code: 200, data: { decoys: decoys.map(decoy => decoy.decoy), config: config.config }, message: 'Successful operation' };
