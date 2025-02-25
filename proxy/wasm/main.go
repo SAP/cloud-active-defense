@@ -208,9 +208,9 @@ func (ctx *pluginContext) OnTick() {
             throttleData.Write(blocklist.Get("content").MarshalTo(nil))
           }
         }
-        blocklistData.WriteByte(']')
-        throttleData.WriteByte(']')
       }
+      blocklistData.WriteByte(']')
+      throttleData.WriteByte(']')
       proxywasm.SetSharedData("blocklist", blocklistData.Bytes(), 0)
       proxywasm.SetSharedData("throttlelist", throttleData.Bytes(), 0)
     }

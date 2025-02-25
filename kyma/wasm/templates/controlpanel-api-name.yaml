@@ -1,10 +1,10 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: configmanager-service
+  name: controlpanel-api-service
   namespace: {{ .Values.namespace }}
 spec:
   type: ExternalName
-  externalName: configmanager-service.config-ns.svc.cluster.local
+  externalName: controlpanel-api-service.controlpanel.svc.cluster.local
   ports:
   - port: 80

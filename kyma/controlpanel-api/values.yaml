@@ -9,6 +9,4 @@ image: "ghcr.io/sap/controlpanel-api:latest"
 
 db_port: 5432
 db_host: controlpanel-db-service
-cron_configmanager: 60
 controlpanel_front_url: <<CONTROLPANEL_FRONT_URL> #https://controlpanel-front.<KYMA_DOMAIN>
-configmanager_url: http://configmanager-service

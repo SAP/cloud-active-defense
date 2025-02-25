@@ -32,12 +32,8 @@ spec:
               value: {{ .Values.db_port | quote }}
             - name: DB_HOST
               value: {{ .Values.db_host }}
-            - name: CRON_CONFIGMANAGER
-              value: {{ .Values.cron_configmanager | quote }}
             - name: CONTROLPANEL_FRONTEND_URL
               value: {{ .Values.controlpanel_front_url }}
-            - name: CONFIGMANAGER_URL
-              value: {{ .Values.configmanager_url }}
           envFrom:
             - secretRef:
                 name: controlpanel-db-secrets
