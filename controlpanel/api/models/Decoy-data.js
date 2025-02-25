@@ -8,10 +8,6 @@ const Decoy = sequelize.define("decoy", {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true
     },
-    state: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
     pa_id: {
         type: DataTypes.UUID,
         references: {

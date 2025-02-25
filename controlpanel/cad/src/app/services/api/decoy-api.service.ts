@@ -30,7 +30,7 @@ export class DecoyApiService {
   deleteDecoy(id: UUID) {
     return this.http.delete<ApiResponse>(`${this.globalState.API_URL}/decoy/${id}`);
   }
-  patchDecoyState(decoy: DecoyData) {
+  patchDecoyDeployState(decoy: DecoyData) {
     return this.http.patch<ApiResponse>(`${this.globalState.API_URL}/decoy/state`, decoy);
   }
 }

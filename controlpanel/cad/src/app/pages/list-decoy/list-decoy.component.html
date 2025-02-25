@@ -9,14 +9,13 @@
                 <th>Inject</th>
                 <th>Detect</th>
                 <th>Action</th>
-                <th>Active</th>
-                <th>Synched</th>
+                <th>Deployed</th>
                 <th class="row-options"></th>
             </tr>
             <tr class="tr-separator"><td class="row-separator" colspan="7"><hr class="head-separator"/></td></tr>
         </thead>
         <tbody>
-            <tr *ngFor="let decoyData of decoys" [ngClass]="{ 'error-line': decoyData.state == 'error'}" [routerLink]="'/decoy/' + decoyData.id">
+            <tr *ngFor="let decoyData of decoys" [routerLink]="'/decoy/' + decoyData.id">
                 <td>
                     <p>{{ displayDecoy(decoyData.decoy) }}</p>
                     <p [ngClass]="{ 'sub-text': displayDecoy(decoyData.decoy) }">{{ decoyData.decoy.decoy.string && decoyData.decoy.decoy.string }}</p>
@@ -49,10 +48,7 @@
                     </ng-template>
                 </td>
                 <td>
-                    <input class="deployed-checkbox" type="checkbox" name="state" id="state" [disabled]="decoyData.state == 'error'" [ngModel]="isDeployed(decoyData.state)" (change)="setDeployed(decoyData)" (click)="$event.stopPropagation()">
-                </td>
-                <td>
-                    <div [ngClass]="{ 'status-true': decoyData.deployed, 'status-false': !decoyData.deployed}"></div>
+                    <input class="deployed-checkbox" type="checkbox" name="deployed" id="deployed" [(ngModel)]="decoyData.deployed" (change)="setDeployed(decoyData)" (click)="$event.stopPropagation()">
                 </td>
                 <td class="options">
                     <button class="option-btn"><img src="delete.svg" alt="" (click)="$event.stopPropagation(); deleteDecoy(decoyData.id!)"></button>

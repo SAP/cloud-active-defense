@@ -35,7 +35,7 @@ module.exports = {
                 const defaultApp = await ProtectedApp.findOne({ where: { namespace: 'default', application: 'default' }});
                 const defaultDecoy = await Decoy.findAll({ where: { pa_id: defaultApp.id }, attributes: ['decoy'] });
                 Decoy.bulkCreate(defaultDecoy.map(decoy => {
-                    return { state: 'inactive', deployed: false, decoy: decoy.decoy, pa_id: newProtectedApp.id };
+                    return { deployed: false, decoy: decoy.decoy, pa_id: newProtectedApp.id };
                 }));
             }
             return { type: 'success', code: 201, message: 'successful operation', data: newProtectedApp };

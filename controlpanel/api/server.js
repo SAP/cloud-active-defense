@@ -36,9 +36,13 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(8050, async () => {
-    console.log("Control panel API started on port 8050 !");
-    await initializeDatabase();
-    const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default' }); 
-    createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
-    updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
+    try {
+        console.log("Control panel API started on port 8050 !");
+        await initializeDatabase();
+        const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default' }); 
+        createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
+        updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
+    } catch(e) {
+        console.error("Error when starting server:\n", e);
+    }
 });
