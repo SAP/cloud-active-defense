@@ -20,13 +20,15 @@ module.exports = {
                 const decoys = await Decoy.findAll({ where: { pa_id: defaultApp.id } });
                 const config = await Config.findOne({ where: { pa_id: defaultApp.id } });
                 const newProtectedApp = await ProtectedApp.create({ namespace, application });
-                Decoy.create({ ...decoys, pa_id: newProtectedApp.id });
-                Config.create({ ...config, pa_id: newProtectedApp.id });
+                await Decoy.bulkCreate(decoys.map(decoy => (
+                    { decoy: decoy.decoy, deployed: decoy.deployed, pa_id: newProtectedApp.id }
+                )));
+                await Config.create({ config: config.config, deployed: config.deployed, pa_id: newProtectedApp.id });
                 return { type: 'error', code: 404, message: 'Invalid namespace or application supplied' };
             }
             const decoys = await Decoy.findAll({ where: { pa_id: protectedApp.id, deployed: true } });
             const config = await Config.findOne({ where: { pa_id: protectedApp.id, deployed: true } });
-            return { type: 'success', code: 200, data: { decoys: decoys.map(decoy => decoy.decoy), config: config.config }, message: 'Successful operation' };
+            return { type: 'success', code: 200, data: { decoys: decoys.map(decoy => decoy.decoy), config: config ? config.config : {} }, message: 'Successful operation' };
         } catch(e) {
             throw e;
         }
