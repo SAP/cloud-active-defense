@@ -123,7 +123,7 @@ module.exports = {
             }
             return { type: 'success', message: "Successful operation", code: 200 };
         } catch(e) {
-            return { type: 'error', message: "Server error", data: e, code: 500 };
+            return { type: 'error', message: "Server error", code: 500 };
         }
     },
     /**
@@ -140,7 +140,7 @@ module.exports = {
             if (response.data.status == 'error') return { type: 'error', code: 500, message: response.data.message };
             return { type: 'success', code: 200 , message: response.data.message };
         } catch(e) {
-            return { type: 'error', message: "Server error", data: e, code: 500 };
+            return { type: 'error', message: "Server error", code: 500 };
         }
     }
 }

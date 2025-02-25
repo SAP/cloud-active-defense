@@ -10,7 +10,7 @@ router.get('/:pa_id', async (req, res) => {
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return res.status(500).send({code: 500, type: 'error', message: "Server error", data: e });
+        return res.status(500).send({code: 500, type: 'error', message: "Server error" });
     }
 })
 

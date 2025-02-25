@@ -9,7 +9,7 @@ router.get('/:id', async (req, res) => {
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return { type: 'error', code: 500, message: "Server error", data: e };
+        return { type: 'error', code: 500, message: "Server error" };
     }
 });
 
@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return { type: 'error', code: 500, message: "Server error", data: e };
+        return { type: 'error', code: 500, message: "Server error" };
     }
 });
 
@@ -29,7 +29,7 @@ router.delete('/:id', async (req, res) => {
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return { type: 'error', code: 500, message: "Server error", data: e };
+        return { type: 'error', code: 500, message: "Server error" };
     }
 });
 
@@ -39,7 +39,7 @@ router.put('/:id', async (req, res) => {
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return { type: 'error', code: 500, message: "Server error", data: e };
+        return { type: 'error', code: 500, message: "Server error" };
     }
 });
 
@@ -49,7 +49,7 @@ router.patch('/state', async (req, res) => {
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
-        return { type: 'error', code: 500, message: "Server error", data: e };
+        return { type: 'error', code: 500, message: "Server error" };
     }
 });
 
