@@ -1,8 +1,0 @@
-kind: Namespace
-apiVersion: v1
-metadata:
- name: {{ .Values.namespace }}
- labels:
-   istio-injection: disabled
-   app.kubernetes.io/name: sundew
- annotations: {}
