@@ -72,8 +72,13 @@ setlocal enabledelayedexpansion
   if defined wasmResult (
     for /f "tokens=* delims=" %%i in ('kubectl get jobs -n %app_userInput_namespace% ^| findstr init-job') do set "wasm_up=%%i"
     if defined wasm_up (
-      for /f "tokens=* delims=" %%i in ('kubectl get job init-job -n %app_userInput_namespace% -o jsonpath^="{.status.conditions[0].type}"') do set "wasm_health=%%i"
-      if "!wasm_health!" == "Complete" (
+      for /f "tokens=* delims=" %%i in ('kubectl get job init-job -n %app_userInput_namespace% -o jsonpath^="{.status.conditions[?(@.status==\"True\")].type}"') do set "wasm_health=%%i"
+      for %%c in (!wasm_health!) do (
+        if "%%c" == "Complete" (
+          set "isComplete=true"
+        )
+      )
+      if "!isComplete!" == "true" (
         echo Wasm is already deployed ✅
       ) else (
         echo Wasm is unhealthy, redeploying it 🚑
