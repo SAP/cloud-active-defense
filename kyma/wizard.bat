@@ -575,8 +575,7 @@ setlocal enabledelayedexpansion
 
   (echo replicaCount: 1
   echo namespace: controlpanel
-  @REM echo image: "ghcr.io/sap/controlpanel-api:latest"
-  echo image: "cad.common.repositories.cloud.sap/i549577/controlpanel-api:0.7"
+  echo image: "ghcr.io/sap/controlpanel-api:latest"
   echo db_port: 5432
   echo db_host: "controlpanel-db-service"
   echo controlpanel_front_url: "!front_url!"
@@ -607,7 +606,7 @@ setlocal enabledelayedexpansion
   set "api_url=%cluster_link:api=controlpanel-api%"
   (echo replicaCount: 1
   echo namespace: controlpanel
-  echo image: "cad.common.repositories.cloud.sap/i549577/controlpanel-front:0.2"
+  echo image: "ghcr.io/sap/controlpanel-frontend:latest"
   echo controlpanel_api_url: "%api_url%"
   ) > controlpanel-front\values_tmp.yaml
 
