@@ -15,8 +15,6 @@ spec:
       labels:
         app: controlpanel-api
     spec:
-      imagePullSecrets:
-        - name: artifactory-creds
       initContainers:
       - name: wait-for-db
         image: busybox
