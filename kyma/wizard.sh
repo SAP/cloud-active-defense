@@ -534,8 +534,7 @@ EOF
   cat <<EOF > controlpanel-api/values_tmp.yaml
 replicaCount: 1
 namespace: controlpanel
-# image: "ghcr.io/sap/controlpanel-api:latest"
-image: "cad.common.repositories.cloud.sap/i549577/controlpanel-api:0.11"
+image: "ghcr.io/sap/controlpanel-api:latest"
 db_port: 5432
 db_host: "controlpanel-db-service"
 controlpanel_front_url: "$front_url"
@@ -572,7 +571,7 @@ install_controlpanel_front() {
   cat <<EOF > controlpanel-front/values_tmp.yaml
 replicaCount: 1
 namespace: controlpanel
-image: "cad.common.repositories.cloud.sap/i549577/controlpanel-front:0.2"
+image: "ghcr.io/sap/controlpanel-frontend:latest"
 controlpanel_api_url: "$api_url"
 EOF
 
