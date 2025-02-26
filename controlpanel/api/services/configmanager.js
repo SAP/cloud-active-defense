@@ -2,6 +2,7 @@ const ProtectedApp = require('../models/ProtectedApp')
 const Config = require('../models/Config-data')
 const Decoy = require('../models/Decoy-data')
 const Blocklist = require('../models/Blocklist')
+const protectedAppService = require('./protected-app')
 
 module.exports = {
     /**
@@ -16,15 +17,9 @@ module.exports = {
             if (!namespace || !application) return { type: 'error', code: 400, message: 'Invalid namespace or application supplied' };
             const protectedApp = await ProtectedApp.findOne({ where: { namespace, application } });
             if (!protectedApp) {
-                const defaultApp = await ProtectedApp.findOne({ where: { namespace: 'default', application: 'default' } });
-                const decoys = await Decoy.findAll({ where: { pa_id: defaultApp.id } });
-                const config = await Config.findOne({ where: { pa_id: defaultApp.id } });
-                const newProtectedApp = await ProtectedApp.create({ namespace, application });
-                await Decoy.bulkCreate(decoys.map(decoy => (
-                    { decoy: decoy.decoy, deployed: decoy.deployed, pa_id: newProtectedApp.id }
-                )));
-                await Config.create({ config: config.config, deployed: config.deployed, pa_id: newProtectedApp.id });
-                return { type: 'error', code: 404, message: 'Invalid namespace or application supplied' };
+                const newProtectedApp = await protectedAppService.createProtectedApp({ namespace, application });
+                if (newProtectedApp.type === 'error') console.error(`Could not create protected app for namespace: ${namespace} and application: ${application}. Error: ${newProtectedApp.message}`);
+                else return { type: 'error', code: 404, message: 'Invalid namespace or application supplied' };
             }
             const decoys = await Decoy.findAll({ where: { pa_id: protectedApp.id, deployed: true } });
             const config = await Config.findOne({ where: { pa_id: protectedApp.id, deployed: true } });
