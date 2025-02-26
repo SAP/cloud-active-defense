@@ -67,9 +67,15 @@ main() {
 
   echo "Deploying wasm in ${app_userInput_namespace} 🚀"
   if helm list | grep -q -E "(^|[[:space:]])wasm-${app_userInput_namespace}([[:space:]]|$)"; then
-    wasm_health=$(kubectl get job init-job -n "${app_userInput_namespace}" -o jsonpath="{.status.conditions[0].type}")
-    if kubectl get jobs -n "${app_userInput_namespace}" | grep -q init-job && [ "${wasm_health}" == "Complete" ]; then
-      echo "Wasm is already deployed ✅"
+    if kubectl get jobs -n "${app_userInput_namespace}" | grep -q init-job; then
+      wasm_health=$(kubectl get job init-job -n "$app_userInput_namespace" -o jsonpath="{.status.conditions[?(@.status=='True')].type}")
+      if echo "${wasm_health}" | grep -q "Complete"; then
+        echo "Wasm is already deployed ✅"
+      else
+        echo "Wasm is unhealthy, redeploying it 🚑"
+        installWasm
+        echo "Done ✅"
+      fi
     else
       echo "Wasm is unhealthy, redeploying it 🚑"
       installWasm
