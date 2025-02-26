@@ -23,7 +23,6 @@ export class DecoyService {
     if (!this.decoy) return { message: "No decoy provided", type: 'error' };
     try {
       const decoyData: DecoyData = {
-        state: 'active',
         pa_id: this.globalState.selectedApp.id,
         deployed: false,
         decoy: this.decoy
@@ -69,9 +68,9 @@ export class DecoyService {
       return { message: "Error when saving decoy", type: 'error' };
     }
   }
-  async updateDecoyState(decoy: DecoyData): Promise<ApiResponse> {
+  async updateDecoyDeployState(decoy: DecoyData): Promise<ApiResponse> {
     try {
-      const apiResponse = await lastValueFrom(this.decoyApi.patchDecoyState(decoy));
+      const apiResponse = await lastValueFrom(this.decoyApi.patchDecoyDeployState(decoy));
       return apiResponse;
     } catch(e) {
       return { message: "Error when saving decoy", type: 'error' };

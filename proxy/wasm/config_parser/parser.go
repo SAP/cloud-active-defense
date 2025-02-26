@@ -71,7 +71,7 @@ func (p *Parser) jsonToStruct(content []byte) error {
 			BlocklistReload: int(json.GetInt("config", "blocklistReload")),
 		}
 	}
-	filtersJs := json.GetArray("decoy", "filters")
+	filtersJs := json.GetArray("decoys")
 	for _, filterJs := range filtersJs {
 		filter := p.filterJsonToStruct(filterJs)
 		p.Config.Decoys.Filters = append(p.Config.Decoys.Filters, *filter)

@@ -1,11 +1,13 @@
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: PersistentVolumeClaim
 metadata:
-  name: config-data
+  name: controlpanel-pvc
   namespace: {{ .Values.namespace }}
+  labels:
+    app: controlpanel-db
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
-      storage: 100Mi
+      storage: 10Gi

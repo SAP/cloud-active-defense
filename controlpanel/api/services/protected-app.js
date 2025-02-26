@@ -1,6 +1,6 @@
 const Decoy = require("../models/Decoy-data");
 const ProtectedApp = require("../models/ProtectedApp");
-const configmanager = require("./configmanager");
+const Config = require("../models/Config-data");
 
 module.exports = {
     /**
@@ -16,7 +16,7 @@ module.exports = {
         }
     },
     /**
-     * Create protected app and calls createFile() from configmanager service
+     * Create protected app
      * @param {JSON} protectedApp protectedApp object
      * @returns {{type: 'success' | 'error' | 'warning', code: number, message: string, data?: Model}}
      */
@@ -26,17 +26,17 @@ module.exports = {
             if (!protectedApp.namespace || !protectedApp.application) return { type: 'error', code: 400, message: 'namespace and/or application are missing' };
             const existingProtectedApp = await ProtectedApp.findOne({ where: { namespace: protectedApp.namespace, application: protectedApp.application }})
             if(existingProtectedApp) {
-                if(existingProtectedApp.namespace != 'default' && existingProtectedApp.application != 'default') configmanager.createFile(existingProtectedApp.id);
                 return { type: 'error', message: 'Protected app alredy exists, cannot create protected app duplicates', code: 409, data: existingProtectedApp };
             }
             const newProtectedApp = await ProtectedApp.create({ namespace: protectedApp.namespace, application: protectedApp.application }, { returning: true });
             if(newProtectedApp.namespace != 'default' && newProtectedApp.application != 'default') {
-                configmanager.createFile(newProtectedApp.id);
                 const defaultApp = await ProtectedApp.findOne({ where: { namespace: 'default', application: 'default' }});
                 const defaultDecoy = await Decoy.findAll({ where: { pa_id: defaultApp.id }, attributes: ['decoy'] });
                 Decoy.bulkCreate(defaultDecoy.map(decoy => {
-                    return { state: 'inactive', deployed: false, decoy: decoy.decoy, pa_id: newProtectedApp.id };
+                    return { deployed: false, decoy: decoy.decoy, pa_id: newProtectedApp.id };
                 }));
+                const defaultConfig = await Config.findOne({ where: { pa_id: defaultApp.id }, attributes: ['config'] });
+                Config.create({ config: defaultConfig.config, deployed: false, pa_id: newProtectedApp.id });
             }
             return { type: 'success', code: 201, message: 'successful operation', data: newProtectedApp };
         } catch (e) {

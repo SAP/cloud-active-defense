@@ -40,7 +40,7 @@ module.exports = {
             
             const [savedDecoy, created] = await Decoy.findOrCreate({
                 where: { pa_id: decoyData.pa_id, decoy: decoyData.decoy },
-                defaults: { ...decoyData, deployed: false, state: 'inactive' }
+                defaults: { ...decoyData, deployed: false }
             });
             
             if (created) {
@@ -79,7 +79,7 @@ module.exports = {
             const validationErrors = validateDecoyFilter(decoy);
             if (validationErrors.length) return { type: 'error', code: 422, message: 'Bad json provided, there are errors in the decoy object', data: validationErrors };
             
-            const updatedDecoy = await Decoy.update({ decoy, deployed: false, state: 'inactive' }, { where: { id }});
+            const updatedDecoy = await Decoy.update({ decoy, deployed: false }, { where: { id }});
             if (!updatedDecoy['0']) return { type: 'success', code: 404, message: 'Decoy not found' };
             return { type: 'success', code: 200, message: 'Successful operation' };
         } catch(e) {
@@ -90,14 +90,13 @@ module.exports = {
      * @param {JSON} decoyData
      * @returns {{type: 'success' | 'error' | 'warning', code: number, message: string}}
      */
-    updateDecoyState: async (decoyData) => {
+    updateDecoyDeployState: async (decoyData) => {
         try {
             if (typeof decoyData != 'object') return { type: 'error', code: 422, message: 'Payload should be a json' };
             if (!decoyData.id) return { type: 'error', code: 422, message: 'No decoy id provided' }
             if (!isUUID(decoyData.id)) return { type: 'error', code: 400, message: 'Invalid decoy id supplied' };
-            if (!decoyData.state) return { type: 'error', code: 422, message: 'No state provided' };
-            if (!['active', 'inactive', 'error'].includes(decoyData.state)) return { type: 'error', code: 422, message: 'Invalid state provided' };
-            const updatedDecoy = await Decoy.update({ state: decoyData.state, deployed: false }, { where: { id: decoyData.id }});
+            if (decoyData.deployed == null || decoyData.deployed == undefined) return { type: 'error', code: 422, message: 'No deploy state provided' };
+            const updatedDecoy = await Decoy.update({ deployed: decoyData.deployed }, { where: { id: decoyData.id }});
             if (!updatedDecoy['0']) return { type: 'success', code: 404, message: 'Decoy not found' };
             return { type: 'success', code: 200, message: 'Successful operation' };
         } catch(e) {

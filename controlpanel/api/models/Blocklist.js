@@ -1,8 +1,8 @@
-const { DataTypes } = require("sequelize");
+const { DataTypes } = require("sequelize")
 const sequelize = require("../config/db.config");
 const ProtectedApp = require("./ProtectedApp");
 
-const Decoy = sequelize.define("decoy", {
+const Blocklist = sequelize.define("blocklist", {
     id: {
         type: DataTypes.UUID,
         defaultValue: DataTypes.UUIDV4,
@@ -16,13 +16,18 @@ const Decoy = sequelize.define("decoy", {
         },
         allowNull: false
     },
-    deployed: {
-        type: DataTypes.BOOLEAN,
+    type: {
+        type: DataTypes.STRING,
         allowNull: false
     },
-    decoy: {
-        type: DataTypes.JSON,
+    date: {
+        type: DataTypes.FLOAT,
+        defaultValue: Math.floor(new Date().getTime() / 1000),
+        allowNull: false
+    },
+    content: {
+        type: DataTypes.JSONB,
         allowNull: false
     }
 });
-module.exports = Decoy;
+module.exports = Blocklist;

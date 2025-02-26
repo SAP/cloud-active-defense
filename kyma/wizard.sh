@@ -12,26 +12,38 @@ main() {
     ask_kubeconfig_path
   fi
 
-  echo "Looking for Configmanager 🔍"
-  if helm list | grep -q configmanager; then
-    configmanager_up=$(kubectl get deployment -n config-ns 2>/dev/null | grep configmanager)
-    if [[ "${configmanager_up}" ]]; then
-      configmanager_health=$(kubectl get deployment configmanager -n config-ns -o jsonpath="{.status.unavailableReplicas}")
-      if [[ "${configmanager_health}" == "" ]]; then
-        echo "Configmanager is already deployed ✅"
-      else
-        echo "Configmanager is unhealthy, redeploying it 🚑"
-        helm upgrade --install configmanager configmanager > /dev/null
-      fi
-    else
-      echo "Configmanager is missing, deploying it 🚀"
-      helm upgrade configmanager configmanager > /dev/null
-    fi
+  echo "Looking for controlpanel API 🔍"
+  
+  # Check if the controlpanel-api is listed
+  cp_api_result=$(helm list --short | grep -w "controlpanel-api")
+  
+  if [ -z "$cp_api_result" ]; then
+    install_controlpanel
   else
-    echo "Configmanager is missing, deploying it 🚀"
-    helm install configmanager configmanager > /dev/null
+    # Check if controlpanel API deployment exists
+    controlpanel_up=$(kubectl get deployment -n controlpanel | grep -w "controlpanel-api")
+    
+    if [ -z "$controlpanel_up" ]; then
+      echo "Controlpanel API deployment is missing, please check deployment 🕵️"
+    else
+      # Check if controlpanel API is healthy
+      controlpanel_health=$(kubectl get deployment controlpanel-api -n controlpanel -o jsonpath="{.status.availableReplicas}")
+      
+      if [ -z "$controlpanel_health" ] || [ "$controlpanel_health" -eq 0 ]; then
+        echo "Controlpanel API is unhealthy, please check deployment 🤒"
+      else
+        echo "Controlpanel API is already deployed ✅"
+      fi
+    fi
   fi
   echo
+
+  # Check if controlpanel-front is listed
+  cp_front_result=$(helm list --short | grep -w "controlpanel-front")
+  
+  if [ -z "$cp_front_result" ]; then
+    ask_controlpanel_front
+  fi
 
   echo "Looking for Telemetry module 🔍"
   if ! kubectl get deployment -n kyma-system | grep -q telemetry-manager; then
@@ -224,17 +236,17 @@ spec:
     patch:
       operation: ADD
       value:
-        name: "configmanager"
+        name: "controlpanel-api"
         type: STRICT_DNS
         lb_policy: ROUND_ROBIN
         load_assignment:
-          cluster_name: configmanager
+          cluster_name: controlpanel-api
           endpoints:
           - lb_endpoints:
             - endpoint:
                 address:
                   socket_address:
-                    address: configmanager-service
+                    address: controlpanel-api-service
                     port_value: 80
 EOF
 
@@ -494,5 +506,76 @@ EOF
 
   helm upgrade --install -f wasm/values_tmp.yaml "wasm-${app_userInput_namespace}" wasm > /dev/null
   rm wasm/values_tmp.yaml
+}
+install_controlpanel() {
+  echo "Deploying Controlpanel API 🚀"
+
+  cluster_link=$(kubectl config view --minify -o jsonpath="{.clusters[0].cluster.server}")
+  front_url=${cluster_link//api/controlpanel-front}
+
+  read -p "Please provide the username for the database: " db_userInput_user
+  read -sp "Please provide the password for the database: " db_userInput_password
+  echo
+
+  db_user=$(echo -n "$db_userInput_user" | base64)
+  db_password=$(echo -n "$db_userInput_password" | base64)
+
+  cat <<EOF > controlpanel-api/templates/controlpanel-temp-secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: controlpanel-db-secrets
+  namespace: {{ .Values.namespace }}
+data:
+  POSTGRES_USER: $db_user
+  POSTGRES_PASSWORD: $db_password
+EOF
+
+  cat <<EOF > controlpanel-api/values_tmp.yaml
+replicaCount: 1
+namespace: controlpanel
+image: "ghcr.io/sap/controlpanel-api:latest"
+db_port: 5432
+db_host: "controlpanel-db-service"
+controlpanel_front_url: "$front_url"
+from_wizard: true
+EOF
+
+  helm install -f controlpanel-api/values_tmp.yaml controlpanel-api controlpanel-api > /dev/null
+  rm controlpanel-api/templates/controlpanel-temp-secrets.yaml controlpanel-api/values_tmp.yaml
+}
+
+ask_controlpanel_front() {
+  while true; do
+    read -p "Do you want to install controlpanel dashboard (Y/N)? " front_userInput
+    case $front_userInput in
+      [nN])
+        return
+        ;;
+      [yY])
+        install_controlpanel_front
+        break
+        ;;
+      *)
+        echo "Please answer Y or N."
+        ;;
+    esac
+  done
+}
+
+install_controlpanel_front() {
+ echo "Deploying controlpanel dashboard 🚀"
+ cluster_link=$(kubectl config view --minify -o jsonpath="{.clusters[0].cluster.server}")
+  api_url=${cluster_link//api/controlpanel-api}
+
+  cat <<EOF > controlpanel-front/values_tmp.yaml
+replicaCount: 1
+namespace: controlpanel
+image: "ghcr.io/sap/controlpanel-frontend:latest"
+controlpanel_api_url: "$api_url"
+EOF
+
+  helm upgrade --install -f controlpanel-front/values_tmp.yaml controlpanel-front controlpanel-front > /dev/null
+  rm controlpanel-front/values_tmp.yaml
 }
 main
