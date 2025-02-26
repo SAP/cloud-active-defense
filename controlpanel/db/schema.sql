@@ -12,7 +12,6 @@ CREATE TABLE "protectedApps" (
 
 CREATE TABLE decoys (
     id UUID PRIMARY KEY NOT NULL,
-    state VARCHAR(255) NOT NULL,
     pa_id UUID NOT NULL,
     deployed BOOLEAN NOT NULL,
     decoy JSON NOT NULL,

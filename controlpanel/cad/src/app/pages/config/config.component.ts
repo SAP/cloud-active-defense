@@ -12,7 +12,6 @@ import { ConfigService } from '../../services/config.service';
 import { GlobalStateService } from '../../services/global-state.service';
 import { ToastrService } from 'ngx-toastr';
 import { isEmptyObject } from '../../utils';
-import { ConfigmanagerApiService } from '../../services/api/configmanager-api.service';
 import { ConfigData } from '../../models/config-data';
 
 @Component({
@@ -64,7 +63,7 @@ onLeaveInfo() {
 }
 //#endregion
 
-  constructor(private configService: ConfigService, private globalState: GlobalStateService, private toastr: ToastrService, private configmanagerApi: ConfigmanagerApiService) {
+  constructor(private configService: ConfigService, private globalState: GlobalStateService, private toastr: ToastrService) {
     this.configForm = new FormGroup({
       sessionIn: new FormControl(''),
       sessionKey: new FormControl(''),
@@ -284,17 +283,5 @@ onLeaveInfo() {
         this.toastr.success(apiResponse.message, 'Successfully updated global config');
         this.isSync = false;
       }
-  }
-  async sync() {
-    const apiResponse = await this.configService.updateConfig({ pa_id: this.globalState.selectedApp.id, deployed: false, config: this.config });
-    if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving global config");
-    const saveResponse = await this.configmanagerApi.updateConfigmanagerConfig(this.globalState.selectedApp.id)
-    if (saveResponse.type == 'error') this.toastr.error(saveResponse.message, "Error Synchronizing");
-    else if (saveResponse.type == 'warning') this.toastr.warning(saveResponse.message, "Warning");
-    else {
-      this.toastr.success("Successfully synchronized with configmanager", "Synchronized");
-      const apiResponse = await this.configService.getConfig(this.globalState.selectedApp.id)
-      this.isSync = (apiResponse.data as ConfigData).deployed
-    }
   }
 }

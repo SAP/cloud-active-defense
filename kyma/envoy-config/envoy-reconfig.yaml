@@ -40,15 +40,15 @@ spec:
     patch:
       operation: ADD
       value:
-        name: "configmanager"
+        name: "controlpanel-api"
         type: STRICT_DNS
         lb_policy: ROUND_ROBIN
         load_assignment:
-          cluster_name: configmanager
+          cluster_name: controlpanel-api
           endpoints:
           - lb_endpoints:
             - endpoint:
                 address:
                   socket_address:
-                    address: configmanager-service
+                    address: controlpanel-api-service
                     port_value: 80

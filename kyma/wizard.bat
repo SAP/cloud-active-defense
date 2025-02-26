@@ -12,28 +12,29 @@ setlocal enabledelayedexpansion
     call :ask_kubeconfig_path
   )
 
-  echo Looking for Configmanager 🔍
-  for /f "tokens=*" %%i in ('helm list ^| findstr configmanager') do set configmanager_helm=%%i
-  if defined configmanager_helm (
-    for /f "tokens=* delims=" %%i in ('kubectl get deployment -n config-ns 2^> nul ^| findstr configmanager') do set configmanager_up=%%i
-    if defined configmanager_up (
-      for /f "tokens=* delims=" %%i in ('kubectl get deployment configmanager -n config-ns -o jsonpath^="{.status.unavailableReplicas}"') do set configmanager_health=%%i
-      if "!configmanager_health!"=="" (
-        echo Configmanager is already deployed ✅
-      ) else (
-        echo Configmanager is unhealthy, redeploying it 🚑
-        helm upgrade --install configmanager configmanager > nul
-      )
-    ) else (
-      echo Configmanager is missing, deploying it 🚀
-      helm upgrade configmanager configmanager > nul
-    )
+  echo Looking for controlpanel API 🔍
+  for /f "tokens=* delims=" %%i in ('helm list ^| findstr controlpanel-api 2^> nul') do set cp_api_result=%%i
+  if not defined cp_api_result (
+    call :installControlpanel
   ) else (
-    echo Configmanager is missing, deploying it 🚀
-    helm install configmanager configmanager > nul
+    for /f "tokens=* delims=" %%i in ('kubectl get deployment -n controlpanel ^| findstr controlpanel-api') do set controlpanel_up=%%i
+    if not defined controlpanel_up (
+      echo Controlpanel API deployment is missing, please check deployment 🕵️
+    ) else (
+      for /f "tokens=* delims=" %%i in ('kubectl get deployment controlpanel-api -n controlpanel -o jsonpath^="{.status.availableReplicas}"') do set controlpanel_health=%%i
+      if not defined controlpanel_health (
+        echo Controlpanel API is unhealthy, please check deployment 🤒
+      ) else (
+        echo Controlpanel API is already deployed ✅
+      )
+    )
   )
   echo.
 
+  for /f "tokens=* delims=" %%i in ('helm list ^| findstr controlpanel-front 2^> nul') do set "cp_front_result=%%i"
+  if not defined cp_front_result (
+    call :askControlpanelFront
+  )
   echo Looking for Telemetry module 🔍
   for /f "tokens=* delims=" %%i in ('kubectl get deployment -n kyma-system ^| findstr telemetry-manager') do set telemetry_deployment=%%i
   if not defined telemetry_deployment (
@@ -264,17 +265,17 @@ setlocal enabledelayedexpansion
     echo    patch:
     echo      operation: ADD
     echo      value:
-    echo        name: "configmanager"
+    echo        name: "controlpanel-api"
     echo        type: STRICT_DNS
     echo        lb_policy: ROUND_ROBIN
     echo        load_assignment:
-    echo          cluster_name: configmanager
+    echo          cluster_name: controlpanel-api
     echo          endpoints:
     echo          - lb_endpoints:
     echo            - endpoint:
     echo                address:
     echo                  socket_address:
-    echo                    address: configmanager-service
+    echo                    address: controlpanel-api-service
     echo                    port_value: 80
   ) > envoy-config\temp\envoy-reconfig.yaml
   (
@@ -507,7 +508,7 @@ setlocal enabledelayedexpansion
   helm install -f telemetry/values_tmp.yaml telemetry telemetry > nul 2> nul
   del telemetry\values_tmp.yaml
 
-  sleep 2
+  timeout /t 2 /nobreak > nul
   kubectl get secret -n !loki_userInput_namespace! grafana-app -o jsonpath="{.data.admin-password}" > temp.b64
   certutil -decode temp.b64 temp.txt > nul
   set /p decoded_password=<temp.txt
@@ -545,3 +546,71 @@ setlocal enabledelayedexpansion
   echo initimage: "!init_userInput_image!") > wasm\values_tmp.yaml
   helm upgrade --install -f wasm\values_tmp.yaml wasm-%app_userInput_namespace% wasm > nul
   del wasm\values_tmp.yaml
+  exit /B
+:installControlpanel
+  echo Deploying Controlpanel API 🚀
+  for /f "tokens=* delims=" %%i in ('kubectl config view --minify -o jsonpath^="{.clusters[0].cluster.server}"') do set "cluster_link=%%i"
+  set "front_url=%cluster_link:api=controlpanel-front%"
+  set /p "db_userInput_user=Please provide the username for the database: "
+  set /p "db_userInput_password=Please provide the password for the database: "
+  set "db_userInput_user=!db_userInput_user: =!"
+  (echo|set /p=!db_userInput_user!) > temp_user.txt
+  certutil -encode temp_user.txt temp_user.b64 > nul
+  for /f "delims=" %%A in (temp_user.b64) do echo %%A | findstr /v "CERTIFICATE" >nul && set db_user=%%A
+  del temp_user.txt temp_user.b64
+  (echo|set /p=!db_userInput_password!) > temp_password.txt
+  certutil -encode temp_password.txt temp_password.b64 > nul
+  for /f "delims=" %%A in (temp_password.b64) do echo %%A | findstr /v "CERTIFICATE" >nul && set db_password=%%A
+  del temp_password.txt temp_password.b64
+  (
+    echo apiVersion: v1
+    echo kind: Secret
+    echo metadata:
+    echo   name: controlpanel-db-secrets
+    echo   namespace: {{ .Values.namespace }}
+    echo data:
+    echo   POSTGRES_USER: !db_user!
+    echo   POSTGRES_PASSWORD: !db_password!
+  ) > controlpanel-api/templates/controlpanel-temp-secrets.yaml
+
+  (echo replicaCount: 1
+  echo namespace: controlpanel
+  echo image: "ghcr.io/sap/controlpanel-api:latest"
+  echo db_port: 5432
+  echo db_host: "controlpanel-db-service"
+  echo controlpanel_front_url: "!front_url!"
+  echo from_wizard: true
+  ) > controlpanel-api\values_tmp.yaml
+
+  helm install -f controlpanel-api\values_tmp.yaml controlpanel-api controlpanel-api > nul
+  del controlpanel-api\templates\controlpanel-temp-secrets.yaml controlpanel-api\values_tmp.yaml
+  exit /B
+:askControlpanelFront
+  set /p front_userInput=Do you want to install controlpanel dashboard (Y/N) ? 
+  if "%front_userInput%"=="n" (
+    exit /B
+  ) else if "%front_userInput%"=="N" (
+    exit /B
+  ) else if "%front_userInput%"=="y" (
+    call :installControlpanelFront
+  ) else if "%front_userInput%"=="Y" (
+    call :installControlpanelFront
+  ) else (
+    call :askControlpanelFront
+  )
+  echo.
+  exit /B
+:installControlpanelFront
+  echo Deploying controlpanel dashboard 🚀
+  for /f "tokens=* delims=" %%i in ('kubectl config view --minify -o jsonpath^="{.clusters[0].cluster.server}"') do set "cluster_link=%%i"
+  set "api_url=%cluster_link:api=controlpanel-api%"
+  (echo replicaCount: 1
+  echo namespace: controlpanel
+  echo image: "ghcr.io/sap/controlpanel-frontend:latest"
+  echo controlpanel_api_url: "%api_url%"
+  ) > controlpanel-front\values_tmp.yaml
+
+  helm upgrade --install -f controlpanel-front\values_tmp.yaml controlpanel-front controlpanel-front > nul
+  del controlpanel-front\values_tmp.yaml
+  echo.
+  exit /B

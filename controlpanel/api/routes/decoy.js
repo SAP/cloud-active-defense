@@ -45,7 +45,7 @@ router.put('/:id', async (req, res) => {
 
 router.patch('/state', async (req, res) => {
     try {
-        const result = await decoyService.updateDecoyState(req.body);
+        const result = await decoyService.updateDecoyDeployState(req.body);
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);

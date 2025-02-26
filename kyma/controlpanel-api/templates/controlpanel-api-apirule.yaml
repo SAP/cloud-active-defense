@@ -1,0 +1,19 @@
+apiVersion: gateway.kyma-project.io/v1beta1
+kind: APIRule
+metadata:
+  name: controlpanel-api-apirule
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: controlpanel-api
+spec:
+  host: controlpanel-api
+  service:
+    name: controlpanel-api-service
+    port: 80
+  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  rules:
+    - path: /.*
+      methods: ["GET","POST", "PUT", "DELETE"]
+      accessStrategies:
+        - handler: allow
+      mutators: []

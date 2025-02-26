@@ -63,7 +63,7 @@
                     <div class="form-label">
                         <label for="inputBlocklistReload">How often to reload blacklist ?</label>
                         <img class="info-icon" src="info.svg"
-                        (mouseenter)="onHoverInfo('blocklistReload', 'Determine each time the proxy will reload the blocklist from the configmanager', 'https://github.com/SAP/cloud-active-defense/wiki/BlocklistReload', $event)"
+                        (mouseenter)="onHoverInfo('blocklistReload', 'Determine each time the proxy will reload the blocklist from the API', 'https://github.com/SAP/cloud-active-defense/wiki/BlocklistReload', $event)"
                         (mouseleave)="onLeaveInfo()"/>
                         <p class="debug">(Debug)</p>
                     </div>
@@ -121,7 +121,6 @@
         <div class="file-preview">{{ config | json }}</div>
         <div class="next">
             <button class="filled-btn" (click)="save()">Save</button>
-            <button class="filled-btn" (click)="sync()">Sync</button>
         </div>
     </div>
 </div>

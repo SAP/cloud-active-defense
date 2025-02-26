@@ -4,6 +4,7 @@ import (
   "strconv"
 	"errors"
 	"encoding/json"
+	"bytes"
 	"math/rand"
 	"strings"
 
@@ -17,6 +18,7 @@ import (
 
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm"
 	"github.com/tetratelabs/proxy-wasm-go-sdk/proxywasm/types"
+	"github.com/valyala/fastjson"
 )
 
 // plugin tick period, config is reread every tick
@@ -62,10 +64,10 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
 	workload, _ := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
 	if len(namespace) != 0 {
 		ctx.namespace = string(namespace)
-	} else { ctx.namespace = "unknown" }
+	} else { ctx.namespace = "default" }
 	if len(workload) != 0 {
 		ctx.deployment = string(workload)
-	} else { ctx.deployment = "unknown" }
+	} else { ctx.deployment = "default" }
 
   if err := proxywasm.SetTickPeriodMilliSeconds(tickMilliseconds); err != nil {
     proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"failed to set tick period: %v\"}", err.Error())
@@ -75,9 +77,18 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
 
   ctx.callBackConfRequested = func(numHeaders, bodySize, numTrailers int) {
     emptyConf := config_parser.EmptyConfig()
-    configBody, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+    responseBody, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
     if err != nil && err != types.ErrorStatusNotFound {
       proxywasm.LogWarnf("{\"type\": \"system\", \"content\": \"could not read body of config file: %v\"}", err.Error())
+    }
+    jsonBody := map[string]interface{}{}
+    err = json.Unmarshal(responseBody, &jsonBody)
+    if err != nil {
+      proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not unmarshal json: %v\"}", err.Error())
+    }
+    configBody, err := json.Marshal(jsonBody["data"])
+    if err != nil {
+      proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not marshal json: %v\"}", err.Error())
     }
 
     data, cas, _ := proxywasm.GetSharedData("oldConfig")
@@ -112,10 +123,10 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
 func (ctx *pluginContext) OnTick() {
   //proxywasm.LogInfof("--- plugin tick, rereading config ---")
   requestHeaders := [][2]string{
-    {":method", "GET"}, {":authority", "configmanager"}, {":path", "/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
+    {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
     {"Content-Type", "application/json"},
   }
-  if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
+  if _, err := proxywasm.DispatchHttpCall("controlpanel-api", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
     proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
   }
   // Update blocklist via configmanager
@@ -139,10 +150,10 @@ func (ctx *pluginContext) OnTick() {
       return
     }
     requestHeadersBlocklist := [][2]string{
-      {":method", "POST"}, {":authority", "configmanager"}, {":path", "/blocklist"}, {"accept", "*/*"},
+      {":method", "POST"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
       {"Content-Type", "application/json"},
     }
-    if _, err := proxywasm.DispatchHttpCall("configmanager", requestHeadersBlocklist, payload, nil, 5000, callBackSetBlocklist); err != nil {
+    if _, err := proxywasm.DispatchHttpCall("controlpanel-api", requestHeadersBlocklist, payload, nil, 5000, callBackSetBlocklist); err != nil {
       proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
     }
     updateBlocklist = []map[string]string{}
@@ -173,27 +184,41 @@ func (ctx *pluginContext) OnTick() {
       if err != nil {
         proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"%v\"}", err.Error())
       }
-      proxywasm.SetSharedData("blocklist", body, 0)
-    }
-    callBackGetThrottlelist:= func(numHeaders, bodySize, numTrailers int) {
-      body, err := proxywasm.GetHttpCallResponseBody(0, bodySize)
+      var fjsp = fastjson.Parser{}
+      jsonResponse, err := fjsp.Parse(string(body))
       if err != nil {
-        proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"%v\"}", err.Error())
+        proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not parse json: %v\"}", err.Error())
       }
-      proxywasm.SetSharedData("throttlelist", body, 0)
+      var blocklistData bytes.Buffer
+      var throttleData bytes.Buffer
+      blocklistData.WriteByte('[')
+      throttleData.WriteByte('[')
+      if jsonResponse.Exists("data") {
+        for _, blocklist := range jsonResponse.GetArray("data") {
+          if (string(blocklist.GetStringBytes("type")) == "blocklist") {
+            if blocklistData.Len() > 1 {
+              blocklistData.WriteByte(',')
+            }
+            blocklistData.Write(blocklist.Get("content").MarshalTo(nil))
+          }
+          if (string(blocklist.GetStringBytes("type")) == "throttle") {
+            if throttleData.Len() > 1 {
+              throttleData.WriteByte(',')
+            }
+            throttleData.Write(blocklist.Get("content").MarshalTo(nil))
+          }
+        }
+      }
+      blocklistData.WriteByte(']')
+      throttleData.WriteByte(']')
+      proxywasm.SetSharedData("blocklist", blocklistData.Bytes(), 0)
+      proxywasm.SetSharedData("throttlelist", throttleData.Bytes(), 0)
     }
     reqHeadBlocklist := [][2]string{
-      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/blocklist"}, {"accept", "*/*"},
+      {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
       {"Content-Type", "application/json"},
     }
-    if _, err := proxywasm.DispatchHttpCall("configmanager", reqHeadBlocklist, nil, nil, 5000, callBackGetBlocklist); err != nil {
-      proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
-    }
-    reqHeadThrottlelist := [][2]string{
-      {":method", "GET"}, {":authority", "configmanager"}, {":path", "/throttlelist"}, {"accept", "*/*"},
-      {"Content-Type", "application/json"},
-    }
-    if _, err := proxywasm.DispatchHttpCall("configmanager", reqHeadThrottlelist, nil, nil, 5000, callBackGetThrottlelist); err != nil {
+    if _, err := proxywasm.DispatchHttpCall("controlpanel-api", reqHeadBlocklist, nil, nil, 5000, callBackGetBlocklist); err != nil {
       proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
     }
   }

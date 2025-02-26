@@ -127,6 +127,8 @@ module.exports = {
                 if (typeof log.date != 'number') {
                     errors.push({ log, error: '.data is not a number' });
                 }
+                const matchLog = log.log.match(/.*cad-filter:\s*(?<log>.*)(?:\s|\\t).*$/);
+                if (matchLog != null) log.log = matchLog.groups.log;
                 if (!isJSON(log.log)) {
                     errors.push({ log, error: '.log attribute is not a JSON' });
                     continue;

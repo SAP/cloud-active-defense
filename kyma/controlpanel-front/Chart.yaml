@@ -1,7 +1,6 @@
 apiVersion: v2
-name: configmanager
-description: A Helm chart deploying SunDEW's generic active defense services.
-
+name: controlpanel-api
+description: This chart creates a deployment for the controlpanel-front service.
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives

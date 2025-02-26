@@ -8,7 +8,7 @@ const Logs = sequelize.define("logs", {
         primaryKey: true
     },
     date: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.FLOAT,
         defaultValue: Math.floor(new Date().getTime() / 1000),
         allowNull: false
     },

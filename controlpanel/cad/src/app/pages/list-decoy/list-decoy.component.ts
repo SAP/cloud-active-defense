@@ -3,14 +3,13 @@ import { CommonModule } from '@angular/common';
 import { Decoy } from '../../models/decoy';
 import { DecoyService } from '../../services/decoy.service';
 import { ToastrService } from 'ngx-toastr';
-import { DecoyData, DecoyState } from '../../models/decoy-data';
+import { DecoyData } from '../../models/decoy-data';
 import { FormsModule } from '@angular/forms';
 import { GlobalStateService } from '../../services/global-state.service';
 import { isProtectedAppEmpty } from '../../models/protected-app';
 import { RouterLink } from '@angular/router';
 import { UUID } from '../../models/types';
 import { Subscription } from 'rxjs';
-import { ConfigmanagerApiService } from '../../services/api/configmanager-api.service';
 
 @Component({
   selector: 'app-list-decoy',
@@ -23,7 +22,7 @@ export class ListDecoyComponent implements OnInit, OnDestroy {
   decoys: DecoyData[] = [];
   globalStateSubscription?: Subscription;
 
-  constructor(private decoyService: DecoyService, private toastr: ToastrService, private globalState: GlobalStateService, private configmanagerApi: ConfigmanagerApiService) { }
+  constructor(private decoyService: DecoyService, private toastr: ToastrService, private globalState: GlobalStateService) { }
 
   async ngOnInit() {
     this.globalStateSubscription = this.globalState.selectedApp$.subscribe(data => {
@@ -49,22 +48,15 @@ export class ListDecoyComponent implements OnInit, OnDestroy {
     return `${key}${value ? decoy.decoy.separator ? decoy.decoy.separator : '=' : ''}${value}`;
   }
 
-  isDeployed(state: DecoyState) {
-    if (state == 'active') return true;
-    else return false;
-  }
   async setDeployed(decoyData: DecoyData) {
-    const oldState = decoyData.state;
-    if (decoyData.state == 'active') decoyData.state = 'inactive';
-    else decoyData.state = 'active';
-    const updateResponse = await this.decoyService.updateDecoyState(decoyData);
+    const oldState = decoyData.deployed;
+    const updateResponse = await this.decoyService.updateDecoyDeployState(decoyData);
     if (updateResponse.type == 'error') {
-      this.toastr.error(updateResponse.message, "Error updating state");
-      decoyData.state = oldState;
+      this.toastr.error(updateResponse.message, "Error updating deploy state");
+      decoyData.deployed = oldState;
     }
     else {
-      this.toastr.success("Successfully updated decoy state", "Saved");
-      decoyData.deployed = false;
+      this.toastr.success("Successfully updated decoy deploy state", "Saved");
     }
   }
   async deleteDecoy(decoyId: UUID) {
@@ -73,17 +65,6 @@ export class ListDecoyComponent implements OnInit, OnDestroy {
     else {
       this.toastr.success("Successfully deleted decoy", "Deleted");
       this.getDecoyList();
-    }
-  }
-
-  async save() {
-    if (!this.decoys.length) return;
-    const saveResponse = await this.configmanagerApi.updateConfigmanagerDecoys(this.globalState.selectedApp.id)
-    if (saveResponse.type == 'error') this.toastr.error(saveResponse.message, "Error Synchronizing");
-    else if (saveResponse.type == 'warning') this.toastr.warning(saveResponse.message, "Warning");
-    else {
-      this.toastr.success("Successfully synchronized with configmanager", "Synchronized");
-      this.getDecoyList()
     }
   }
 }
