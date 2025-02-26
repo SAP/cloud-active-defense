@@ -217,11 +217,17 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
     if (!this.decoyId) {
       const apiResponse = await this.decoyService.addNewDecoy();
       if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving decoy");
-      else this.toastr.success(apiResponse.message, 'Successfully created Decoy');
+      else {
+        this.toastr.success(apiResponse.message, 'Successfully created Decoy');
+        this.router.navigate(['decoy/list']);
+      }
     } else {
       const apiResponse = await this.decoyService.saveDecoy(this.decoyId, this.decoy);
       if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving decoy");
-      else this.toastr.success(apiResponse.message, 'Successfully saved Decoy');
+      else {
+        this.toastr.success(apiResponse.message, 'Successfully saved Decoy');
+        this.router.navigate(['decoy/list']);
+      }
     }
   }
 }
