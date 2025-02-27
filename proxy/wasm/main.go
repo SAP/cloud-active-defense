@@ -86,9 +86,12 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
     if err != nil {
       proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not unmarshal json: %v\"}", err.Error())
     }
-    configBody, err := json.Marshal(jsonBody["data"])
+    var configBody bytes.Buffer
+    encoder := json.NewEncoder(&configBody)
+    encoder.SetEscapeHTML(false)
+    err = encoder.Encode(jsonBody["data"])
     if err != nil {
-      proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not marshal json: %v\"}", err.Error())
+        proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not marshal json: %v\"}", err.Error())
     }
 
     data, cas, _ := proxywasm.GetSharedData("oldConfig")
@@ -96,11 +99,11 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
     if err != nil {
       oldConfig = &emptyConf
     }
-    err = proxywasm.SetSharedData("oldConfig", configBody, cas)
+    err = proxywasm.SetSharedData("oldConfig", configBody.Bytes(), cas)
     if err != nil && !errors.Is(err, types.ErrorStatusCasMismatch){
       proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error setting old config: %s\"}", err.Error())
     }
-    err, ctx.config = config_parser.ParseString(configBody)
+    err, ctx.config = config_parser.ParseString(configBody.Bytes())
     if err != nil {//&& err != types.ErrorStatusNotFound {
       proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not read config: %s\n continue with old config\"}", err)
       ctx.config = oldConfig
