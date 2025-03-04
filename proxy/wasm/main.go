@@ -139,7 +139,9 @@ func (ctx *pluginContext) OnTick() {
       if err != nil {
         proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not read body when setting blocklist: %v\"}", err)
       }
-      if string(responseBody) != "Done" {
+      var jsonResponse map[string]interface{}
+      json.Unmarshal(responseBody, &jsonResponse)
+      if jsonResponse["code"] != float64(200) {
         proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error when setting blocklist: %v\"}", string(responseBody))
       }
     }
