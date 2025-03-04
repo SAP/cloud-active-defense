@@ -65,6 +65,7 @@ module.exports = {
             if (!protectedApp) return { type: 'error', code: 404, message: 'Invalid namespace or application supplied' };
             const blocklist = await Blocklist.findAll({ where: { pa_id: protectedApp.id } });
             for (const blockElement of blocklist) {
+                if (blockElement.content.Duration == 'forever') continue;
                 const duration = parseInt(blockElement.content.Duration.substring(0, blockElement.content.Duration.length - 1));
                 const ext = blockElement.content.Duration.slice(-1);
                 const unbanDate = new Date(blockElement.content.Time * 1000);
