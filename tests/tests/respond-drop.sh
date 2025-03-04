@@ -60,7 +60,7 @@ curl -X PATCH -s -H "Content-Type: application/json" -d "{\"id\": \"${decoy_id}\
 # Send the global configuration to the API
 curl -X PUT -s -H "Content-Type: application/json" -d "$globalconfig" http://localhost:8050/config > /dev/null
 # wait a few seconds for the proxy to read the new config
-sleep 3
+sleep 5
 
 
 # Start timing
@@ -73,7 +73,7 @@ tempfile=$(bash ./uuidgen.sh)
 curl -v --cookie SESSION=c32272b9-99d8-4687-b57e-a606952ae870 -H "x-cloud-active-defense: ACTIVE" -s http://localhost:8000/ &>/dev/null
 
 # Wait a little before next request
-sleep 2
+sleep 3
 # Do relevant action(s)
 curl -v --max-time 5 --cookie SESSION=c32272b9-99d8-4687-b57e-a606952ae870 http://localhost:8000/ >$tempfile 2>&1
 
