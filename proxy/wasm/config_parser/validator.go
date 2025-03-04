@@ -155,7 +155,7 @@ func (v *validator) validateStore(obj StoreType) {
 		v.addError(v.currentPlace+".withVerb", "needs to be a valid HTTP verb or empty")
 	}
 	if !validAs(obj.As) {
-		v.addError(v.currentPlace+".as", "needs to be cookie, header or body")
+		v.addError(v.currentPlace+".as", "needs to be cookie, header, body or status")
 	}
 	if !validInjectionMethod(obj.At.Method) && !breaksRequired(obj.At.Method){
 		v.addError(v.currentPlace+".at.method", "needs to be valid injection method or empty")

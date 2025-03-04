@@ -42,7 +42,7 @@ function validateStore(store) {
     if (store.inRequest && !isValidRegex(store.inRequest)) errors.push("inRequest needs to be a valid regex");
     if (store.inResponse && !isValidRegex(store.inResponse)) errors.push("inResponse needs to be a valid regex");
     if (store.withVerb && !isVerbType(store.withVerb)) errors.push("withVerb needs to be a valid HTTP verb or empty");
-    if (!isAsType(store.as)) errors.push("as needs to be cookie , header or body");
+    if (!isAsType(store.as)) errors.push("as needs to be cookie , header, body or status");
     if (store.at) {
         if (typeof store.at != 'object') errors.push(".store.at must be an object");
         else {
@@ -109,7 +109,7 @@ function isVerbType(verb) {
     return ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'].includes(verb);
 }
 function isAsType(as) {
-    return ['header', 'body', 'cookie'].includes(as);
+    return ['header', 'body', 'cookie', 'status'].includes(as);
 }
 function isAtMethodType(method) {
     return ['character', 'line', 'replace', 'always','after', 'before'].includes(method);
