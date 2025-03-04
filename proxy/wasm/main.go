@@ -194,26 +194,30 @@ func (ctx *pluginContext) OnTick() {
       }
       var blocklistData bytes.Buffer
       var throttleData bytes.Buffer
-      blocklistData.WriteByte('[')
-      throttleData.WriteByte('[')
+      blocklistData.WriteString("{\"list\":[")
+      throttleData.WriteString("{\"list\":[")
+      var blocklistCount = 0
+      var throttleCount = 0
       if jsonResponse.Exists("data") {
         for _, blocklist := range jsonResponse.GetArray("data") {
           if (string(blocklist.GetStringBytes("type")) == "blocklist") {
-            if blocklistData.Len() > 1 {
+            if blocklistCount >= 1 {
               blocklistData.WriteByte(',')
             }
             blocklistData.Write(blocklist.Get("content").MarshalTo(nil))
+            blocklistCount++
           }
           if (string(blocklist.GetStringBytes("type")) == "throttle") {
-            if throttleData.Len() > 1 {
+            if throttleCount > 1 {
               throttleData.WriteByte(',')
             }
             throttleData.Write(blocklist.Get("content").MarshalTo(nil))
+            throttleCount++
           }
         }
       }
-      blocklistData.WriteByte(']')
-      throttleData.WriteByte(']')
+      blocklistData.WriteString("]}")
+      throttleData.WriteString("]}")
       proxywasm.SetSharedData("blocklist", blocklistData.Bytes(), 0)
       proxywasm.SetSharedData("throttlelist", throttleData.Bytes(), 0)
     }
