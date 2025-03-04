@@ -1,45 +1,53 @@
 # Check if the decoy throttle the request once triggered
 
 # Configure decoys
-config='
+config=$(cat <<EOF
 {
-  "filters": [
-    {
-      "decoy": {
-        "key": "x-cloud-active-defense",
-        "separator": "=",
-        "value": "ACTIVE"
+  "pa_id": "${PROTECTEDAPP_ID}",
+  "decoy": {
+    "decoy": {
+      "key": "x-cloud-active-defense",
+      "separator": "=",
+      "value": "ACTIVE"
+    },
+    "detect": {
+      "seek": {
+        "inRequest": ".*",
+        "in": "header" 
       },
-      "detect": {
-        "seek": {
-          "inRequest": ".*",
-          "in": "header" 
-        },
-        "alert": {
-          "severity": "HIGH",
-          "whenComplete": true
-        }
+      "alert": {
+        "severity": "HIGH",
+        "whenComplete": true
       }
     }
-  ]
+  }
 }
-'
+EOF
+)
 # Configure global config
-globalconfig='
+globalconfig=$(cat <<EOF
 {
-  "respond": [{
-    "source": "ip, userAgent",
-    "behavior": "throttle",
-    "property": "10"
-  }],
-  "blocklistReload": 1
+  "pa_id": "${PROTECTEDAPP_ID}",
+  "config": {
+    "respond": [{
+      "source": "ip, userAgent",
+      "behavior": "throttle",
+      "property": "10",
+      "delay": "now",
+      "duration": "10s"
+    }],
+    "blocklistReload": 1
+  }
 }
-'
-# connect to configmanager, update /data/cad-default.json and /data/config-default.json
-echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.json'
-echo "$globalconfig" | docker exec -i configmanager sh -c 'cat > /data/config-default.json'
+EOF
+)
+# Send the decoy configuration to the API
+decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -d "$config" http://localhost:8050/decoy | jq -r '.data.id')
+curl -X PATCH -s -H "Content-Type: application/json" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
+# Send the global configuration to the API
+curl -X PUT -s -H "Content-Type: application/json" -d "$globalconfig" http://localhost:8050/config > /dev/null
 # wait a few seconds for the proxy to read the new config
-sleep 5
+sleep 3
 
 
 # Start timing
@@ -52,7 +60,7 @@ tempfile=$(bash ./uuidgen.sh)
 curl -v -H "x-cloud-active-defense: ACTIVE" -s http://localhost:8000/ &>/dev/null
 
 # Wait a little before next request
-sleep 2
+sleep 3
 # Do relevant action(s)
 curl --max-time 5 -v http://localhost:8000/ >$tempfile 2>&1
 
@@ -72,8 +80,6 @@ echo "Execution time: $execution_time seconds"
 
 # Cleanup
 rm $tempfile
-# reseting banlist
-echo '{"list":[]}' | docker exec -i configmanager sh -c 'cat > /data/blocklist/blocklist.json'
-#reseting global config
-echo "{}" | docker exec -i configmanager sh -c 'cat > /data/config-default.json'
+curl -X DELETE -s http://localhost:8050/decoy/$decoy_id > /dev/null
+curl -X PUT -s -H "Content-Type: application/json" -d "{\"pa_id\": \"$PROTECTEDAPP_ID\", \"config\": {}}" http://localhost:8050/config > /dev/null
 
