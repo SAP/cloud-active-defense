@@ -1,5 +1,5 @@
 apiVersion: v2
-name: controlpanel-api
+name: controlpanel-front
 description: This chart creates a deployment for the controlpanel-front service.
 # A chart can be either an 'application' or a 'library' chart.
 #

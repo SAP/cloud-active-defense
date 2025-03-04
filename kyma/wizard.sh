@@ -522,6 +522,15 @@ install_controlpanel() {
   read -p "Please provide the username for the database: " db_userInput_user
   read -sp "Please provide the password for the database: " db_userInput_password
   echo
+  
+  if [[ -z "$db_userInput_user" ]]; then
+    db_userInput_user=$(generate_random_string 10)
+    echo "Username generated: $db_userInput_user"
+  fi
+  if [[ -z "$db_userInput_password" ]]; then
+    db_userInput_password=$(generate_random_string 16)
+    echo "Password generated: $db_userInput_password"
+  fi
 
   db_user=$(echo -n "$db_userInput_user" | base64)
   db_password=$(echo -n "$db_userInput_password" | base64)
@@ -583,5 +592,15 @@ EOF
 
   helm upgrade --install -f controlpanel-front/values_tmp.yaml controlpanel-front controlpanel-front > /dev/null
   rm controlpanel-front/values_tmp.yaml
+}
+generate_random_string() {
+  local length=$1
+  local charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"
+  local random_string=""
+  for (( i=0; i<length; i++ )); do
+    local random_index=$((RANDOM % ${#charset}))
+    random_string+="${charset:$random_index:1}"
+  done
+  echo "$random_string"
 }
 main

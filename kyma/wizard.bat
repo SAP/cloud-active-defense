@@ -558,7 +558,19 @@ setlocal enabledelayedexpansion
   set "front_url=%cluster_link:api=controlpanel-front%"
   set /p "db_userInput_user=Please provide the username for the database: "
   set /p "db_userInput_password=Please provide the password for the database: "
-  set "db_userInput_user=!db_userInput_user: =!"
+  
+  if "!db_userInput_user!"=="" (
+    call :generate_random_string 10 db_userInput_user
+    echo Username generated: !db_userInput_user!
+  ) else (
+    set "db_userInput_user=!db_userInput_user: =!"
+  )
+  if "!db_userInput_password!"=="" (
+    call :generate_random_string 16 db_userInput_password
+    echo Password generated: !db_userInput_password!
+  ) else (
+    set "db_userInput_password=!db_userInput_password: =!"
+  )
   (echo|set /p=!db_userInput_user!) > temp_user.txt
   certutil -encode temp_user.txt temp_user.b64 > nul
   for /f "delims=" %%A in (temp_user.b64) do echo %%A | findstr /v "CERTIFICATE" >nul && set db_user=%%A
@@ -619,3 +631,14 @@ setlocal enabledelayedexpansion
   del controlpanel-front\values_tmp.yaml
   echo.
   exit /B
+:generate_random_string
+  setlocal enabledelayedexpansion
+  set "charset=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"
+  set "random_string="
+  set /a length=%1
+  for /l %%i in (1,1,!length!) do (
+      set /a index=!random! %% 62
+      for %%j in (!index!) do set "random_string=!random_string!!charset:~%%j,1!"
+  )
+  endlocal & set "%2=%random_string%"
+  exit /b
