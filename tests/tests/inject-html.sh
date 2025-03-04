@@ -1,10 +1,10 @@
 # test for injection in html login page
 
 # Configure decoys
-config='
+config=$(cat <<EOF
 {
-  "filters":[
-  {
+  "pa_id": "${PROTECTEDAPP_ID}",
+  "decoy": {
     "decoy": {
       "key": "system",
       "separator": "=",
@@ -34,13 +34,16 @@ config='
       }
     }
   }
-]}
-'
+}
+EOF
+)
 
-# connect to configmanager, update /data/cad-default.json
-echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.json'
+# Send the decoy configuration to the API
+decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -d "$config" http://localhost:8050/decoy | jq -r '.data.id')
+curl -X PATCH -s -H "Content-Type: application/json" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
+
 # wait a few seconds for the proxy to read the new config
-sleep 5
+sleep 3
 
 
 # Start timing
@@ -89,3 +92,4 @@ echo "Execution time: $execution_time seconds"
 
 # Cleanup
 rm $tempfile
+curl -X DELETE -s http://localhost:8050/decoy/$decoy_id > /dev/null

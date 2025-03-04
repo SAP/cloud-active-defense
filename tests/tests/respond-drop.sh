@@ -1,60 +1,66 @@
 # Check if the decoy drop the request once triggered
 
 # Configure decoys
-config='
+config=$(cat <<EOF
 {
-  "filters": [
-    {
-      "decoy": {
-        "key": "x-cloud-active-defense",
-        "separator": "=",
-        "value": "ACTIVE"
+  "pa_id": "${PROTECTEDAPP_ID}",
+  "decoy": {
+    "decoy": {
+      "key": "x-cloud-active-defense",
+      "separator": "=",
+      "value": "ACTIVE"
+    },
+    "detect": {
+      "seek": {
+        "inRequest": ".*",
+        "in": "header" 
       },
-      "detect": {
-        "seek": {
-          "inRequest": ".*",
-          "in": "header" 
-        },
-        "alert": {
-          "severity": "HIGH",
-          "whenComplete": true
-        },
-        "respond": [{
-          "source": "ip, session",
-          "behavior": "drop",
-          "duration": "1h",
-          "delay": "now"
-        }]
-      }
+      "alert": {
+        "severity": "HIGH",
+        "whenComplete": true
+      },
+      "respond": [{
+        "source": "ip, session",
+        "behavior": "drop",
+        "duration": "7s",
+        "delay": "now"
+      }]
     }
-  ]
+  }
 }
-'
+EOF
+)
 # Configure global config
 # Note that the respond part in the global config will be overrided by the 'local' decoy respond
-globalconfig='
+globalconfig=$(cat <<EOF
 {
-  "alert": {
-    "session": {
-      "in": "cookie",
-      "key": "SESSION"
+  "pa_id": "${PROTECTEDAPP_ID}",
+  "config": {
+    "alert": {
+      "session": {
+        "in": "cookie",
+        "key": "SESSION"
+      }
     },
-    "respond": {
+    "respond": [{
       "source": "ip, userAgent",
-      "behavior": "clone",
+      "behavior": "divert",
       "duration": "forever",
       "delay": "now"
-    }
-  },
-  "blocklistReload": 1
+    }],
+    "blocklistReload": 1
+  }
 }
-'
+EOF
+)
 
-# connect to configmanager, update /data/cad-default.json and /data/config-default.json
-echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.json'
-echo "$globalconfig" | docker exec -i configmanager sh -c 'cat > /data/config-default.json'
+# Send the decoy configuration to the API
+decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -d "$config" http://localhost:8050/decoy | jq -r '.data.id')
+curl -X PATCH -s -H "Content-Type: application/json" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
+# Send the global configuration to the API
+curl -X PUT -s -H "Content-Type: application/json" -d "$globalconfig" http://localhost:8050/config > /dev/null
 # wait a few seconds for the proxy to read the new config
-sleep 5
+sleep 3
 
 
 # Start timing
@@ -87,8 +93,6 @@ echo "Execution time: $execution_time seconds"
 
 # Cleanup
 rm $tempfile
-# reseting banlist
-echo '{"list":[]}' | docker exec -i configmanager sh -c 'cat > /data/blocklist/blocklist.json'
-#reseting global config
-echo "{}" | docker exec -i configmanager sh -c 'cat > /data/config-default.json'
+curl -X DELETE -s http://localhost:8050/decoy/$decoy_id > /dev/null
+curl -X PUT -s -H "Content-Type: application/json" -d "{\"pa_id\": \"$PROTECTEDAPP_ID\", \"config\": {}" http://localhost:8050/config > /dev/null
 

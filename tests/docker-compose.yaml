@@ -6,9 +6,36 @@ services:
     ports:
     - "3000:3000"
     
-  config:
-    container_name: configmanager
-    image: configmanagertest
+  controlpanel-api:
+    container_name: controlpanel-api
+    image: controlpanel-apitest
+    ports:
+    - "8050:8050"
+    depends_on:
+      controlpanel-db:
+        condition: service_healthy
+      fluent:
+        condition: service_started
+    environment:
+      - POSTGRES_USER=postgres-test
+      - POSTGRES_PASSWORD=postgres-test
+      - DB_HOST=controlpanel-db
+      - DB_PORT=5432
+
+  controlpanel-db:
+    container_name: controlpanel-db
+    image: postgres
+    ports:
+    - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres-test
+      POSTGRES_PASSWORD: postgres-test
+      POSTGRES_DB: cad
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres-test"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   proxy:
     container_name: proxy
@@ -20,6 +47,7 @@ services:
     - fluent
     - clone
     - exhaust
+    - controlpanel-api
     logging:
       driver: fluentd
   
