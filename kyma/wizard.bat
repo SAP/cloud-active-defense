@@ -566,7 +566,7 @@ setlocal enabledelayedexpansion
     set "db_userInput_user=!db_userInput_user: =!"
   )
   if "!db_userInput_password!"=="" (
-    call :generate_random_string 16 db_userInput_password
+    call :generate_random_string 30 db_userInput_password
     echo Password generated: !db_userInput_password!
   ) else (
     set "db_userInput_password=!db_userInput_password: =!"
