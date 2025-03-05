@@ -364,7 +364,15 @@ patches:
       name: ${app_userInput_deployment}-cloudactivedefensefilter
 EOF
 
-  cp clone/envoy-config/kustomize.sh clone/envoy-config/temp/kustomize.sh
+  cat <<EOF > clone/envoy-config/temp/kustomize.sh
+#!/bin/bash
+dir="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+
+kubectl get envoyfilter $app_userInput_deployment-cloudactivedefensefilter -n $app_userInput_namespace -o yaml > "\$dir/resources.yaml"
+kubectl apply -k "\$dir"
+rm -f "\$dir/resources.yaml"
+EOF
+
   chmod +x clone/envoy-config/kustomize.sh
 
   clone/envoy-config/temp/kustomize.sh > /dev/null 2> /dev/null
@@ -440,7 +448,15 @@ patches:
       name: ${app_userInput_deployment}-cloudactivedefensefilter
 EOF
 
-  cp exhaust/envoy-config/kustomize.sh exhaust/envoy-config/temp/kustomize.sh
+  cat <<EOF > exhaust/envoy-config/temp/kustomize.sh
+#!/bin/bash
+dir="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+
+kubectl get envoyfilter $app_userInput_deployment-cloudactivedefensefilter -n $app_userInput_namespace -o yaml > "\$dir/resources.yaml"
+kubectl apply -k "\$dir"
+rm -f "\$dir/resources.yaml"
+EOF
+
   chmod +x exhaust/envoy-config/temp/kustomize.sh
 
   exhaust/envoy-config/temp/kustomize.sh > /dev/null 2> /dev/null
