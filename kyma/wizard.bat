@@ -633,7 +633,7 @@ setlocal enabledelayedexpansion
   exit /B
 :generate_random_string
   setlocal enabledelayedexpansion
-  set "charset=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"
+  set "charset=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   set "random_string="
   set /a length=%1
   for /l %%i in (1,1,!length!) do (
