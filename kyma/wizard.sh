@@ -595,7 +595,7 @@ EOF
 }
 generate_random_string() {
   local length=$1
-  local charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"
+  local charset="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
   local random_string=""
   for (( i=0; i<length; i++ )); do
     local random_index=$((RANDOM % ${#charset}))
