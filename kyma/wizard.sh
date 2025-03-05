@@ -528,7 +528,7 @@ install_controlpanel() {
     echo "Username generated: $db_userInput_user"
   fi
   if [[ -z "$db_userInput_password" ]]; then
-    db_userInput_password=$(generate_random_string 16)
+    db_userInput_password=$(generate_random_string 30)
     echo "Password generated: $db_userInput_password"
   fi
 
