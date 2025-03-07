@@ -200,6 +200,7 @@ apply_envoyreconfig() {
   fi
   rm -rf envoy-config/temp 2>/dev/null
   mkdir -p envoy-config/temp
+  envoy_apiKey=$(kubectl get secret -n controlpanel envoy-api-key-secret -o jsonpath="{.data.ENVOY_API_KEY}" | base64 --decode)
   cat <<EOF > envoy-config/temp/envoy-reconfig.yaml
 apiVersion: networking.istio.io/v1alpha3
 kind: EnvoyFilter
@@ -236,6 +237,12 @@ spec:
                     filename: var/local/lib/wasm/sundew.wasm
                 runtime: envoy.wasm.runtime.v8
                 vmId: cad-filter
+              configuration:
+                '@type': type.googleapis.com/google.protobuf.StringValue
+                value: |
+                  {
+                    "ENVOY_API_KEY": "${envoy_apiKey}"
+                  }
   - applyTo: CLUSTER
     match:
       context: SIDECAR_OUTBOUND
@@ -540,27 +547,20 @@ install_controlpanel() {
   echo
   
   if [[ -z "$db_userInput_user" ]]; then
-    db_userInput_user=$(generate_random_string 10)
-    echo "Username generated: $db_userInput_user"
+    db_user=$(generate_random_string 10)
+    echo "Username generated: $db_user"
+  else
+    db_user=$db_userInput_user
   fi
   if [[ -z "$db_userInput_password" ]]; then
-    db_userInput_password=$(generate_random_string 30)
-    echo "Password generated: $db_userInput_password"
+    db_password=$(generate_random_string 30)
+    echo "Password generated: $db_password"
+  else
+    db_password=$db_userInput_password
   fi
 
-  db_user=$(echo -n "$db_userInput_user" | base64)
-  db_password=$(echo -n "$db_userInput_password" | base64)
-
-  cat <<EOF > controlpanel-api/templates/controlpanel-temp-secrets.yaml
-apiVersion: v1
-kind: Secret
-metadata:
-  name: controlpanel-db-secrets
-  namespace: {{ .Values.namespace }}
-data:
-  POSTGRES_USER: $db_user
-  POSTGRES_PASSWORD: $db_password
-EOF
+  envoy_apiKey=$(generate_random_string 65)
+  fluentbit_apiKey=$(generate_random_string 65)
 
   cat <<EOF > controlpanel-api/values_tmp.yaml
 replicaCount: 1
@@ -569,11 +569,14 @@ image: "ghcr.io/sap/controlpanel-api:latest"
 db_port: 5432
 db_host: "controlpanel-db-service"
 controlpanel_front_url: "$front_url"
-from_wizard: true
+db_user: "$db_user"
+db_password: "$db_password"
+envoyApiKey: "$envoy_apiKey"
+fluentbitApiKey: "$fluentbit_apiKey"
 EOF
 
   helm install -f controlpanel-api/values_tmp.yaml controlpanel-api controlpanel-api > /dev/null
-  rm controlpanel-api/templates/controlpanel-temp-secrets.yaml controlpanel-api/values_tmp.yaml
+  rm controlpanel-api/values_tmp.yaml
 }
 
 ask_controlpanel_front() {

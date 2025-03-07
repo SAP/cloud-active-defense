@@ -228,6 +228,10 @@ setlocal enabledelayedexpansion
     rmdir /S /Q envoy-config\temp > nul
   )
   mkdir envoy-config\temp
+  for /f "tokens=*" %%i in ('kubectl get secret -n controlpanel envoy-api-key-secret -o jsonpath^="{.data.ENVOY_API_KEY}"') do set encodedKey=%%i
+  echo %encodedKey% > temp.b64
+  for /f "tokens=* delims=" %%i in ('powershell -Command "[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String((Get-Content -Raw -Path 'temp.b64')))"') do set envoy_apiKey=%%i
+  del temp.b64
   (
     echo apiVersion: networking.istio.io/v1alpha3
     echo kind: EnvoyFilter
@@ -264,6 +268,12 @@ setlocal enabledelayedexpansion
     echo                      filename: var/local/lib/wasm/sundew.wasm
     echo                  runtime: envoy.wasm.runtime.v8
     echo                  vmId: cad-filter
+    echo                configuration:
+    echo                  '@type': type.googleapis.com/google.protobuf.StringValue
+    echo                  value: ^|
+    echo                    {
+    echo                      "ENVOY_API_KEY": "!envoy_apiKey!"
+    echo                    }
     echo  - applyTo: CLUSTER
     echo    match:
     echo      context: SIDECAR_OUTBOUND
@@ -560,35 +570,20 @@ setlocal enabledelayedexpansion
   set /p "db_userInput_password=Please provide the password for the database: "
   
   if "!db_userInput_user!"=="" (
-    call :generate_random_string 10 db_userInput_user
-    echo Username generated: !db_userInput_user!
+    call :generate_random_string 10 db_user
+    echo Username generated: !db_user!
   ) else (
-    set "db_userInput_user=!db_userInput_user: =!"
+    set "db_user=!db_userInput_user: =!"
   )
   if "!db_userInput_password!"=="" (
-    call :generate_random_string 30 db_userInput_password
-    echo Password generated: !db_userInput_password!
+    call :generate_random_string 30 db_password
+    echo Password generated: !db_password!
   ) else (
-    set "db_userInput_password=!db_userInput_password: =!"
+    set "db_password=!db_userInput_password: =!"
   )
-  (echo|set /p=!db_userInput_user!) > temp_user.txt
-  certutil -encode temp_user.txt temp_user.b64 > nul
-  for /f "delims=" %%A in (temp_user.b64) do echo %%A | findstr /v "CERTIFICATE" >nul && set db_user=%%A
-  del temp_user.txt temp_user.b64
-  (echo|set /p=!db_userInput_password!) > temp_password.txt
-  certutil -encode temp_password.txt temp_password.b64 > nul
-  for /f "delims=" %%A in (temp_password.b64) do echo %%A | findstr /v "CERTIFICATE" >nul && set db_password=%%A
-  del temp_password.txt temp_password.b64
-  (
-    echo apiVersion: v1
-    echo kind: Secret
-    echo metadata:
-    echo   name: controlpanel-db-secrets
-    echo   namespace: {{ .Values.namespace }}
-    echo data:
-    echo   POSTGRES_USER: !db_user!
-    echo   POSTGRES_PASSWORD: !db_password!
-  ) > controlpanel-api/templates/controlpanel-temp-secrets.yaml
+
+  call :generate_random_string 65 envoy_apiKey
+  call :generate_random_string 65 fluentbit_apiKey
 
   (echo replicaCount: 1
   echo namespace: controlpanel
@@ -596,11 +591,14 @@ setlocal enabledelayedexpansion
   echo db_port: 5432
   echo db_host: "controlpanel-db-service"
   echo controlpanel_front_url: "!front_url!"
-  echo from_wizard: true
+  echo db_user: !db_user!
+  echo db_password: !db_password!
+  echo envoyApiKey: !envoy_apiKey!
+  echo fluentbitApiKey: !fluentbit_apiKey!
   ) > controlpanel-api\values_tmp.yaml
 
   helm install -f controlpanel-api\values_tmp.yaml controlpanel-api controlpanel-api > nul
-  del controlpanel-api\templates\controlpanel-temp-secrets.yaml controlpanel-api\values_tmp.yaml
+  del controlpanel-api\values_tmp.yaml
   exit /B
 :askControlpanelFront
   set /p front_userInput=Do you want to install controlpanel dashboard (Y/N) ? 
