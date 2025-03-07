@@ -14,12 +14,13 @@ const protectedApp = require('./routes/protected-app');
 const { createProtectedApp } = require('./services/protected-app');
 const { createDecoy } = require('./services/decoy');
 const { updateConfig } = require('./services/config');
+const configmanagerAuth = require('./middleware/configmanager-authentication');
 
 const app = express();
 app.use(express.json());
 app.use(cors({ origin: process.env.CONTROLPANEL_FRONTEND_URL }));
 
-app.use('/configmanager', configmanager);
+app.use('/configmanager', configmanagerAuth, configmanager);
 app.use('/decoys', decoys);
 app.use('/decoy', decoy);
 app.use('/statistics', statistics);
@@ -42,6 +43,15 @@ app.listen(8050, async () => {
         const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default' }); 
         createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
         updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
+
+        if (process.env.ENVOY_API_KEY) {
+            const ApiKey = require('./models/Api-key');
+            ApiKey.findOrCreate({ where: { key: process.env.ENVOY_API_KEY, permissions: ["configmanager"] }});
+        }
+        if (process.env.FLUENTBIT_API_KEY) {
+            const ApiKey = require('./models/Api-key');
+            ApiKey.findOrCreate({ where: { key: process.env.FLUENTBIT_API_KEY, permissions: ["fluentbit"] }});
+        }
     } catch(e) {
         console.error("Error when starting server:\n", e);
     }

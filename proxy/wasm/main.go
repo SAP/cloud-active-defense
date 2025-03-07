@@ -55,11 +55,19 @@ type pluginContext struct {
   deployment            string
   namespace             string
   postponed []uint32
+  conf                  PluginConf
+}
+type PluginConf struct {
+  EnvoyAPIKey   string `json:"ENVOY_API_KEY"`
 }
 
 func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
   // load decoy config
-
+  pluginConf, _ := proxywasm.GetPluginConfiguration()
+  if err := json.Unmarshal(pluginConf, &ctx.conf); err != nil {
+    proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"failed to unmarshal plugin configuration: %v\"}", err.Error())
+    return types.OnPluginStartStatusFailed
+  }
   namespace, _ := proxywasm.GetProperty([]string{"node", "metadata", "NAMESPACE"})
 	workload, _ := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
 	if len(namespace) != 0 {
@@ -127,7 +135,7 @@ func (ctx *pluginContext) OnTick() {
   //proxywasm.LogInfof("--- plugin tick, rereading config ---")
   requestHeaders := [][2]string{
     {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
-    {"Content-Type", "application/json"},
+    {"Content-Type", "application/json"}, {"Authorization", ctx.conf.EnvoyAPIKey},
   }
   if _, err := proxywasm.DispatchHttpCall("controlpanel-api", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
     proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
@@ -156,7 +164,7 @@ func (ctx *pluginContext) OnTick() {
     }
     requestHeadersBlocklist := [][2]string{
       {":method", "POST"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
-      {"Content-Type", "application/json"},
+      {"Content-Type", "application/json"}, {"Authorization", ctx.conf.EnvoyAPIKey},
     }
     if _, err := proxywasm.DispatchHttpCall("controlpanel-api", requestHeadersBlocklist, payload, nil, 5000, callBackSetBlocklist); err != nil {
       proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
@@ -225,7 +233,7 @@ func (ctx *pluginContext) OnTick() {
     }
     reqHeadBlocklist := [][2]string{
       {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
-      {"Content-Type", "application/json"},
+      {"Content-Type", "application/json"}, {"Authorization", ctx.conf.EnvoyAPIKey},
     }
     if _, err := proxywasm.DispatchHttpCall("controlpanel-api", reqHeadBlocklist, nil, nil, 5000, callBackGetBlocklist); err != nil {
       proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
