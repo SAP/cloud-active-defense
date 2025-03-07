@@ -21,6 +21,12 @@ static_resources:
                   code:
                     local:
                       filename: "var/local/lib/wasm/cloud-active-defense.wasm"
+                configuration: 
+                  "@type": type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "ENVOY_API_KEY": "F3mTzUj8nRbW4pQc7gHxN1AvD5sL6KfVZ0yPuJkE2R9qXi8MwB7lChGvTa1ZoS3Nd"
+                    }
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router

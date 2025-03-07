@@ -1,6 +1,7 @@
 const express = require('express');
 
 const logsService = require('../services/logs');
+const fluentAuth = require('../middleware/fluentbit-authentication');
 
 const router = express.Router();
 
@@ -14,7 +15,7 @@ router.get('/:pa_id', async (req, res) => {
     }
 })
 
-router.post('/', async (req, res) => {
+router.post('/', fluentAuth, async (req, res) => {
     try {
         const result = await logsService.createLogs(req.body);
         return res.status(result.code).send(result);
