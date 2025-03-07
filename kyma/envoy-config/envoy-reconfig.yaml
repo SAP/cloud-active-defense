@@ -33,6 +33,12 @@ spec:
                       filename: var/local/lib/wasm/sundew.wasm
                   runtime: envoy.wasm.runtime.v8
                   vmId: cad-filter
+                configuration:
+                  "@type": type.googleapis.com/google.protobuf.StringValue
+                  value: |
+                    {
+                      "ENVOY_API_KEY": "<ENVOY_API_KEY>"
+                    }
 
   - applyTo: CLUSTER
     match:
