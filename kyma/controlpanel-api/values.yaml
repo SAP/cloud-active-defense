@@ -9,4 +9,9 @@ image: "ghcr.io/sap/controlpanel-api:latest"
 
 db_port: 5432
 db_host: controlpanel-db-service
+db_user: <DB_USER>
+db_password: <DB_PASSWORD>
 controlpanel_front_url: <<CONTROLPANEL_FRONT_URL> #https://controlpanel-front.<KYMA_DOMAIN>
+
+envoyApiKey: <ENVOY_API_KEY>
+fluentbitApiKey: <FLUENTBIT_API_KEY>
