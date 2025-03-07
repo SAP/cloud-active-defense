@@ -35,3 +35,7 @@ spec:
           envFrom:
             - secretRef:
                 name: controlpanel-db-secrets
+            - secretRef:
+                name: envoy-api-key-secret
+            - secretRef:
+                name: fluentbit-api-key-secret

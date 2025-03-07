@@ -15,6 +15,14 @@ spec:
          host    controlpanel-api-service.controlpanel.svc.cluster.local
          uri     /logs
          format  json
+         header  Authorization ${API_KEY}
+   variables:
+    - name: API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: fluentbit-api-key-secret
+          namespace: controlpanel
+          key: FLUENTBIT_API_KEY
    filters:
       - custom: |
          Name    grep
