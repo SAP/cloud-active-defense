@@ -105,6 +105,7 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
       }
       return true
     }
+    if (!this.injectionForm.dirty) return true;
     return confirm("Are you sure to leave this page ? All progress will be lost");
   }
   

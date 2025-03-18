@@ -20,6 +20,7 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
   reviewText = "";
   decoySubscription?: Subscription;
   decoyId: UUID = "";
+  isSaving = false;
 
   constructor(private decoyService: DecoyService, private toastr: ToastrService, private router: Router, private activatedRoute: ActivatedRoute) {
     this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
@@ -37,6 +38,7 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
       this.toastr.warning("Cannot go to alert/action page, detect is not set yet", 'Not allowed');
       return false;
     }
+    if (this.isSaving) return true;
     return confirm("Are you sure to leave this page? All progress will be lost");
   }
 
@@ -226,6 +228,7 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
       if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving decoy");
       else {
         this.toastr.success(apiResponse.message, 'Successfully saved Decoy');
+        this.isSaving = true;
         this.router.navigate(['decoy/list']);
       }
     }
