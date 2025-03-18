@@ -89,6 +89,7 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
       }
       return true
     }
+    if (!this.detectionForm.dirty) return true;
     return confirm("Are you sure to leave this page ? All progress will be lost");
   }
 
