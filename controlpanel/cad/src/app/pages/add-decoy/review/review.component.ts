@@ -162,8 +162,8 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
       for (const respond of this.decoy.detect.respond) {
         let behavior;
         if (respond.behavior == 'error') behavior = "send error 500";
-        else if (respond.behavior == 'throttle') behavior = `${respond.behavior} ${respond.property?.includes('-') ? 'between ' + respond.property : respond.property} seconds`;
-        else behavior = respond;
+        else if (respond.behavior == 'throttle') behavior = `${respond.behavior} ${respond.property ? respond.property?.includes('-') ? 'between ' + respond.property : respond.property : 'between 30-120'} seconds`;
+        else behavior = respond.behavior;
 
         let delay;
         if (respond.delay == 'now' || !respond.delay) delay = 'now';
