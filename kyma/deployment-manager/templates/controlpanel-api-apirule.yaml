@@ -1,0 +1,19 @@
+apiVersion: gateway.kyma-project.io/v1beta1
+kind: APIRule
+metadata:
+  name: deployment-manager-apirule
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: deployment-manager
+spec:
+  host: deployment-manager
+  service:
+    name: deployment-manager-service
+    port: 80
+  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  rules:
+    - path: /.*
+      methods: ["POST", "PUT", "DELETE"]
+      accessStrategies:
+        - handler: allow
+      mutators: []
