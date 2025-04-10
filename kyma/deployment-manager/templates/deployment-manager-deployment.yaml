@@ -1,30 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: myapp
+  name: deployment-manager
   namespace: {{ .Values.namespace }}
   labels:
-    app: myapp
+    app: deployment-manager
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: myapp
+      app: deployment-manager
   template:
     metadata:
       labels:
-        app: myapp
+        app: deployment-manager
     spec:
       containers:
-        - name: myapp
+        - name: deployment-manager
           image: {{ .Values.image }}
           imagePullPolicy: Always
-          resources:
-            limits:
-              cpu: 20m
-              memory: 32Mi
-            requests:
-              cpu: 10m
-              memory: 16Mi
           ports:
           - containerPort: 3000
