@@ -31,17 +31,23 @@ module.exports = {
                 .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
             if (initJob.error && initJob.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create init job' };
 
-            const apiKey = generateRandomString(65);
-            const envoyFilter = await k8sCustom.createNamespacedCustomObject({ group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', body: { apiVersion: 'networking.istio.io/v1alpha3', kind: 'EnvoyFilter', metadata: { name: 'cloudactivedefense-filter', namespace, labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { workloadSelector: { labels: { protects: 'protectedApp' } }, configPatches: [{ applyTo: 'HTTP_FILTER', match: { context: 'SIDECAR_INBOUND', listener: { filterChain: { filter: { name: 'envoy.filters.network.http_connection_manager', subFilter: { name: 'envoy.filters.http.router', } } } } }, patch: { operation: 'INSERT_BEFORE', value: { name: 'envoy.filters.http.wasm', typedConfig: { '@type': 'type.googleapis.com/udpa.type.v1.TypedStruct', type_url: 'type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm', value: { config: { rootId: 'my_root_id', vmConfig: { code: { local: { filename: 'var/local/lib/wasm/sundew.wasm' } }, runtime: 'envoy.wasm.runtime.v8', vmId: 'cad-filter' }, configuration: { '@type': 'type.googleapis.com/google.protobuf.StringValue', value: `{"ENVOY_API_KEY": "${apiKey}"}` } } } } } } }, { applyTo: 'CLUSTER', match: { context: 'SIDECAR_OUTBOUND', }, patch: { operation: 'ADD', value: { name: 'controlpanel-api', type: 'STRICT_DNS', lb_policy: 'ROUND_ROBIN', load_assignment: { cluster_name: 'controlpanel-api', endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: 'controlpanel-api-service', port_value: 80 } } } }] }] } } } }] } } })
+            let apiKey;
+            const envoyFilterExists = await k8sCustom.getNamespacedCustomObject({ group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', name: 'cloudactivedefense-filter' })
                 .then(envoyFilter => envoyFilter)
                 .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
-            if (envoyFilter.error && envoyFilter.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create envoy filter' };
+            if (envoyFilterExists.error && envoyFilterExists.reason == 'NotFound') {
+                apiKey = generateRandomString(65);
+                const envoyFilter = await k8sCustom.createNamespacedCustomObject({ group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', body: { apiVersion: 'networking.istio.io/v1alpha3', kind: 'EnvoyFilter', metadata: { name: 'cloudactivedefense-filter', namespace, labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { workloadSelector: { labels: { protects: 'protectedApp' } }, configPatches: [{ applyTo: 'HTTP_FILTER', match: { context: 'SIDECAR_INBOUND', listener: { filterChain: { filter: { name: 'envoy.filters.network.http_connection_manager', subFilter: { name: 'envoy.filters.http.router', } } } } }, patch: { operation: 'INSERT_BEFORE', value: { name: 'envoy.filters.http.wasm', typedConfig: { '@type': 'type.googleapis.com/udpa.type.v1.TypedStruct', type_url: 'type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm', value: { config: { rootId: 'my_root_id', vmConfig: { code: { local: { filename: 'var/local/lib/wasm/sundew.wasm' } }, runtime: 'envoy.wasm.runtime.v8', vmId: 'cad-filter' }, configuration: { '@type': 'type.googleapis.com/google.protobuf.StringValue', value: `{"ENVOY_API_KEY": "${apiKey}"}` } } } } } } }, { applyTo: 'CLUSTER', match: { context: 'SIDECAR_OUTBOUND', }, patch: { operation: 'ADD', value: { name: 'controlpanel-api', type: 'STRICT_DNS', lb_policy: 'ROUND_ROBIN', load_assignment: { cluster_name: 'controlpanel-api', endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: 'controlpanel-api-service', port_value: 80 } } } }] }] } } } }] } } })
+                    .then(envoyFilter => envoyFilter)
+                    .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
+                if (envoyFilter.error && envoyFilter.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create envoy filter' };
+            }
             const controlpanelService = await k8sCore.createNamespacedService({ namespace, body: { metadata: { name: 'controlpanel-api-service', labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { type: 'ExternalName', externalName: 'controlpanel-api-service.controlpanel.svc.cluster.local', ports: [{ port: 80 }] } } })
                 .then(controlpanelService => controlpanelService)
                 .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
             if (controlpanelService.error && controlpanelService.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create controlpanel service' };
 
-            return { code: 200, type: 'success', message: 'Envoy wasm installed successfully', data: apiKey };
+            return { code: 200, type: 'success', message: 'Envoy wasm installed successfully', ...(apiKey && { data: apiKey }) };
         } catch (e) {
             throw e;
         }
