@@ -44,15 +44,60 @@ installServiceAccount() {
 installClusterRole() {
   if ! kubectl get clusterrole | grep -q deployment-manager; then
     echo "Creating cluster role 🔧"
-    kubectl apply -f - <<EOF
+    kubectl apply -f - <<EOF > /dev/null
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: deployment-manager
 rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["*"]
+- verbs:
+   - create
+   - get
+  apiGroups:
+   - ''
+   - operator.kyma-project.io
+  resources:
+   - persistentvolumeclaims
+   - telemetries
+- verbs:
+   - create
+  apiGroups:
+   - batch
+   - ''
+   - telemetry.kyma-project.io
+  resources:
+   - jobs
+   - services
+   - logpipelines
+- verbs:
+   - create
+   - patch
+   - get
+  apiGroups:
+   - networking.istio.io
+   - ''
+  resources:
+   - envoyfilters
+   - secrets
+- verbs:
+   - get
+  apiGroups:
+   - ''
+  resources:
+   - namespaces
+- verbs:
+   - get
+   - patch
+  apiGroups:
+   - apps
+  resources:
+   - deployments
+- verbs:
+   - patch
+  apiGroups:
+   - operator.kyma-project.io
+  resources:
+   - kymas
 EOF
     kubectl label clusterrole deployment-manager app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
   fi
@@ -114,6 +159,7 @@ contexts:
 EOF
 
   echo "Kubeconfig generated successfully! 🎉"
+  echo "This kubeconfig is valid for 1 year, to renew it run the script again."
   echo "You can either use it with deployment-manager API or upload it into Cloud Active Defense controlpanel (recommanded)."
 }
 

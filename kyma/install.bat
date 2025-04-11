@@ -51,9 +51,54 @@ setlocal enabledelayedexpansion
     echo metadata:
     echo  name: deployment-manager
     echo rules:
-    echo - apiGroups: ["*"]
-    echo   resources: ["*"]
-    echo   verbs: ["*"]
+    echo - verbs:
+    echo    - create
+    echo    - get
+    echo   apiGroups:
+    echo    - ''
+    echo    - operator.kyma-project.io
+    echo   resources:
+    echo    - persistentvolumeclaims
+    echo    - telemetries
+    echo - verbs:
+    echo    - create
+    echo   apiGroups:
+    echo    - batch
+    echo    - ''
+    echo    - telemetry.kyma-project.io
+    echo   resources:
+    echo    - jobs
+    echo    - services
+    echo    - logpipelines
+    echo - verbs:
+    echo    - create
+    echo    - patch
+    echo    - get
+    echo   apiGroups:
+    echo    - networking.istio.io
+    echo    - ''
+    echo   resources:
+    echo    - envoyfilters
+    echo    - secrets
+    echo - verbs:
+    echo    - get
+    echo   apiGroups:
+    echo    - ''
+    echo   resources:
+    echo    - namespaces
+    echo - verbs:
+    echo    - get
+    echo    - patch
+    echo   apiGroups:
+    echo    - apps
+    echo   resources:
+    echo    - deployments
+    echo - verbs:
+    echo    - patch
+    echo   apiGroups:
+    echo    - operator.kyma-project.io
+    echo   resources:
+    echo    - kymas
     ) | kubectl apply -f - >nul
     kubectl label clusterrole deployment-manager app.kubernetes.io/managed-by=deployment-manager-install >nul
   )
@@ -129,5 +174,6 @@ setlocal enabledelayedexpansion
   ) > kubeconfig.yaml
   
   echo Kubeconfig generated successfully! 🎉
+  echo This kubeconfig is valid for 1 year, to renew it run the script again.
   echo You can either use it with deployment-manager API or upload it into Cloud Active Defense controlpanel (recommanded).
   exit /B 
