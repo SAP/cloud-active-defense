@@ -16,11 +16,7 @@ module.exports = {
         try {
             if (!namespace || !application) return { type: 'error', code: 400, message: 'Invalid namespace or application supplied' };
             const protectedApp = await ProtectedApp.findOne({ where: { namespace, application } });
-            if (!protectedApp) {
-                const newProtectedApp = await protectedAppService.createProtectedApp({ namespace, application });
-                if (newProtectedApp.type === 'error') console.error(`Could not create protected app for namespace: ${namespace} and application: ${application}. Error: ${newProtectedApp.message}`);
-                else return { type: 'error', code: 404, message: 'Invalid namespace or application supplied' };
-            }
+            if (!protectedApp) return { type: 'error', code: 404, message: 'Protected app with this namespace and/or application does not exist' };
             const decoys = await Decoy.findAll({ where: { pa_id: protectedApp.id, deployed: true } });
             const config = await Config.findOne({ where: { pa_id: protectedApp.id, deployed: true } });
             return { type: 'success', code: 200, data: { decoys: decoys.map(decoy => decoy.decoy), config: config ? config.config : {} }, message: 'Successful operation' };

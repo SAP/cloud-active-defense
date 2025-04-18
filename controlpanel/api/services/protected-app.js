@@ -1,6 +1,7 @@
 const Decoy = require("../models/Decoy-data");
 const ProtectedApp = require("../models/ProtectedApp");
 const Config = require("../models/Config-data");
+const Customer = require("../models/Customer");
 
 module.exports = {
     /**
@@ -24,11 +25,13 @@ module.exports = {
         try {
             if (typeof protectedApp != 'object') return { type: 'error', code: 422, message: 'Payload should be a json' };
             if (!protectedApp.namespace || !protectedApp.application) return { type: 'error', code: 400, message: 'namespace and/or application are missing' };
-            const existingProtectedApp = await ProtectedApp.findOne({ where: { namespace: protectedApp.namespace, application: protectedApp.application }})
+            const existingCustomer = await Customer.findOne({ where: { id: protectedApp.cu_id }});
+            if (!existingCustomer) return { type: 'error', code: 404, message: 'Customer not found' };
+            const existingProtectedApp = await ProtectedApp.findOne({ where: { namespace: protectedApp.namespace, application: protectedApp.application, cu_id: protectedApp.cu_id }});
             if(existingProtectedApp) {
                 return { type: 'error', message: 'Protected app alredy exists, cannot create protected app duplicates', code: 409, data: existingProtectedApp };
             }
-            const newProtectedApp = await ProtectedApp.create({ namespace: protectedApp.namespace, application: protectedApp.application }, { returning: true });
+            const newProtectedApp = await ProtectedApp.create({ namespace: protectedApp.namespace, application: protectedApp.application, cu_id: existingCustomer.id }, { returning: true });
             if(newProtectedApp.namespace != 'default' && newProtectedApp.application != 'default') {
                 const defaultApp = await ProtectedApp.findOne({ where: { namespace: 'default', application: 'default' }});
                 const defaultDecoy = await Decoy.findAll({ where: { pa_id: defaultApp.id }, attributes: ['decoy'] });

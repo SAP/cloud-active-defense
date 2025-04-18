@@ -23,8 +23,18 @@ function isValidRegex(str) {
     }
 }
 
+function isUrl(urlString) {
+  try {
+    new URL(urlString);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 module.exports = {
     isJSON,
     isUUID,
-    isValidRegex
+    isValidRegex,
+    isUrl
 }

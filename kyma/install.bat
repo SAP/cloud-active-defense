@@ -82,6 +82,7 @@ setlocal enabledelayedexpansion
     echo    - secrets
     echo - verbs:
     echo    - get
+    echo    - list
     echo   apiGroups:
     echo    - ''
     echo   resources:

@@ -68,7 +68,23 @@ async function canConnectToCluster(kubeconfig) {
         throw error
     }
 }
-
+/**
+ * 
+ * @param {UUID} cu_id 
+ * @returns {{ code?: number, type: 'success' | 'error', message: string, kubeconfig?: string}}
+ */
+async function getKubeconfig(cu_id) {
+    try {
+        const Customer = require('../model/Customer');
+        const customer = await Customer.findOne({ where: { id: cu_id } });
+        if (!customer) return { code: 404, type: 'error', message: 'Customer does not exist' };
+        if (!customer.kubeconfig) return { code: 404, type: 'error', message: 'No kubeconfig provided for customer' };
+        return { type: 'success', kubeconfig: customer.kubeconfig.replace(/\\n/g, '\n') };
+    }
+    catch (e) {
+        throw e;
+    }
+}
 module.exports = {
     connectToK8s,
     coreApi,
@@ -76,5 +92,6 @@ module.exports = {
     batchApi,
     customApi,
     clientApi,
-    canConnectToCluster
+    canConnectToCluster,
+    getKubeconfig
 }

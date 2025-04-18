@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize")
 const sequelize = require("../config/db.config");
+const ProtectedApp = require("./ProtectedApp");
 
 const ApiKey = sequelize.define("apiKey", {
     id: {
@@ -14,6 +15,14 @@ const ApiKey = sequelize.define("apiKey", {
     permissions: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: false
+    },
+    pa_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: ProtectedApp,
+            key: 'id'
+        },
     }
 });
 module.exports = ApiKey;

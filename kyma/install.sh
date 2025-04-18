@@ -81,6 +81,7 @@ rules:
    - secrets
 - verbs:
    - get
+   - list
   apiGroups:
    - ''
   resources:

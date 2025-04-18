@@ -13,7 +13,7 @@ spec:
   gateway: kyma-gateway.kyma-system.svc.cluster.local
   rules:
     - path: /.*
-      methods: ["POST", "PUT", "DELETE"]
+      methods: ["GET", "POST", "PUT", "DELETE"]
       accessStrategies:
         - handler: allow
       mutators: []

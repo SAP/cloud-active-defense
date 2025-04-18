@@ -1,20 +1,21 @@
 const express = require('express');
-const { installTelemetry, renewApiKey } = require('../services/telemetry');
+const { getNamespaces, getDeployments } = require('../services/resources');
 
 const router = express.Router();
 
-router.post('/', async (req, res) => {
+router.get('/namespaces/:cu_id', async (req, res) => {
     try {
-        const result = await installTelemetry(req.body.cu_id, req.body.namespace, req.body.deploymentName);
+        const result = await getNamespaces(req.params.cu_id);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);
         return res.status(500).send({ code: 500, type: 'error', message: 'Server error' });
     }
 });
-router.post('/renew-apikey', async (req, res) => {
+
+router.get('/:namespace/deployments/:cu_id', async (req, res) => {
     try {
-        const result = await renewApiKey(req.body.cu_id, req.body.namespace);
+        const result = await getDeployments(req.params.cu_id, req.params.namespace);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);
