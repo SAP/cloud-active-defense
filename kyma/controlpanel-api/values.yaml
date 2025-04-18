@@ -2,16 +2,19 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
-replicaCount: 1
 namespace: "controlpanel"
 
-image: "ghcr.io/sap/controlpanel-api:latest"
+controlpanel:
+  replicaCount: 1
+  image: "ghcr.io/sap/controlpanel-api:latest"
+  front_url: <CONTROLPANEL_FRONT_URL>
+  deployment_manager_url: http://deployment-manager-service
+  db_user: <DB_USER>
+  db_password: <DB_PASSWORD>
+
+deployment_manager:
+  image: "ghcr.io/sap/deployment-manager:latest"
+  db_password: <DEPLOYMENTMANAGER_DB_PASSWORD>
 
 db_port: 5432
 db_host: controlpanel-db-service
-db_user: <DB_USER>
-db_password: <DB_PASSWORD>
-controlpanel_front_url: <<CONTROLPANEL_FRONT_URL> #https://controlpanel-front.<KYMA_DOMAIN>
-
-envoyApiKey: <ENVOY_API_KEY>
-fluentbitApiKey: <FLUENTBIT_API_KEY>

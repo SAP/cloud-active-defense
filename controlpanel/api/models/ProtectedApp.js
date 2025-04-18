@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize")
 const sequelize = require("../config/db.config");
+const Customer = require("./Customer");
 
 const ProtectedApp = sequelize.define("protectedApp", {
     id: {
@@ -14,6 +15,14 @@ const ProtectedApp = sequelize.define("protectedApp", {
     application: {
         type: DataTypes.STRING,
         allowNull: false
+    },
+    cu_id: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: Customer,
+            key: 'id'
+        },
     },
 });
 module.exports = ProtectedApp;

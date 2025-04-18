@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-manager
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: deployment-manager
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: deployment-manager
+  template:
+    metadata:
+      labels:
+        app: deployment-manager
+    spec:
+      imagePullSecrets:
+      - name: artifactory-creds
+      initContainers:
+      - name: wait-for-db
+        image: busybox
+        command: ['sh', '-c', 'until nc -z -v controlpanel-api-service 80; do echo waiting for db; sleep 2; done']
+      containers:
+        - name: deployment-manager
+          image: {{ .Values.deployment_manager.image }}
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 3000
+          env:
+            - name: DB_PORT
+              value: {{ .Values.db_port | quote }}
+            - name: DB_HOST
+              value: {{ .Values.db_host }}
+          envFrom:
+            - secretRef:
+                name: deployment-manager-db-secrets

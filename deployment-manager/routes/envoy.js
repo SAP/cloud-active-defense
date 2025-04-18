@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post('/wasm', async (req, res) => {
     try {
-        const result = await installEnvoyWasm(req.body.kubeconfig, req.body.namespace);
+        const result = await installEnvoyWasm(req.body.cu_id, req.body.namespace);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);
@@ -14,7 +14,7 @@ router.post('/wasm', async (req, res) => {
 });
 router.put('/reconfig', async (req, res) => {
     try {
-        const result = await reconfigEnvoy(req.body.kubeconfig, req.body.deploymentName, req.body.namespace);
+        const result = await reconfigEnvoy(req.body.cu_id, req.body.deploymentName, req.body.namespace);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);
@@ -23,7 +23,7 @@ router.put('/reconfig', async (req, res) => {
 });
 router.post('/renew-apikey', async (req, res) => {
     try {
-        const result = await renewApiKey(req.body.kubeconfig, req.body.namespace);
+        const result = await renewApiKey(req.body.cu_id, req.body.namespace);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);
