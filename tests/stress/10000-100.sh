@@ -1,52 +1,41 @@
 # Time taken for 10000 requests, 100 injected decoy (replace) - each triggered 10 times
 
 # Configure decoys
-element='
+element=$(cat <<EOF
 {
+  "pa_id": "${PROTECTEDAPP_ID}",
   "decoy": {
-    "key": "somekey"
-  },
-  "inject": {
-    "store": {
-      "inResponse": "/1",
-      "withVerb": "GET",
-      "as": "body",
-      "at": {
-        "method": "replace",
-        "property": "((.|\n)*)"
+    "decoy": {
+      "key": "somekey"
+    },
+    "inject": {
+      "store": {
+        "inResponse": "/1",
+        "withVerb": "GET",
+        "as": "body",
+        "at": {
+          "method": "replace",
+          "property": "((.|\n)*)"
+        }
       }
     }
   }
 }
-'
+EOF
+)
 
-# Create an array to store the modified elements
-declare -a elements
-
-# Loop through numbers from 1 to 100 and replace /1 with /<number>
+decoy_ids=()
+# Loop through numbers from 1 to 100 and replace /1 with /<number> and create decoy
 for ((i=1; i<=100; i++)); do
     modified_element=$(echo "$element" | sed "s/\/1/\/$i/")
-    elements+=("$modified_element")
+    # Send the decoy configuration to the API
+    decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -d "$modified_element" http://localhost:8050/decoy | jq -r '.data.id')
+    curl -X PATCH -s -H "Content-Type: application/json" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
+    decoy_ids+=($decoy_id)
 done
 
-# Initialize the decoys variable
-config="{  \"filters\": ["
-
-for ((i=0; i<${#elements[@]}; i++)); do
-    # Add a comma between elements except for the last one
-    if [ $i -eq $((${#elements[@]} - 1)) ]; then
-        config+="$(printf '%s' "${elements[$i]}")"
-    else
-        config+="$(printf '%s' "${elements[$i]}"),"
-    fi
-done
-
-config+="]}"
-
-# connect to configmanager, update /data/cad-default.json
-echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.json'
 # wait a few seconds for the proxy to read the new config
-sleep 5
+sleep 3
 
 
 # Start timing
@@ -80,4 +69,6 @@ echo "Execution time: $execution_time seconds"
 
 # Cleanup
 rm $tempfile
-
+for id in "${decoy_ids[@]}"; do
+  curl -X DELETE -s http://localhost:8050/decoy/$id > /dev/null
+done
