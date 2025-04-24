@@ -123,6 +123,7 @@ module.exports = {
      * Renew API key for envoy filter
      * @param {UUID} cu_id Customer ID
      * @param {string} namespace Namespace of application
+     * @param {string} deploymentName Name of application deployment
      * @returns {{code: number, type: string, message: string, data?: string}}
      */
     renewApiKey: async (cu_id, namespace, deploymentName) => {
