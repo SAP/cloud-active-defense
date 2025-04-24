@@ -75,7 +75,7 @@ module.exports = {
      * @param {string} namespace Namespace of application
      * @returns {{code: number, type: string, message: string, data?: string}}
      */
-    renewApiKey: async (cu_id, namespace) => {
+    renewApiKey: async (cu_id, namespace, deploymentName) => {
         try {
             const kubeconfigResponse = await getKubeconfig(cu_id);
             if (kubeconfigResponse.type == 'error') return kubeconfigResponse;
@@ -86,7 +86,7 @@ module.exports = {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
             const apiKey = generateRandomString(65);
-            const patchError = await k8sCore.patchNamespacedSecret({name: 'fluentbit-api-key-secret', namespace, body: [{ op: 'add', path: '/data/FLUENTBIT_API_KEY', value: encodeBase64(apiKey)}]})
+            const patchError = await k8sCore.patchNamespacedSecret({name: `${deploymentName}-fluentbit-api-key-secret`, namespace, body: [{ op: 'add', path: '/data/FLUENTBIT_API_KEY', value: encodeBase64(apiKey)}]})
             .catch(()=>({ code: 500, type: 'error', message: 'Failed to renew API key for fluentbit: Could not patch fluentbit secret'}));
             if (patchError.type == 'error') return patchError;
             return { code: 200, type: 'success', message: 'Fluentbit API key renewed successfully', data: apiKey };
