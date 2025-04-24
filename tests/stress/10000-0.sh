@@ -1,34 +1,35 @@
 # Time taken for 10000 requests, 1 injected decoy (replace) but 0 trigger (except for last one)
 
 # Configure decoys
-config='
+config=$(cat <<EOF
 {
-  "filters": [
-    {
-      "decoy": {
-        "key": "admin1234"
-      },
-      "inject": {
-        "store": {
-          "inResponse": "/robots.txt",
-          "withVerb": "GET",
-          "as": "body",
-          "at": {
-            "method": "replace",
-            "property": "((.|\n)*)"
-          }
+  "pa_id": "${PROTECTEDAPP_ID}",
+  "decoy": {
+    "decoy": {
+      "key": "admin1234"
+    },
+    "inject": {
+      "store": {
+        "inResponse": "/robots.txt",
+        "withVerb": "GET",
+        "as": "body",
+        "at": {
+          "method": "replace",
+          "property": "((.|\n)*)"
         }
       }
     }
-  ]
+  }
 }
-'
+EOF
+)
 
-# connect to configmanager, update /data/cad-default.json
-echo "$config" | docker exec -i configmanager sh -c 'cat > /data/cad-default.json'
+# Send the decoy configuration to the API
+decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -d "$config" http://localhost:8050/decoy | jq -r '.data.id')
+curl -X PATCH -s -H "Content-Type: application/json" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
+
 # wait a few seconds for the proxy to read the new config
-sleep 5
-
+sleep 3
 
 # Start timing
 start_time=$(date +%s.%N)
@@ -59,4 +60,5 @@ echo "Execution time: $execution_time seconds"
 
 # Cleanup
 rm $tempfile
+curl -X DELETE -s http://localhost:8050/decoy/$decoy_id > /dev/null
 

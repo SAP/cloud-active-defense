@@ -81,6 +81,7 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
       }
       return true
     }
+    if (!this.alertForm.dirty) return true;
     return confirm("Are you sure to leave this page ? All progress will be lost");
   }
 

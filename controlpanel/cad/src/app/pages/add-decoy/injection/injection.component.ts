@@ -78,7 +78,7 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   constructor(private decoyService: DecoyService, private router: Router, private activatedRoute: ActivatedRoute, private toastr: ToastrService){
     this.injectionForm = new FormGroup({
       injectionPath: new FormControl('', [Validators.required, CustomValidators.isValidURL]),
-      request: new FormControl('inRequest', [Validators.required]),
+      request: new FormControl('inResponse', [Validators.required]),
       verb: new FormControl(''),
       as: new FormControl('header', [Validators.required]),
       key: new FormControl(''),
@@ -105,6 +105,7 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
       }
       return true
     }
+    if (!this.injectionForm.dirty) return true;
     return confirm("Are you sure to leave this page ? All progress will be lost");
   }
   
@@ -283,7 +284,7 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   fillForm(decoyData: Decoy){
     this.injectionForm.setValue({
       injectionPath: decoyData.inject?.store.inRequest || decoyData.inject?.store.inResponse || '',
-      request: decoyData.inject?.store.inResponse != undefined ? 'inResponse' : 'inRequest',
+      request: decoyData.inject?.store.inResponse || decoyData.inject?.store.inRequest ? (decoyData.inject?.store.inResponse ? 'inResponse' : 'inRequest') : 'inResponse',      
       verb: decoyData.inject?.store.withVerb || '',
       as: decoyData.inject?.store.as || 'header',
       key: decoyData.decoy.key || '',
