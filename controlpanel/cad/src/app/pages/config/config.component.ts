@@ -12,7 +12,6 @@ import { ConfigService } from '../../services/config.service';
 import { GlobalStateService } from '../../services/global-state.service';
 import { ToastrService } from 'ngx-toastr';
 import { isEmptyObject } from '../../utils';
-import { ConfigData } from '../../models/config-data';
 
 @Component({
   selector: 'app-config',
@@ -27,7 +26,6 @@ export class ConfigComponent implements OnInit, OnDestroy {
   config: Config = {};
   configSubscription?: Subscription
   isUpdating = false;
-  isSync = false;
   
   validRespond = false;
   actionTouched = false;
@@ -76,7 +74,6 @@ onLeaveInfo() {
   }
 
   ngOnInit() {
-    this.configForm.valueChanges.subscribe(() => { if(!this.isUpdating) this.isSync = false})
     this.globalState.selectedApp$.subscribe(async selectedApp => {
       const apiResponse = await this.configService.getConfig(selectedApp.id)
       if (apiResponse.type == 'error') {
@@ -84,8 +81,6 @@ onLeaveInfo() {
         this.fillForm({});
         this.config = {};
         this.actionArray = [];
-      } else {
-        this.isSync = (apiResponse.data as ConfigData).deployed
       }
       this.configSubscription = this.configService.config$.subscribe(data => {
         if (!this.isUpdating){
@@ -277,11 +272,10 @@ onLeaveInfo() {
       this.toastr.error("Cannot save empty json, must have at least one property", 'Error when saving global config');
       return 
     }
-    const apiResponse = await this.configService.updateConfig({ pa_id: this.globalState.selectedApp.id, deployed: false, config: this.config });
+    const apiResponse = await this.configService.updateConfig({ pa_id: this.globalState.selectedApp.id, config: this.config });
       if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving global config");
       else {
         this.toastr.success(apiResponse.message, 'Successfully updated global config');
-        this.isSync = false;
       }
   }
 }

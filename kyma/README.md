@@ -16,17 +16,21 @@
 
 If you wish to build and use your own images of the project follow the instructions in each steps
 
-## 1. Configmanager
+It is recommanded to install Cloud Active Defense with the [wizard](wizard.sh) rather than the step by step install
 
-The only thing to replace in `values.yaml` is `configimage` with configmanager image
+## 1. Controlpanel
 
-<!-- Also modify the `cad-default.json` with your decoys config or keep the default one -->
+The only thing to replace in `values.yaml` is `controlpanelpanel_front_url` which is `https://controlpanel-front` and your kyma domain (ex. `.c-1050b8h.kyma.ondemand.com/`)
+If you don't want to install the dashboard you can just skip this step
 
-If you wish to use your own image of configmanager, go to `configmanager/` directory from the root of the project and build the Dockerfile inside
-
-Then run 
+Then run to install controlpanel's API
 ```shell
-helm install configmanager ./configmanager
+helm install controlpanel-api ./controlpanel-api
+```
+
+You can also run this to install the controlpanel dashboard
+```shell
+helm install controlpanel-front ./controlpanel-front
 ```
 
 ## 2. Collect logs
