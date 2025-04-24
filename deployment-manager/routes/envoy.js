@@ -23,7 +23,7 @@ router.put('/reconfig', async (req, res) => {
 });
 router.post('/renew-apikey', async (req, res) => {
     try {
-        const result = await renewApiKey(req.body.cu_id, req.body.namespace);
+        const result = await renewApiKey(req.body.cu_id, req.body.namespace, req.body.deploymentName);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);
