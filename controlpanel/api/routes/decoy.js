@@ -193,7 +193,7 @@ router.get('/:id', async (req, res) => {
  *                   example: error
  *                 message:
  *                   type: string
- *                   example: No protected api id provided
+ *                   example: No protected app id provided
  *             - type: object
  *               properties:
  *                 code:
