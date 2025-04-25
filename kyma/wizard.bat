@@ -20,12 +20,40 @@ setlocal enabledelayedexpansion
     for /f "tokens=* delims=" %%i in ('kubectl get deployment -n controlpanel ^| findstr controlpanel-api') do set controlpanel_up=%%i
     if not defined controlpanel_up (
       echo Controlpanel API deployment is missing, please check deployment 🕵️
+      for /f "tokens=* delims=" %%i in ('kubectl get deployment -n controlpanel ^| findstr deployment-manager') do set deployment_manager_up=%%i
+      if not defined deployment_manager_up (
+        echo Deployment manager deployment is missing, please check deployment 🕵️
+      ) else (
+        for /f "tokens=* delims=" %%i in ('kubectl get deployment deployment-manager -n controlpanel -o jsonpath^="{.status.availableReplicas}"') do set deployment_manager_health=%%i
+        if not defined deployment_manager_health (
+          echo Deployment manager is unhealthy, please check deployment 🤒
+        )
+      )
     ) else (
       for /f "tokens=* delims=" %%i in ('kubectl get deployment controlpanel-api -n controlpanel -o jsonpath^="{.status.availableReplicas}"') do set controlpanel_health=%%i
       if not defined controlpanel_health (
         echo Controlpanel API is unhealthy, please check deployment 🤒
+        for /f "tokens=* delims=" %%i in ('kubectl get deployment -n controlpanel ^| findstr deployment-manager') do set deployment_manager_up=%%i
+        if not defined deployment_manager_up (
+          echo Deployment manager deployment is missing, please check deployment 🕵️
+        ) else (
+          for /f "tokens=* delims=" %%i in ('kubectl get deployment deployment-manager -n controlpanel -o jsonpath^="{.status.availableReplicas}"') do set deployment_manager_health=%%i
+          if not defined deployment_manager_health (
+            echo Deployment manager is unhealthy, please check deployment 🤒
+          )
+        )
       ) else (
-        echo Controlpanel API is already deployed ✅
+        for /f "tokens=* delims=" %%i in ('kubectl get deployment -n controlpanel ^| findstr deployment-manager') do set deployment_manager_up=%%i
+        if not defined deployment_manager_up (
+          echo Deployment manager deployment is missing, please check deployment 🕵️
+        ) else (
+          for /f "tokens=* delims=" %%i in ('kubectl get deployment deployment-manager -n controlpanel -o jsonpath^="{.status.availableReplicas}"') do set deployment_manager_health=%%i
+          if not defined deployment_manager_health (
+            echo Deployment manager is unhealthy, please check deployment 🤒
+          ) else (
+            echo Controlpanel API ^& deployment manager are already deployed ✅
+          )
+        )
       )
     )
   )
@@ -36,23 +64,6 @@ setlocal enabledelayedexpansion
     call :askControlpanelFront
   )
 
-  echo Looking for deployment manager 🔍
-  for /f "tokens=* delims=" %%i in ('helm list ^| findstr deployment-manager 2^> nul') do set dm_result=%%i
-  if not defined dm_result (
-    call :installDeploymentManager
-  ) else (
-    for /f "tokens=* delims=" %%i in ('kubectl get deployment deployment-manager -n controlpanel') do set deployment_manager_up=%%i
-    if not defined deployment_manager_up (
-      echo Deployment manager deployment is missing, please check deployment 🕵️
-    ) else (
-      for /f "tokens=* delims=" %%i in ('kubectl get deployment deployment-manager -n controlpanel -o jsonpath^="{.status.availableReplicas}"') do set deployment_manager_health=%%i
-      if not defined deployment_manager_health (
-        echo Deployment manager is unhealthy, please check deployment 🤒
-      ) else (
-        echo Deployment manager is already deployed ✅
-      )
-    )
-  )
   echo.
   echo Cloud Active defense is deployed! 💫
 
@@ -90,19 +101,21 @@ setlocal enabledelayedexpansion
     set "db_password=!db_userInput_password: =!"
   )
 
-  call :generate_random_string 65 envoy_apiKey
-  call :generate_random_string 65 fluentbit_apiKey
+  call :generate_random_string 30 db_password_deploymentmanager
 
-  (echo replicaCount: 1
-  echo namespace: controlpanel
-  echo image: "ghcr.io/sap/controlpanel-api:latest"
+  (echo namespace: controlpanel
+  echo controlpanel:
+  echo   replicaCount: 1
+  echo   image: "ghcr.io/sap/controlpanel-api:latest"
+  echo   controlpanel_front_url: "!front_url!"
+  echo   deployment_manager_url: "http://deployment-manager-service"
+  echo   db_user: !db_user!
+  echo   db_password: !db_password!
+  echo deployment_manager:
+  echo   image: "ghcr.io/sap/deployment-manager:latest"
+  echo   db_password: !db_password_deploymentmanager!
   echo db_port: 5432
   echo db_host: "controlpanel-db-service"
-  echo controlpanel_front_url: "!front_url!"
-  echo db_user: !db_user!
-  echo db_password: !db_password!
-  echo envoyApiKey: !envoy_apiKey!
-  echo fluentbitApiKey: !fluentbit_apiKey!
   ) > controlpanel-api\values_tmp.yaml
 
   helm install -f controlpanel-api\values_tmp.yaml controlpanel-api controlpanel-api > nul
@@ -147,7 +160,3 @@ setlocal enabledelayedexpansion
   )
   endlocal & set "%2=%random_string%"
   exit /b
-:installDeploymentManager
-  echo Deploying Deployment manager 🚀
-  helm install deployment-manager deployment-manager > nul
-  exit /B
