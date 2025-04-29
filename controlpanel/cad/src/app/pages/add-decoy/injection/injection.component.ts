@@ -13,18 +13,17 @@ import { Observable, Subscription } from 'rxjs';
 
 
 @Component({
-  selector: 'app-injection',
-  standalone: true,
-  imports: [
-    FormsModule, 
-    CommonModule, 
-    TooltipComponent, 
-    ReactiveFormsModule, 
-    InjectionWhenTableComponent, 
-    RouterLink
-  ],
-  templateUrl: './injection.component.html',
-  styleUrl: './injection.component.scss'
+    selector: 'app-injection',
+    imports: [
+        FormsModule,
+        CommonModule,
+        TooltipComponent,
+        ReactiveFormsModule,
+        InjectionWhenTableComponent,
+        RouterLink
+    ],
+    templateUrl: './injection.component.html',
+    styleUrl: './injection.component.scss'
 })
 export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, OnDestroy {
   injectionForm: FormGroup

@@ -11,11 +11,10 @@ import { Observable, Subscription } from 'rxjs';
 import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate-decoy-form.guard';
 
 @Component({
-  selector: 'app-detection',
-  standalone: true,
-  imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterOutlet, RouterLink],
-  templateUrl: './detection.component.html',
-  styleUrl: './detection.component.scss'
+    selector: 'app-detection',
+    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterOutlet, RouterLink],
+    templateUrl: './detection.component.html',
+    styleUrl: './detection.component.scss'
 })
 export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, OnDestroy {
   detectionForm: FormGroup

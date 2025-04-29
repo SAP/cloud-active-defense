@@ -3,11 +3,10 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-when-alert-select',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './when-alert-select.component.html',
-  styleUrls: ['./when-alert-select.component.scss']
+    selector: 'app-when-alert-select',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './when-alert-select.component.html',
+    styleUrls: ['./when-alert-select.component.scss']
 })
 export class WhenAlertSelectComponent {
   @ViewChild('whenSelect') whenSelect!: ElementRef<HTMLSelectElement>;

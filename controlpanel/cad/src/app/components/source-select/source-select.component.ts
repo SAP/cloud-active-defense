@@ -3,11 +3,10 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-source-select',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './source-select.component.html',
-  styleUrls: ['./source-select.component.scss']
+    selector: 'app-source-select',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './source-select.component.html',
+    styleUrls: ['./source-select.component.scss']
 })
 export class SourceSelectComponent {
   @ViewChild('sourceSelect') sourceSelect!: ElementRef<HTMLSelectElement>;

@@ -11,11 +11,10 @@ export interface FormWhen extends WhenType{
 }
 
 @Component({
-  selector: 'app-injection-when-table',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './injection-when-table.component.html',
-  styleUrl: './injection-when-table.component.scss'
+    selector: 'app-injection-when-table',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './injection-when-table.component.html',
+    styleUrl: './injection-when-table.component.scss'
 })
 export class InjectionWhenTableComponent {
   @Input() whenArray: FormWhen[] = [{ key:'', value: '', in: 'cookie', type: true }];

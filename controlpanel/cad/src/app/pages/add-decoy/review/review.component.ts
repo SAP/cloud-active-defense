@@ -9,11 +9,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UUID } from '../../../models/types';
 
 @Component({
-  selector: 'app-review',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './review.component.html',
-  styleUrl: './review.component.scss'
+    selector: 'app-review',
+    imports: [CommonModule],
+    templateUrl: './review.component.html',
+    styleUrl: './review.component.scss'
 })
 export class ReviewComponent implements ReturnBackReviewDeactivate {
   decoy: Decoy = {decoy:{}};
