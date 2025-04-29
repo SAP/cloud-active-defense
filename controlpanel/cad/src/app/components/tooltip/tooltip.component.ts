@@ -2,11 +2,10 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 
 @Component({
-  selector: 'app-tooltip',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './tooltip.component.html',
-  styleUrl: './tooltip.component.scss'
+    selector: 'app-tooltip',
+    imports: [CommonModule],
+    templateUrl: './tooltip.component.html',
+    styleUrl: './tooltip.component.scss'
 })
 export class TooltipComponent {
   @Input() showTooltip = true;

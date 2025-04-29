@@ -11,11 +11,10 @@ import { isEmptyObject } from '../../utils';
 
 
 @Component({
-  selector: 'app-menu',
-  standalone: true,
-  imports: [CommonModule, RouterLink],
-  templateUrl: './menu.component.html',
-  styleUrl: './menu.component.scss'
+    selector: 'app-menu',
+    imports: [CommonModule, RouterLink],
+    templateUrl: './menu.component.html',
+    styleUrl: './menu.component.scss'
 })
 export class MenuComponent implements OnInit{
   showDecoysSubMenu = false;

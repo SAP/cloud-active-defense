@@ -12,11 +12,10 @@ export interface FormRespond extends RespondType {
 }
 
 @Component({
-  selector: 'app-alert-action-table',
-  standalone: true,
-  imports: [CommonModule, SourceSelectComponent, FormsModule, OnlyNumbersDirective, OnlyValidRespondPropertyDirective],
-  templateUrl: './alert-action-table.component.html',
-  styleUrl: './alert-action-table.component.scss'
+    selector: 'app-alert-action-table',
+    imports: [CommonModule, SourceSelectComponent, FormsModule, OnlyNumbersDirective, OnlyValidRespondPropertyDirective],
+    templateUrl: './alert-action-table.component.html',
+    styleUrl: './alert-action-table.component.scss'
 })
 export class AlertActionTableComponent {
   @Input() actionArray: FormRespond[] = [];
