@@ -12,11 +12,10 @@ import { UUID } from '../../models/types';
 import { Subscription } from 'rxjs';
 
 @Component({
-  selector: 'app-list-decoy',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './list-decoy.component.html',
-  styleUrl: './list-decoy.component.scss'
+    selector: 'app-list-decoy',
+    imports: [CommonModule, FormsModule, RouterLink],
+    templateUrl: './list-decoy.component.html',
+    styleUrl: './list-decoy.component.scss'
 })
 export class ListDecoyComponent implements OnInit, OnDestroy {
   decoys: DecoyData[] = [];
