@@ -10,11 +10,10 @@ import { RoundCheckboxComponent } from "../../components/round-checkbox/round-ch
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-logs',
-  standalone: true,
-  imports: [CommonModule, RoundCheckboxComponent, FormsModule],
-  templateUrl: './logs.component.html',
-  styleUrls: ['./logs.component.scss']
+    selector: 'app-logs',
+    imports: [CommonModule, RoundCheckboxComponent, FormsModule],
+    templateUrl: './logs.component.html',
+    styleUrls: ['./logs.component.scss']
 })
 export class LogsComponent implements OnInit, OnDestroy {
   logs: Logs[] = [];

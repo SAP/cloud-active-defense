@@ -13,11 +13,10 @@ import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate
 import { CustomValidators } from '../../../validators/customValidators';
 
 @Component({
-  selector: 'app-alert-action',
-  standalone: true,
-  imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterOutlet, WhenAlertSelectComponent, AlertActionTableComponent],
-  templateUrl: './alert-action.component.html',
-  styleUrl: './alert-action.component.scss'
+    selector: 'app-alert-action',
+    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterOutlet, WhenAlertSelectComponent, AlertActionTableComponent],
+    templateUrl: './alert-action.component.html',
+    styleUrl: './alert-action.component.scss'
 })
 export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate, OnDestroy {
   alertForm: FormGroup

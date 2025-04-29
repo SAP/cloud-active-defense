@@ -12,11 +12,10 @@ export interface Tab {
 }
 
 @Component({
-  selector: 'app-add-decoy',
-  standalone: true,
-  imports: [RouterOutlet, CommonModule, RouterLink, FormsModule],
-  templateUrl: './add-decoy.component.html',
-  styleUrl: './add-decoy.component.scss'
+    selector: 'app-add-decoy',
+    imports: [RouterOutlet, CommonModule, RouterLink, FormsModule],
+    templateUrl: './add-decoy.component.html',
+    styleUrl: './add-decoy.component.scss'
 })
 export class AddDecoyComponent implements OnInit, OnDestroy {
   tabs: Tab[] = [

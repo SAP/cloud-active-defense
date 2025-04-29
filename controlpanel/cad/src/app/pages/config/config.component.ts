@@ -14,11 +14,10 @@ import { ToastrService } from 'ngx-toastr';
 import { isEmptyObject } from '../../utils';
 
 @Component({
-  selector: 'app-config',
-  standalone: true,
-  imports: [TooltipComponent, CommonModule, AlertActionTableComponent, FormsModule, ReactiveFormsModule, OnlyNumbersDirective],
-  templateUrl: './config.component.html',
-  styleUrl: './config.component.scss'
+    selector: 'app-config',
+    imports: [TooltipComponent, CommonModule, AlertActionTableComponent, FormsModule, ReactiveFormsModule, OnlyNumbersDirective],
+    templateUrl: './config.component.html',
+    styleUrl: './config.component.scss'
 })
 export class ConfigComponent implements OnInit, OnDestroy {
 
