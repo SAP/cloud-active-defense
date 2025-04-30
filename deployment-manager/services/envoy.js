@@ -136,6 +136,17 @@ module.exports = {
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
+            
+            const existingNamespace = await k8sCore.readNamespace({ name: namespace })
+                .then(namespace => namespace)
+                .catch(() => null);
+            if (!existingNamespace) return { code: 404, type: 'error', message: 'Namespace not found' };
+
+            const existingDeployment = await k8sApp.readNamespacedDeployment({ namespace, name: deploymentName })
+                .then(existingDeployment => existingDeployment)
+                .catch(() => null);
+            if (!existingDeployment) return { code: 404, type: 'error', message: 'Deployment not found' };
+            
             const apiKey = generateRandomString(65);
             const patchError = await k8sCustom.patchNamespacedCustomObject({ name: `cloudactivedefense-filter-${deploymentName}`, group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', body: [{ op: 'replace', path: '/spec/configPatches/0/patch/value/typedConfig/value/config/configuration/value', value: `{"ENVOY_API_KEY": "${apiKey}"}`}]})
             .catch(()=>({ code: 500, type: 'error', message: 'Failed to renew API key for envoy: Could not patch envoy config'}));

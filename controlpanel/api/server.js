@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const axios = require('axios');
 require('dotenv').config({ path: __dirname + '/.env' });
 const { initializeDatabase } = require('./models/index');
 
@@ -22,6 +23,8 @@ const { updateConfig } = require('./services/config');
 const configmanagerAuth = require('./middleware/configmanager-authentication');
 const checkDeploymentManagerURL = require('./middleware/deployment-manager');
 const Customer = require('./models/Customer');
+const ApiKey = require('./models/Api-key');
+const { generateRandomString } = require('./util');
 
 const app = express();
 app.use(express.json());
@@ -572,14 +575,38 @@ app.listen(8050, async () => {
         createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
         updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
 
-        if (process.env.ENVOY_API_KEY) {
-            const ApiKey = require('./models/Api-key');
+        if (process.env.ENVOY_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
             ApiKey.findOrCreate({ where: { key: process.env.ENVOY_API_KEY, permissions: ["configmanager"], pa_id: defaultApp.data.id }});
         }
-        if (process.env.FLUENTBIT_API_KEY) {
-            const ApiKey = require('./models/Api-key');
+        if (process.env.FLUENTBIT_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
             ApiKey.findOrCreate({ where: { key: process.env.FLUENTBIT_API_KEY, permissions: ["fluentbit"], pa_id: defaultApp.data.id }});
         }
+
+        setInterval(async () => {
+            const customersWithExpiredKeys = await Customer.getCustomersWithExpiredApiKeys();
+            for (const customer of customersWithExpiredKeys)
+                for (const app of customer.protectedApps)
+                    for (const apiKey of app.apiKeys) {
+                        if (process.env.DEPLOYMENT_MANAGER_URL) {
+                            if (apiKey.permissions.includes("configmanager")) {
+                                try {
+                                    const envoyApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/envoy/renew-apikey`, { cu_id: customer.id, namespace: app.namespace, deploymentName: app.application });
+                                    if (envoyApiKeyResponse.status === 200) ApiKey.update({ key: envoyApiKeyResponse.data.data, expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }});
+                                } catch (e) {
+                                    console.error("Error when renewing envoy API key:\n", e);
+                                }
+                            }
+                            if (apiKey.permissions.includes("fluentbit")) {
+                                try {
+                                    const telemetryApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/telemetry/renew-apikey`, { cu_id: customer.id, namespace: app.namespace, deploymentName: app.application });
+                                    if (telemetryApiKeyResponse.status === 200) ApiKey.update({ key: telemetryApiKeyResponse.data.data, expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }});
+                                } catch (e) {
+                                    console.error("Error when renewing telemetry API key:\n", e);
+                                }
+                            }
+                        } else ApiKey.update({ key: generateRandomString(65), expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }, returning: true });
+                    }
+        }, 30 * 24 * 60 * 60 * 1000); // 1 month
     } catch(e) {
         console.error("Error when starting server:\n", e);
     }

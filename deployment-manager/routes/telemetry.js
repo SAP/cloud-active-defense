@@ -237,6 +237,32 @@ router.post('/', async (req, res) => {
  *                     message:
  *                       type: string
  *                       example: No kubeconfig provided for customer
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Namespace not found
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Deployment not found
  *       500:
  *         description: Server error
  *         content:
