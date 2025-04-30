@@ -23,6 +23,11 @@ const ApiKey = sequelize.define("apiKey", {
             model: ProtectedApp,
             key: 'id'
         },
+    },
+    expirationDate: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: new Date(new Date().setFullYear(new Date().getFullYear() + 1))
     }
 });
 module.exports = ApiKey;

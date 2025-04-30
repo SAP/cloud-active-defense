@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize")
 const sequelize = require("../config/db.config");
+const Sequelize = require("sequelize");
 
 const Customer = sequelize.define("customer", {
     id: {
@@ -16,4 +17,24 @@ const Customer = sequelize.define("customer", {
         allowNull: true
     },
 });
+
+Customer.getCustomersWithExpiredApiKeys = async () => {
+    return await Customer.findAll({
+        include: [{
+            model: sequelize.models.protectedApp,
+            as: 'protectedApps',
+            include: [{
+                model: sequelize.models.apiKey,
+                as: 'apiKeys',
+                where: {
+                    expirationDate: {
+                        [Sequelize.Op.lte]: new Date()
+                    }
+                },
+                required: true
+            }]
+        }]
+    });
+};
+
 module.exports = Customer;

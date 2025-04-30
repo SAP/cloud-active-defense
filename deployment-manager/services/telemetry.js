@@ -85,6 +85,17 @@ module.exports = {
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
+            
+            const existingNamespace = await k8sCore.readNamespace({ name: namespace })
+                .then(namespace => namespace)
+                .catch(() => null);
+            if (!existingNamespace) return { code: 404, type: 'error', message: 'Namespace not found' };
+
+            const existingDeployment = await k8sApp.readNamespacedDeployment({ namespace, name: deploymentName })
+                .then(existingDeployment => existingDeployment)
+                .catch(() => null);
+            if (!existingDeployment) return { code: 404, type: 'error', message: 'Deployment not found' };
+
             const apiKey = generateRandomString(65);
             const patchError = await k8sCore.patchNamespacedSecret({name: `${deploymentName}-fluentbit-api-key-secret`, namespace, body: [{ op: 'add', path: '/data/FLUENTBIT_API_KEY', value: encodeBase64(apiKey)}]})
             .catch(()=>({ code: 500, type: 'error', message: 'Failed to renew API key for fluentbit: Could not patch fluentbit secret'}));
