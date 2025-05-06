@@ -1,5 +1,6 @@
 const { coreApi, appsApi, getKubeconfig } = require("../util/k8s");
 const Customer = require('../model/Customer');
+const { isUuid, isValidNamespaceName } = require("../util");
 
 module.exports = {
     /**
@@ -9,6 +10,9 @@ module.exports = {
      */
     getNamespaces: async (cu_id) => {
         try {
+            if (!cu_id) return { code: 400, type: 'error', message: 'Customer ID is required' };
+            if (!isUuid(cu_id)) return { code: 400, type: 'error', message: 'Customer ID is not a valid UUID' };
+
             const kubeconfigResponse = await getKubeconfig(cu_id);
             if (kubeconfigResponse.type == 'error') return kubeconfigResponse;
             let k8sCore;
@@ -34,6 +38,11 @@ module.exports = {
      */
     getDeployments: async (cu_id, namespace) => {
         try {
+            if (!cu_id) return { code: 400, type: 'error', message: 'Customer ID is required' };
+            if (!isUuid(cu_id)) return { code: 400, type: 'error', message: 'Customer ID is not a valid UUID' };
+            if (!namespace) return { code: 400, type: 'error', message: 'Namespace is required' };
+            if (isValidNamespaceName(namespace)) return { code: 400, type: 'error', message: 'Invalid namespace, must be in kubernetes valid name format' };
+
             const kubeconfigResponse = await getKubeconfig(cu_id);
             if (kubeconfigResponse.type == 'error') return kubeconfigResponse;
             let k8sApp;
@@ -42,6 +51,12 @@ module.exports = {
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
+
+            const existingNamespace = await k8sApp.readNamespace({ name: namespace })
+            .then(namespace=>namespace)
+            .catch(()=>null);
+            if (!existingNamespace) return { code: 404, type: 'error', message: 'Namespace not found' };
+
             const deployments = await k8sApp.listNamespacedDeployment({ namespace })
             .then(deployments=>deployments)
             .catch(()=>null);

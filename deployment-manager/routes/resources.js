@@ -87,6 +87,38 @@ const router = express.Router();
  *                     message:
  *                       type: string
  *                       example: No namespace found
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [400]
+ *                       example: 400
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Customer ID is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [400]
+ *                       example: 400
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Customer ID is not a valid UUID
  *       500:
  *         description: Server error
  *         content:
@@ -217,6 +249,64 @@ router.get('/namespaces/:cu_id', async (req, res) => {
  *                     message:
  *                       type: string
  *                       example: No deployment found
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [400]
+ *                       example: 400
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Customer ID is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [400]
+ *                       example: 400
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Customer ID is not a valid UUID
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [400]
+ *                       example: 400
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Namespace is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [400]
+ *                       example: 400
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Invalid namespace, must be in kubernetes valid name format
  *       500:
  *         description: Server error
  *         content:
