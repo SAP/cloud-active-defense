@@ -16,10 +16,25 @@ function decodeBase64(input) {
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+function isValidNamespaceName(namespace) {
+    const regex = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/;
+    return regex.test(namespace) && namespace.length >= 63;
+}
+function isValidDeploymentName(deployment) {
+    const regex = /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/;
+    return regex.test(deployment) && deployment.length >= 63;
+}
+function isUuid(str) {
+    const regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return regex.test(str);
+}
 
 module.exports = {
     generateRandomString,
     encodeBase64,
     decodeBase64,
-    sleep
+    sleep,
+    isValidNamespaceName,
+    isValidDeploymentName,
+    isUuid,
 }

@@ -1,4 +1,4 @@
-const { generateRandomString } = require('../util');
+const { generateRandomString, isUuid, isValidNamespaceName, isValidDeploymentName } = require('../util');
 const { batchApi, coreApi, appsApi, customApi, getKubeconfig } = require('../util/k8s');
 
 module.exports = {
@@ -10,6 +10,11 @@ module.exports = {
      */
     installEnvoyWasm: async (cu_id, namespace) => {
         try {
+            if (!cu_id) return { code: 400, type: 'error', message: 'Customer ID is required' };
+            if (!namespace) return { code: 400, type: 'error', message: 'Namespace is required' };
+            if (!isUuid(cu_id)) return { code: 400, type: 'error', message: 'Invalid customer ID, must be a valid UUID' };
+            if (isValidNamespaceName(namespace)) return { code: 400, type: 'error', message: 'Invalid namespace, must be in kubernetes valid name format' };
+
             const kubeconfigResponse = await getKubeconfig(cu_id);
             if (kubeconfigResponse.type == 'error') return kubeconfigResponse;
             let k8sBatch;
@@ -20,6 +25,11 @@ module.exports = {
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
+
+            const existingNamespace = await k8sCore.readNamespace({ name: namespace })
+                .then(namespace => namespace)
+                .catch(() => null);
+            if (!existingNamespace) return { code: 404, type: 'error', message: 'Namespace not found' };
 
             const wasmData = await k8sCore.createNamespacedPersistentVolumeClaim({ namespace, body: { metadata: { name: 'wasm-data', labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { accessModes: ['ReadWriteOnce'], resources: { requests: { storage: '100Mi' } } } } })
                 .then(wasmData => wasmData)
@@ -51,6 +61,13 @@ module.exports = {
      */
     reconfigEnvoy: async (cu_id, deploymentName, namespace) => {
         try {
+            if (!cu_id) return { code: 400, type: 'error', message: 'Customer ID is required' };
+            if (!namespace) return { code: 400, type: 'error', message: 'Namespace is required' };
+            if (!deploymentName) return { code: 400, type: 'error', message: 'Deployment name is required' };
+            if (!isUuid(cu_id)) return { code: 400, type: 'error', message: 'Invalid customer ID, must be a valid UUID' };
+            if (isValidNamespaceName(namespace)) return { code: 400, type: 'error', message: 'Invalid namespace, must be in kubernetes valid name format' };
+            if (isValidDeploymentName(deploymentName)) return { code: 400, type: 'error', message: 'Invalid deployment name, must be in kubernetes valid name format' };
+
             const kubeconfigResponse = await getKubeconfig(cu_id);
             if (kubeconfigResponse.type == 'error') return kubeconfigResponse;
             let k8sApp;
@@ -83,13 +100,14 @@ module.exports = {
                 if (envoyInstallResult.code !== 200) return { code: 500, type: 'error', message: `Wasm volume is missing, tried to install it but got error: ${envoyInstallResult.message}` };
             }
 
+            const envoyfilterName = `cloudactivedefense-${deploymentName.substring(0, Math.max(0, 63 - "cloudactivedefense-filter-".length))}-filter`;
             let apiKey;
-            const envoyFilterExists = await k8sCustom.getNamespacedCustomObject({ group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', name: `cloudactivedefense-filter-${deploymentName}` })
+            const envoyFilterExists = await k8sCustom.getNamespacedCustomObject({ group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', name: envoyfilterName })
                 .then(envoyFilter => envoyFilter)
                 .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
             if (envoyFilterExists.error && envoyFilterExists.reason == 'NotFound') {
                 apiKey = generateRandomString(65);
-                const envoyFilter = await k8sCustom.createNamespacedCustomObject({ group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', body: { apiVersion: 'networking.istio.io/v1alpha3', kind: 'EnvoyFilter', metadata: { name: `cloudactivedefense-filter-${deploymentName}`, namespace, labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { workloadSelector: { labels: { protects: deploymentName } }, configPatches: [{ applyTo: 'HTTP_FILTER', match: { context: 'SIDECAR_INBOUND', listener: { filterChain: { filter: { name: 'envoy.filters.network.http_connection_manager', subFilter: { name: 'envoy.filters.http.router', } } } } }, patch: { operation: 'INSERT_BEFORE', value: { name: 'envoy.filters.http.wasm', typedConfig: { '@type': 'type.googleapis.com/udpa.type.v1.TypedStruct', type_url: 'type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm', value: { config: { rootId: 'my_root_id', vmConfig: { code: { local: { filename: 'var/local/lib/wasm/sundew.wasm' } }, runtime: 'envoy.wasm.runtime.v8', vmId: 'cad-filter' }, configuration: { '@type': 'type.googleapis.com/google.protobuf.StringValue', value: `{"ENVOY_API_KEY": "${apiKey}"}` } } } } } } }, { applyTo: 'CLUSTER', match: { context: 'SIDECAR_OUTBOUND', }, patch: { operation: 'ADD', value: { name: 'controlpanel-api', type: 'STRICT_DNS', lb_policy: 'ROUND_ROBIN', load_assignment: { cluster_name: 'controlpanel-api', endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: 'controlpanel-api-service', port_value: 80 } } } }] }] } } } }] } } })
+                const envoyFilter = await k8sCustom.createNamespacedCustomObject({ group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', body: { apiVersion: 'networking.istio.io/v1alpha3', kind: 'EnvoyFilter', metadata: { name: envoyfilterName, namespace, labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { workloadSelector: { labels: { protects: deploymentName } }, configPatches: [{ applyTo: 'HTTP_FILTER', match: { context: 'SIDECAR_INBOUND', listener: { filterChain: { filter: { name: 'envoy.filters.network.http_connection_manager', subFilter: { name: 'envoy.filters.http.router', } } } } }, patch: { operation: 'INSERT_BEFORE', value: { name: 'envoy.filters.http.wasm', typedConfig: { '@type': 'type.googleapis.com/udpa.type.v1.TypedStruct', type_url: 'type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm', value: { config: { rootId: 'my_root_id', vmConfig: { code: { local: { filename: 'var/local/lib/wasm/sundew.wasm' } }, runtime: 'envoy.wasm.runtime.v8', vmId: 'cad-filter' }, configuration: { '@type': 'type.googleapis.com/google.protobuf.StringValue', value: `{"ENVOY_API_KEY": "${apiKey}"}` } } } } } } }, { applyTo: 'CLUSTER', match: { context: 'SIDECAR_OUTBOUND', }, patch: { operation: 'ADD', value: { name: 'controlpanel-api', type: 'STRICT_DNS', lb_policy: 'ROUND_ROBIN', load_assignment: { cluster_name: 'controlpanel-api', endpoints: [{ lb_endpoints: [{ endpoint: { address: { socket_address: { address: 'controlpanel-api-service', port_value: 80 } } } }] }] } } } }] } } })
                     .then(envoyFilter => envoyFilter)
                     .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
                 if (envoyFilter.error && envoyFilter.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create envoy filter' };
@@ -128,6 +146,13 @@ module.exports = {
      */
     renewApiKey: async (cu_id, namespace, deploymentName) => {
         try {
+            if (!cu_id) return { code: 400, type: 'error', message: 'Customer ID is required' };
+            if (!namespace) return { code: 400, type: 'error', message: 'Namespace is required' };
+            if (!deploymentName) return { code: 400, type: 'error', message: 'Deployment name is required' };
+            if (!isUuid(cu_id)) return { code: 400, type: 'error', message: 'Invalid customer ID, must be a valid UUID' };
+            if (isValidNamespaceName(namespace)) return { code: 400, type: 'error', message: 'Invalid namespace, must be in kubernetes valid name format' };
+            if (isValidDeploymentName(deploymentName)) return { code: 400, type: 'error', message: 'Invalid deployment name, must be in kubernetes valid name format' };
+
             const kubeconfigResponse = await getKubeconfig(cu_id);
             if (kubeconfigResponse.type == 'error') return kubeconfigResponse;
             let k8sCustom;
@@ -147,8 +172,9 @@ module.exports = {
                 .catch(() => null);
             if (!existingDeployment) return { code: 404, type: 'error', message: 'Deployment not found' };
             
+            const envoyfilterName = `cloudactivedefense-${deploymentName.substring(0, Math.max(0, 63 - "cloudactivedefense-filter-".length))}-filter`;
             const apiKey = generateRandomString(65);
-            const patchError = await k8sCustom.patchNamespacedCustomObject({ name: `cloudactivedefense-filter-${deploymentName}`, group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', body: [{ op: 'replace', path: '/spec/configPatches/0/patch/value/typedConfig/value/config/configuration/value', value: `{"ENVOY_API_KEY": "${apiKey}"}`}]})
+            const patchError = await k8sCustom.patchNamespacedCustomObject({ name: envoyfilterName, group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', body: [{ op: 'replace', path: '/spec/configPatches/0/patch/value/typedConfig/value/config/configuration/value', value: `{"ENVOY_API_KEY": "${apiKey}"}`}]})
             .catch(()=>({ code: 500, type: 'error', message: 'Failed to renew API key for envoy: Could not patch envoy config'}));
             if (patchError.type == 'error') return patchError;
             return { code: 200, type: 'success', message: 'Envoy API key renewed successfully', data: apiKey };

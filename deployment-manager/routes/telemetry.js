@@ -103,6 +103,90 @@ const router = express.Router();
  *                     message:
  *                       type: string
  *                       example: Deployment not found
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Customer ID is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Namespace is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Deployment name is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Invalid customer ID, must be a valid UUID
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Invalid namespace, must be a valid Kubernetes name format
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Invalid deployment name, must be a valid Kubernetes name format
  *       500:
  *         description: Server error
  *         content:
@@ -263,6 +347,90 @@ router.post('/', async (req, res) => {
  *                     message:
  *                       type: string
  *                       example: Deployment not found
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Customer ID is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Namespace is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Deployment name is required
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Invalid customer ID, must be a valid UUID
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Invalid namespace, must be a valid Kubernetes name format
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Invalid deployment name, must be a valid Kubernetes name format
  *       500:
  *         description: Server error
  *         content:
