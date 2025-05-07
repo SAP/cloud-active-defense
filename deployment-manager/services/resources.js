@@ -46,13 +46,15 @@ module.exports = {
             const kubeconfigResponse = await getKubeconfig(cu_id);
             if (kubeconfigResponse.type == 'error') return kubeconfigResponse;
             let k8sApp;
+            let k8sCore;
             try {
                 k8sApp = await appsApi(kubeconfigResponse.kubeconfig);
+                k8sCore = await coreApi(kubeconfigResponse.kubeconfig);
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
 
-            const existingNamespace = await k8sApp.readNamespace({ name: namespace })
+            const existingNamespace = await k8sCore.readNamespace({ name: namespace })
             .then(namespace=>namespace)
             .catch(()=>null);
             if (!existingNamespace) return { code: 404, type: 'error', message: 'Namespace not found' };
