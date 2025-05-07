@@ -61,6 +61,7 @@ async function clientApi(kubeconfig) {
 }
 async function canConnectToCluster(kc) {
     try {
+        const k8s = await import('@kubernetes/client-node');
         const coreApi = kc.makeApiClient(k8s.CoreV1Api);
         await coreApi.readNamespace({name: 'default'});
     } catch (error) {
