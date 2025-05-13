@@ -1,9 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 
-@import 'styles/variables';
+@use "styles/variables";
 
 // regular style toast
-@import 'ngx-toastr/toastr';
+@use "ngx-toastr/toastr";
 
 *, *::before, *::after {
    padding: 0;
@@ -112,7 +112,7 @@ app-add-decoy, app-list-decoy, app-config {
 }
 
 .filled-btn {
-    background-color: $primaryColor;
+    background-color: variables.$primaryColor;
     color: white;
     font-size: 1.5rem;
     border: 0;
