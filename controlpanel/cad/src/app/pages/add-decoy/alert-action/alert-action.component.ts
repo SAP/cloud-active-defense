@@ -3,7 +3,7 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { CommonModule } from '@angular/common';
 import { TooltipComponent } from '../../../components/tooltip/tooltip.component';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
-import { Decoy, isInType, isRequestType, isVerbType, RequestType, VerbType, InType, isSeverityType, SeverityType, RespondType, DelayType, DurationType } from '../../../models/decoy';
+import { Decoy, isSeverityType, SeverityType, RespondType, DelayType, DurationType } from '../../../models/decoy';
 import { DecoyService } from '../../../services/decoy.service';
 import { WhenAlertSelectComponent } from '../../../components/when-alert-select/when-alert-select.component';
 import { AlertActionTableComponent, FormRespond } from '../../../components/alert-action-table/alert-action-table.component';
@@ -14,7 +14,7 @@ import { CustomValidators } from '../../../validators/customValidators';
 
 @Component({
     selector: 'app-alert-action',
-    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterOutlet, WhenAlertSelectComponent, AlertActionTableComponent],
+    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, WhenAlertSelectComponent, AlertActionTableComponent],
     templateUrl: './alert-action.component.html',
     styleUrl: './alert-action.component.scss'
 })

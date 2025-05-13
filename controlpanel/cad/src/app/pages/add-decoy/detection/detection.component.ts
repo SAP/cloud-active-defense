@@ -12,7 +12,7 @@ import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate
 
 @Component({
     selector: 'app-detection',
-    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterOutlet, RouterLink],
+    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterLink],
     templateUrl: './detection.component.html',
     styleUrl: './detection.component.scss'
 })
