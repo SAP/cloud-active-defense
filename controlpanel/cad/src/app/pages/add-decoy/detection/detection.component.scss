@@ -40,6 +40,11 @@
             &:disabled {
                 cursor: default;
             }
+            &:hover {
+                background-color: #a5d3ff;
+                opacity: 0.8;
+                border-radius: 10px;
+            }
         }
         
     }

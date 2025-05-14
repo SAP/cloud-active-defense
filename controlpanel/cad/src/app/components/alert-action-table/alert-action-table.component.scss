@@ -66,6 +66,7 @@
                 border: none;
                 border-radius: 5px;
                 padding: 0.2rem 0;
+                cursor: pointer;
                 .add-action-icon {
                     margin: 0 auto;
                     mask: url('../../../../public/add.svg') no-repeat center; 
@@ -74,10 +75,17 @@
                     background-color: #FFF;
                 }
                 &:disabled {
+                    cursor: default;
                     background-color: #C5C1C8;
                 }
                 &:disabled .add-action-icon {
                     background-color: #86838A;
+                }
+            
+                &:not(:disabled):hover {
+                    opacity: 0.9;
+                    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 
+                                0px 1px 2px rgba(0, 0, 0, 0.24);
                 }
             }
         }
@@ -88,6 +96,9 @@
             &:disabled {
                 cursor: default;
             }
+            &:not(:disabled):hover .action-delete-icon {
+                background-color: red;
+            }
         }
         .action-delete-icon {
             margin: 0 auto;
@@ -95,6 +106,10 @@
             width: 24px; 
             height: 24px; 
             background-color: black;
+            transition: background-color 0.3s ease;
+        }
+        .disable-action-delete-icon {
+            background-color: #86838A;
         }
         
     }
