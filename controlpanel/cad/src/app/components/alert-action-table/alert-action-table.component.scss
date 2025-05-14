@@ -73,12 +73,21 @@
                     height: 24px; 
                     background-color: #FFF;
                 }
+                &:disabled {
+                    background-color: #C5C1C8;
+                }
+                &:disabled .add-action-icon {
+                    background-color: #86838A;
+                }
             }
         }
         .action-delete-btn {
             cursor: pointer;
             border: 0;
             background-color: transparent;
+            &:disabled {
+                cursor: default;
+            }
         }
         .action-delete-icon {
             margin: 0 auto;

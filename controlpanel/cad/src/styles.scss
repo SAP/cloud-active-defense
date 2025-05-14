@@ -121,4 +121,8 @@ app-add-decoy, app-list-decoy, app-config {
     border-radius: 5px;
     cursor: pointer;
     font-weight: 400;
+    
+    &:disabled {
+        background-color: #C5C1C8;
+    }
 }

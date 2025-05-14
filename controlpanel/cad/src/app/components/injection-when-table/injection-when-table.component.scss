@@ -42,12 +42,21 @@
                     height: 24px; 
                     background-color: #FFF;
                 }
+                &:disabled {
+                    background-color: #C5C1C8;
+                }
+                &:disabled .add-when-icon {
+                    background-color: #86838A;
+                }
             }
         }
         .when-delete-btn {
             cursor: pointer;
             border: 0;
             background-color: transparent;
+            &:disabled {
+                cursor: default;
+            }
             .when-delete-icon {
                 margin: 0 auto;
                 mask: url('../../../../public/delete.svg') no-repeat center; 

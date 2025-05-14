@@ -125,12 +125,12 @@
             <div class="extra-group">
                 <div class="extra-item" [ngClass]="{ 'switch-regex': keyRegexActive }">
                     <button class="extra-item-btn" (click)="onRegexChange('key')" [disabled]="!isEdit">
-                        <img src="regex.svg" alt="">
+                        <div class="extra-item-icon-regex"></div>
                     </button>
                 </div>
                 <div class="extra-item value-item" [ngClass]="{ 'switch-regex': valueRegexActive }">
                     <button class="extra-item-btn" (click)="onRegexChange('value')" [disabled]="!isEdit">
-                        <img src="regex.svg" alt="">
+                        <div class="extra-item-icon-regex"></div>
                     </button>
                 </div>
                 
