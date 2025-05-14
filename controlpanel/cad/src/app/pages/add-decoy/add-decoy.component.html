@@ -14,7 +14,7 @@
                 </div>
             </ng-container>
         </div>
-        <div class="edit">
+        <div class="edit" *ngIf="decoyId">
             <label class="switch">
                 <input type="checkbox" (change)="updateEditStatus()" [ngModel]="isEdit">
                 <span class="slider round"></span>
