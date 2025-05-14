@@ -5,6 +5,7 @@ import { DecoyService } from '../../services/decoy.service';
 import { ToastrService } from 'ngx-toastr';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { UUID } from '../../models/types';
 
 export interface Tab { 
   name: string,
@@ -40,6 +41,7 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
   isEdit = true;
   navigationSubscription?: Subscription;
   routeParamSubscription?: Subscription
+  decoyId: UUID = '';
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute, private decoyService: DecoyService, private toastr: ToastrService){}
 
@@ -54,11 +56,11 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
     this.updateActiveIndex();
     
     this.routeParamSubscription = this.activatedRoute.params.subscribe(async params => {
-      const decoyId = params['id'];
-      if (decoyId) {
+      this.decoyId = params['id'];
+      if (this.decoyId) {
         this.decoyService.isEdit = false;
         this.isEdit = false;
-        const apiResponse = await this.decoyService.getDecoy(decoyId);
+        const apiResponse = await this.decoyService.getDecoy(this.decoyId);
         if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error");
       } else {
         this.decoyService.isEdit = true;
