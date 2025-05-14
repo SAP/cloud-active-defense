@@ -46,7 +46,7 @@
             <td><input class="input-action-table" type="text" name="property" id="property" [(ngModel)]="action.property" (input)="onItemChange()" [disabled]="action.behavior != 'throttle' || !isEdit" appOnlyValidRespondProperty></td>
             <td class="end-action">
                 <button (click)="onClickDeleteAction(i)" class="action-delete-btn" [disabled]="!isEdit">
-                    <div class="action-delete-icon" [ngStyle]="{ backgroundColor: !isEdit ? 'grey' : 'black' }"></div>
+                    <div class="action-delete-icon" [ngClass]="{ 'disable-action-delete-icon': !isEdit }"></div>
                 </button>
             </td>
        </tr>

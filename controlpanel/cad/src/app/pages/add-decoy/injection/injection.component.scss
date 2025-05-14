@@ -42,6 +42,17 @@
                     &:disabled {
                         cursor: default;
                     }
+                    &:hover {
+                        background-color: #a5d3ff;
+                        opacity: 0.8;
+                        border-radius: 10px;
+                    }
+                    &:has(.extra-item-icon-swap):focus .extra-item-icon-swap {
+                        animation: swap 0.5s ease-in-out;
+                    }
+                    &:has(.extra-item-icon-swap):active .extra-item-icon-swap {
+                        animation: none;
+                    }
                 }
             }
             .switch-string { 
@@ -70,5 +81,14 @@
             color: red;
             font-size: 14px;
         }
+    }
+}
+
+@keyframes swap {
+    from {
+        transform: rotateZ(0deg);
+    }
+    to {
+        transform: rotateZ(180deg);
     }
 }
