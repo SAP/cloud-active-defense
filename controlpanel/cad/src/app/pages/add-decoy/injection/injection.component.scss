@@ -21,6 +21,27 @@
                     display: flex;
                     justify-content: center;
                     align-items: center;
+
+                    .extra-item-icon-regex {
+                        margin: 0 auto;
+                        mask: url('../../../../../public/regex.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: #000;
+                    }
+                    .extra-item-icon-swap {
+                        margin: 0 auto;
+                        mask: url('../../../../../public/swap_horiz.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: #000;
+                    }
+                    &:disabled .extra-item-icon-regex, &:disabled .extra-item-icon-swap {
+                        background-color: #86838A;
+                    }
+                    &:disabled {
+                        cursor: default;
+                    }
                 }
             }
             .switch-string { 

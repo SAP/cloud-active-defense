@@ -3,7 +3,7 @@
         <option *ngFor="let item of sourceItems; let i = index" [value]="i">{{ item }}</option>
     </select>
     <div class="source-container" #sourceContainer (wheel)="onScroll($event)">
-        <div class="source-item" *ngFor="let item of selectedSource; let i = index">
+        <div class="source-item" *ngFor="let item of selectedSource; let i = index" [ngClass]="{'disable-source-item': !isEdit}">
             <span>{{ item }}</span>
             <button (click)="deleteSourceItem(i)" [disabled]="!isEdit">
                 <img src="close_small.svg" alt="">

@@ -45,5 +45,9 @@
                 }
             }
         }
+        .disable-when-item {
+            opacity: 0.5;
+            pointer-events: none;
+        }
       }
 }
