@@ -110,6 +110,7 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   
   ngOnInit(): void {
     this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
+      if (!data) return;
       if (!this.isUpdating){
         this.isUpdating = true
         this.decoy = data as Decoy;
