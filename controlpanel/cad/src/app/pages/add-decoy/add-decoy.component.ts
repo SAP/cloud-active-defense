@@ -62,10 +62,23 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
         this.isEdit = false;
         const apiResponse = await this.decoyService.getDecoy(this.decoyId);
         if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error");
+        else if (apiResponse.type == 'success' && !this.decoyService.decoy?.inject && this.decoyService.decoy?.detect) {
+          await this.router.navigate(['detection'], {
+            relativeTo: this.activatedRoute
+          })
+          this.activeIndex = 1;
+        }
+        else if (apiResponse.type == 'success' && this.decoyService.decoy?.inject) {
+          await this.router.navigate(['injection'], {
+            relativeTo: this.activatedRoute
+          })
+          this.activeIndex = 0;
+        }
+        else this.toastr.error("Error when fetching decoy", "Error");
       } else {
         this.decoyService.isEdit = true;
         this.isEdit = true;
-        this.decoyService.decoy = {decoy:{}};
+        this.decoyService.updateDecoy({decoy:{}});
       }
     });
   }
@@ -73,6 +86,7 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.navigationSubscription?.unsubscribe();
     this.routeParamSubscription?.unsubscribe();
+    this.decoyService.updateDecoy(null);
   }
 
   updateActiveIndex() {

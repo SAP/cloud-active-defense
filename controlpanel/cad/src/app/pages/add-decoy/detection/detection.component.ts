@@ -73,7 +73,12 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
     }, { validators: [CustomValidators.expectValueWithKey()] })
   }
   validateDecoyForm(nextRoute: string): Observable<boolean> | Promise<boolean> | boolean {
-    if (nextRoute.includes('injection')) return true;
+    if (nextRoute.includes('injection')) {
+      if (this.decoy.detect && this.decoy.detect.seek && !this.decoy.detect.seek.inRequest && !this.decoy.detect.seek.inResponse && !this.decoy.detect.seek.withVerb) {
+        delete this.decoy.detect;
+      }
+      return true;
+    }
     if (nextRoute.includes('alert-action') || nextRoute.includes('review')) {
       if (this.skip) return true;
       this.detectionForm.markAllAsTouched();
@@ -96,9 +101,9 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
     this.decoyService.decoy$.subscribe(data => {
       if (!this.isUpdating) {
         this.isUpdating = true
-        this.decoy = data;
+        this.decoy = data as Decoy;
         if (!this.decoy.detect) this.decoy.detect = { seek: { in: 'header' } };
-        this.fillForm(data);
+        this.fillForm(this.decoy);
         this.isUpdating = false;
       }
     })

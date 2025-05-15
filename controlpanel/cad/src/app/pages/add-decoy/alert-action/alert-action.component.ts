@@ -88,9 +88,9 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
     this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
       if (!this.isUpdating){
         this.isUpdating = true
-        this.decoy = data;
+        this.decoy = data as Decoy;
         if (!this.decoy.detect) this.router.navigate(['../detection'], { relativeTo: this.activatedRoute });
-        this.fillForm(data);
+        this.fillForm(this.decoy);
         this.isUpdating = false;
       }
     })

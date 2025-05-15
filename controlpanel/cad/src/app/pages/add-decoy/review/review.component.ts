@@ -23,7 +23,7 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
 
   constructor(private decoyService: DecoyService, private toastr: ToastrService, private router: Router, private activatedRoute: ActivatedRoute) {
     this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
-        this.decoy = data;
+        this.decoy = data as Decoy;
     })
     this.activatedRoute.parent?.params.subscribe(async params => this.decoyId = params['id']);
     if (!this.decoy.detect && !this.decoy.inject) this.router.navigate(['../injection'], { relativeTo: this.activatedRoute });
