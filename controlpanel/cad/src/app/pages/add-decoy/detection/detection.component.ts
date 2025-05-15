@@ -216,10 +216,12 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
       request: decoyData.detect?.seek.inResponse != undefined ? 'inResponse' : 'inRequest',
       verb: decoyData.detect?.seek.withVerb || '',
       in: decoyData.detect?.seek.in || 'header',
-      key: decoyData.decoy.key || '',
+      key: decoyData.decoy.key || decoyData.decoy.dynamicKey || '',
       separator: decoyData.decoy.separator || '',
-      value: decoyData.decoy.value || '',
+      value: decoyData.decoy.value || decoyData.decoy.dynamicValue || '',
     })
+    if (decoyData.decoy.dynamicKey) this.onRegexChange('key');
+    if (decoyData.decoy.dynamicValue) this.onRegexChange('value');
   }
 
   skipDetection() {
