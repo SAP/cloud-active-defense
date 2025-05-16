@@ -220,6 +220,7 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
       if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving decoy");
       else {
         this.toastr.success(apiResponse.message, 'Successfully created Decoy');
+        this.isSaving = true;
         this.router.navigate(['decoy/list']);
       }
     } else {
