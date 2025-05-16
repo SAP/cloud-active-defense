@@ -9,6 +9,7 @@ import { validateDecoyFormGuard } from './guards/deactivate/validate-decoy-form.
 import { returnBackReviewGuard } from './guards/deactivate/return-back-review.guard';
 import { LogsComponent } from './pages/logs/logs.component';
 import { ConfigComponent } from './pages/config/config.component';
+import { SystemComponent } from './pages/system/system.component';
 
 export const routes: Routes = [{
     path: 'decoy',
@@ -82,4 +83,8 @@ export const routes: Routes = [{
 {
     path: 'config',
     component: ConfigComponent
+},
+{
+    path: 'system',
+    component: SystemComponent
 }];

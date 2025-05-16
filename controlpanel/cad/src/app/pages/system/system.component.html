@@ -1,0 +1,73 @@
+<h1>System 🛠️</h1>
+<div class="wrapper">
+    <div class="top-bar">
+        <div class="namespaces-container">
+            <label for="namespaces" class="namespace-label">Namespace</label>
+            <select name="namespaces" class="namespaces" [(ngModel)]="selectedNamespace" (change)="onNamespaceSelect()" [disabled]="namespaces.length == 0">
+                <option value="" disabled *ngIf="namespacesLoading" selected>Loading...</option>
+                <option *ngFor="let ns of namespaces" [value]="ns">{{ns}}</option>
+            </select>
+        </div>
+        <div class="buttons-container">
+            <input type="file" accept=".yaml, .yml" style="display: none;" name="kubeconfig" #fileInput>
+            <button class="outlined-btn" (click)="onKubeconfigUpload(fileInput)">
+                <div class="upload-icon"></div>
+                <p>Upload kubeconfig</p>
+            </button>
+            <button class="outlined-btn" (click)="downloadSetupScript()">
+                <div class="download-icon"></div>
+                <p>Download setup script</p>
+            </button>
+        </div>
+    </div>
+    <table class="list-container">
+        <thead>
+            <tr>
+                <th class="deployment-name">Deployment Name</th>
+                <th class="centered">Protected</th>
+                <th class="centered">Deployment Status</th>
+            </tr>
+            <tr class="tr-separator"><td class="row-separator" colspan="4"><hr class="head-separator"/></td></tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let deployment of deployments" class="deployment-row">
+                <td>
+                    {{ deployment.name }}
+                </td>
+                <td class="centered">
+                    <div class="deployment-loading-install-icon" *ngIf="deployment.loadingInstall"></div>
+                    <label class="switch" *ngIf="!deployment.loadingInstall">
+                        <input type="checkbox" [checked]="deployment.protected" (click)="onSwitchChange($event, deployment)">
+                        <span class="slider round"></span>
+                    </label>
+                </td>
+                <td class="centered">
+                    <div class="available-status" *ngIf="deployment.maxReplicas == deployment.currentReplicas">
+                        available
+                    </div>
+                    <div class="error-status" *ngIf="deployment.maxReplicas != deployment.currentReplicas">
+                        error
+                    </div>
+                </td>
+            </tr>
+            <tr class="loading" *ngIf="deploymentsLoading && !deploymentManagerError">
+                <td colspan="3">
+                    <img class="loading-deployment" src="loading.svg" alt="loading">
+                </td>
+            </tr>
+            <tr class="empty" *ngIf="!deploymentsLoading && !deploymentManagerError && deployments.length == 0">
+                <td colspan="3">
+                    No deployments
+                </td>
+            </tr>
+            <tr *ngIf="deploymentManagerError" class="deploymentmanager-error">
+                <td colspan="3">
+                    Cannot fetch deployments/namespaces. Provided kubeconfig may be wrong.
+                </td>
+            </tr>
+            <tr class="end">
+                <td colspan="3"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>

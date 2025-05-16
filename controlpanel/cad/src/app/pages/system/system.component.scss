@@ -1,0 +1,212 @@
+@import '../../../styles/variables.scss';
+
+
+.wrapper {
+    width: 100%;
+    padding: 0 4%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    .top-bar {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        .namespaces-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            .namespace-label {
+                font-size: 1rem;
+                font-weight: 500;
+            }
+            .namespaces {
+                border: 1px solid #d9d9d9;
+                width: 15rem;
+                font-size: 1rem;
+                border-radius: 8px;
+                padding: 0.2rem;
+                height: fit-content;
+                transition: background-color 0.2s ease-in-out;
+                &:hover {
+                    background-color: #E8E8E8;
+                }
+                option {
+                    background-color: #FFF;
+                }
+            }
+        }
+        .buttons-container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            .outlined-btn {
+                margin-left: 2rem;
+                .upload-icon {
+                    display: flex;
+                    align-items: center;
+                    margin: 0 0.8rem 0 0;
+                    mask: url('../../../../public/upload.svg') no-repeat center; 
+                    width: 24px; 
+                    height: 24px; 
+                    background-color: $primaryColor;
+                }
+                .download-icon {
+                    margin: 0 0.8rem 0 0;
+                    mask: url('../../../../public/download.svg') no-repeat center; 
+                    width: 24px; 
+                    height: 24px; 
+                    background-color: $primaryColor;
+                }
+            }
+        }
+    }
+    .list-container {
+        width: 100%;
+        border-radius: 20px;
+        background-color: white;
+        box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px,
+                    rgba(0, 0, 0, 0.14) 0px 3px 4px 0px,
+                    rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
+        padding-bottom: 10px;
+        padding: 1rem;
+        border-collapse: collapse;
+        .centered {
+            text-align: center;
+            width: 10%;
+        }
+        thead {
+            th {
+                padding: 2rem 1rem 1rem 1rem;
+            }
+            .head-separator {
+                width: 100%;
+            }
+            .deployment-name {
+                text-align: left;
+                width: 50%;
+            }
+        }
+        tbody {
+            tr {
+                &.deployment-row {
+                    transition: all 0.2s ease-in-out;
+                    &:nth-child(even) {
+                        background-color: #E8E8E8;
+                    }
+                    &:hover {
+                        background-color: #d5ebff;
+                    }
+                }
+                &.loading, &.empty, &.deploymentmanager-error {
+                    text-align: center;
+                }
+                td {
+                    padding: 1rem;
+                    .available-status {
+                        display: inline-block;
+                        background-color: #E6F4EA;
+                        color: #188038;
+                        padding: 0.5rem 1.4rem;
+                        border-radius: 20px;
+                        font-weight: 500;
+                        text-align: center;
+                        width: 7rem
+                    }
+                    .error-status {
+                        display: inline-block;
+                        background-color: #FCE8E6;
+                        color: #C92A2A;
+                        padding: 0.5rem 1.4rem;
+                        border-radius: 20px;
+                        font-weight: 500;
+                        text-align: center;
+                        width: 7rem;
+                    }
+                    .switch {
+                        position: relative;
+                        display: inline-block;
+                        width: 52px;
+                        height: 30px;
+                        
+                        input {
+                            opacity: 0;
+                            width: 0;
+                            height: 0;
+                        }
+                        
+                        .slider {
+                            position: absolute;
+                            cursor: pointer;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: white;
+                            border: #767676 solid 1px;
+                            transition: 0.4s;
+                            border-radius: 34px;
+                            
+                            &:before {
+                                position: absolute;
+                                content: '';
+                                height: 16px;
+                                width: 16px;
+                                left: 4px;
+                                bottom: 7px;
+                                background-color: #535353;
+                                transition: 0.4s;
+                                border-radius: 50%;
+                            }
+                        }
+                        input:checked + .slider {
+                            background-color: #2196F3;
+                            border: #2196F3 solid 1px;
+                            cursor: not-allowed;
+                        }
+                        input:checked + .slider:before {
+                            transform: translateX(20px);
+                            width: 22px;
+                            height: 22px;
+                            bottom: 4px;
+                            background-color: white;
+                        }
+
+                        input:disabled + .slider {
+                            background-color: #e6e0e9;
+                            border: #e6e0e9 solid 1px;
+                            cursor: not-allowed;
+                        }
+                        input:disabled + input:not(:checked) + .slider:before {
+                            background-color: #bdbdbd;
+                        }
+                    }
+                    .loading-deployment {
+                        height: 3rem;
+                        animation: loading-anim 1.5s linear infinite;
+                    }
+                    .deployment-loading-install-icon {
+                        mask: url('../../../../public/loading.svg') no-repeat center; 
+                        mask-size: contain;
+                        height: 2rem;
+                        background-color: $primaryColor;
+                        animation: loading-anim 1.5s linear infinite;
+                    }
+                }
+                &.end {
+                    background-color: transparent;
+                }
+            }
+        }
+    }
+    
+}
+
+@keyframes loading-anim {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
