@@ -35,6 +35,13 @@
                     margin-left: 2rem;
                     color: $primaryColor;
                     cursor: pointer;
+                    transition: all 0.2s ease;
+                    &:hover {
+                        background-color: rgba($primaryColor, 0.2);
+                        box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px,
+                                    rgba(0, 0, 0, 0.14) 0px 3px 4px 0px,
+                                    rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
+                    }
                     .filter-icon {
                         margin: 0 auto;
                         mask: url('../../../../public/filter.svg') no-repeat center; 
@@ -45,8 +52,12 @@
                     p {
                         color: $primaryColor;
                     }
+                    option {
+                        background-color: #FFF;
+                    }
                 }
                 .filter-details {
+                    animation: fadeInDown 0.3s;
                     width: 25rem;
                     padding: 1rem 1.7rem;
                     position: absolute;
@@ -178,8 +189,13 @@
         }
         tbody {
             tr {
-                cursor: pointer;
                 box-sizing: border-box;
+                &.log-row {
+                    cursor: pointer;
+                    &:hover {
+                        background-color: #d5ebff;
+                    }
+                }
                 td {
                     padding: 0.8rem 1rem;
                     .sub-text {
@@ -242,4 +258,9 @@
             }
         }
     }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-10px);}
+  to { opacity: 1; transform: translateY(0);}
 }
