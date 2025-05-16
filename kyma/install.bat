@@ -85,21 +85,18 @@ setlocal enabledelayedexpansion
     echo    - list
     echo   apiGroups:
     echo    - ''
-    echo   resources:
-    echo    - namespaces
-    echo - verbs:
-    echo    - get
-    echo    - patch
-    echo   apiGroups:
     echo    - apps
     echo   resources:
+    echo    - namespaces
     echo    - deployments
     echo - verbs:
     echo    - patch
     echo   apiGroups:
     echo    - operator.kyma-project.io
+    echo    - apps
     echo   resources:
     echo    - kymas
+    echo    - deployments
     ) | kubectl apply -f - >nul
     kubectl label clusterrole deployment-manager app.kubernetes.io/managed-by=deployment-manager-install >nul
   )
