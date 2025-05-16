@@ -1,5 +1,5 @@
 const { coreApi, customApi, appsApi, getKubeconfig } = require("../util/k8s");
-const { generateRandomString, encodeBase64, decodeBase64, sleep } = require("../util");
+const { generateRandomString, encodeBase64, decodeBase64, sleep, isUuid, isValidNamespaceName, isValidDeploymentName } = require("../util");
 
 module.exports = {
     /**
