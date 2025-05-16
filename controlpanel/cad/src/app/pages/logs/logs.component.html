@@ -126,7 +126,7 @@
             <tr class="tr-separator"><td class="row-separator" colspan="4"><hr class="head-separator"/></td></tr>
         </thead>
         <tbody>
-            <tr *ngFor="let log of logs" (click)="toggleMoreLog($event)">
+            <tr *ngFor="let log of logs" (click)="toggleMoreLog($event)" class="log-row">
                 <td>
                     <p>{{ log.date * 1000 | date:'H:mm:ss d/MM/yy' }}</p>
                     <p class="sub-text">{{ log.date }}</p>
