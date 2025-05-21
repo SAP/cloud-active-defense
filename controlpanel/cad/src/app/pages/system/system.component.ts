@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Deployment, DeploymentManagerService } from '../../services/deployment-manager.service';
 import { ToastrService } from 'ngx-toastr';
 import { ActivatedRoute } from '@angular/router';
+import { AppListService } from '../../services/app-list.service';
 
 @Component({
   selector: 'app-system',
@@ -19,7 +20,7 @@ export class SystemComponent {
   namespacesLoading: boolean = false;
   deploymentManagerError: boolean = false;
 
-  constructor(private deploymentManagerService: DeploymentManagerService, private toastr: ToastrService, private route: ActivatedRoute) { }
+  constructor(private deploymentManagerService: DeploymentManagerService, private toastr: ToastrService, private route: ActivatedRoute, private applistService: AppListService) { }
   
   async ngOnInit() {
     await this.fetchNamespaces();
@@ -81,7 +82,11 @@ export class SystemComponent {
       deployment.protected = false
       this.toastr.error(installApiResponse.message, 'Error')
     }
-    else this.toastr.success(installApiResponse.message, 'Success')
+    else {
+      this.toastr.success(installApiResponse.message, 'Success')
+      const applistResponse = await this.applistService.getAppList();
+      if (applistResponse.type == 'error') this.toastr.error(applistResponse.message, 'Error');
+    }
     deployment.loadingInstall = false;
   }
 

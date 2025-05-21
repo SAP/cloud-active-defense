@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { AppListService } from '../../services/api/app-list.service';
+import { AppListService } from '../../services/app-list.service';
 import { ToastrService } from 'ngx-toastr';
 import { GlobalStateService } from '../../services/global-state.service';
 import { isProtectedAppEmpty, ProtectedApp } from '../../models/protected-app';
@@ -29,11 +29,12 @@ export class MenuComponent implements OnInit{
 
   async ngOnInit() {
     const response = await this.applistService.getAppList();
-    if (response.type == 'error') this.toastr.error(response.message, 'Error fetching data');
-    else {
-      this.defaultApp = (response.data as ProtectedApp[]).filter(app => app.namespace == 'default' && app.application == 'default')[0] as ProtectedApp;
-      this.applist = (response.data as ProtectedApp[]).filter(app => app.namespace != 'default' && app.application != 'default');
-    }
+    if (response.type == 'error') this.toastr.error(response.message, 'Error');
+
+    this.applistService.applist$.subscribe(data => {
+      this.defaultApp = data.filter(app => app.namespace == 'default' && app.application == 'default')[0] as ProtectedApp;
+      this.applist = data.filter(app => app.namespace != 'default' && app.application != 'default');
+    })
 
     this.globalState.selectedApp$.subscribe(data => {
       if (isEmptyObject(data)) this.selectedApp = this.defaultApp;
