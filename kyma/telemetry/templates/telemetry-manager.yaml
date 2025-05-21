@@ -1,5 +1,0 @@
-apiVersion: operator.kyma-project.io/v1alpha1
-kind: Telemetry
-metadata:
-  name: default
-  namespace: {{ .Values.namespace }}
