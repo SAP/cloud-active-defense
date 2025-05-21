@@ -97,20 +97,22 @@ install_controlpanel() {
     db_password=$db_userInput_password
   fi
 
-  envoy_apiKey=$(generate_random_string 65)
-  fluentbit_apiKey=$(generate_random_string 65)
+  deployment_manager_db_password=$(generate_random_string 30)
 
   cat <<EOF > controlpanel-api/values_tmp.yaml
-replicaCount: 1
-namespace: controlpanel
-image: "ghcr.io/sap/controlpanel-api:latest"
+namespace: "controlpanel"
+controlpanel:
+  replicaCount: 1
+  image: "ghcr.io/sap/controlpanel-api:latest"
+  front_url: "$front_url"
+  deployment_manager_url: http://deployment-manager-service
+  db_user: "$db_user"
+  db_password: "$db_password"
+deployment_manager:
+  image: "ghcr.io/sap/deployment-manager:latest"
+  db_password: "$deployment_manager_db_password"
 db_port: 5432
-db_host: "controlpanel-db-service"
-controlpanel_front_url: "$front_url"
-db_user: "$db_user"
-db_password: "$db_password"
-envoyApiKey: "$envoy_apiKey"
-fluentbitApiKey: "$fluentbit_apiKey"
+db_host: controlpanel-db-service
 EOF
 
   helm install -f controlpanel-api/values_tmp.yaml controlpanel-api controlpanel-api > /dev/null
