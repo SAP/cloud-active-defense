@@ -52,13 +52,13 @@ type pluginContext struct {
   config           *config_parser.Config
   configChecksum        [32]byte
   callBackConfRequested func(numHeaders, bodySize, numTrailers int)
-  deployment            string
-  namespace             string
   postponed []uint32
   conf                  PluginConf
 }
 type PluginConf struct {
   EnvoyAPIKey   string `json:"ENVOY_API_KEY"`
+  Namespace     string `json:"NAMESPACE"`
+  Deployment    string `json:"DEPLOYMENT"`
 }
 
 func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPluginStartStatus {
@@ -68,14 +68,12 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
     proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"failed to unmarshal plugin configuration: %v\"}", err.Error())
     return types.OnPluginStartStatusFailed
   }
-  namespace, _ := proxywasm.GetProperty([]string{"node", "metadata", "NAMESPACE"})
-	workload, _ := proxywasm.GetProperty([]string{"node", "metadata", "WORKLOAD_NAME"})
-	if len(namespace) != 0 {
-		ctx.namespace = string(namespace)
-	} else { ctx.namespace = "default" }
-	if len(workload) != 0 {
-		ctx.deployment = string(workload)
-	} else { ctx.deployment = "default" }
+	if ctx.conf.Namespace == "" {
+    ctx.conf.Namespace = "default"
+  }
+  if ctx.conf.Deployment == "" {
+    ctx.conf.Deployment = "default"
+  }
 
   if err := proxywasm.SetTickPeriodMilliSeconds(tickMilliseconds); err != nil {
     proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"failed to set tick period: %v\"}", err.Error())
@@ -134,7 +132,7 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
 func (ctx *pluginContext) OnTick() {
   //proxywasm.LogInfof("--- plugin tick, rereading config ---")
   requestHeaders := [][2]string{
-    {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
+    {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/" + ctx.conf.Namespace + "/" + ctx.conf.Deployment}, {"accept", "*/*"},
     {"Content-Type", "application/json"}, {"Authorization", ctx.conf.EnvoyAPIKey},
   }
   if _, err := proxywasm.DispatchHttpCall("controlpanel-api", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
@@ -163,7 +161,7 @@ func (ctx *pluginContext) OnTick() {
       return
     }
     requestHeadersBlocklist := [][2]string{
-      {":method", "POST"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
+      {":method", "POST"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.conf.Namespace + "/" + ctx.conf.Deployment}, {"accept", "*/*"},
       {"Content-Type", "application/json"}, {"Authorization", ctx.conf.EnvoyAPIKey},
     }
     if _, err := proxywasm.DispatchHttpCall("controlpanel-api", requestHeadersBlocklist, payload, nil, 5000, callBackSetBlocklist); err != nil {
@@ -232,7 +230,7 @@ func (ctx *pluginContext) OnTick() {
       proxywasm.SetSharedData("throttlelist", throttleData.Bytes(), 0)
     }
     reqHeadBlocklist := [][2]string{
-      {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.namespace + "/" + ctx.deployment}, {"accept", "*/*"},
+      {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.conf.Namespace + "/" + ctx.conf.Deployment}, {"accept", "*/*"},
       {"Content-Type", "application/json"}, {"Authorization", ctx.conf.EnvoyAPIKey},
     }
     if _, err := proxywasm.DispatchHttpCall("controlpanel-api", reqHeadBlocklist, nil, nil, 5000, callBackGetBlocklist); err != nil {
