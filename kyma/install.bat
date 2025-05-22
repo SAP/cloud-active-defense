@@ -86,9 +86,11 @@ setlocal enabledelayedexpansion
     echo   apiGroups:
     echo    - ''
     echo    - apps
+    echo    - operator.kyma-project.io
     echo   resources:
     echo    - namespaces
     echo    - deployments
+    echo    - kymas
     echo - verbs:
     echo    - patch
     echo   apiGroups:

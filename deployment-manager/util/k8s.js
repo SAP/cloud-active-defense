@@ -68,6 +68,17 @@ async function canConnectToCluster(kc) {
         throw error
     }
 }
+async function isKymaCluster(kubeconfig) {
+    try {
+        const k8s = await import('@kubernetes/client-node');
+        const kc = await connectToK8s(kubeconfig);
+        const customApi = kc.makeApiClient(k8s.CustomObjectsApi);
+        const kymaCluster = await customApi.listNamespacedCustomObject({ group:'operator.kyma-project.io', version: 'v1beta2', plural: 'kymas', namespace: 'kyma-system' })
+        return kymaCluster.items.length > 0;
+    } catch (error) {
+        throw error
+    }
+}
 /**
  * 
  * @param {UUID} cu_id 
@@ -93,5 +104,6 @@ module.exports = {
     customApi,
     clientApi,
     canConnectToCluster,
+    isKymaCluster,
     getKubeconfig
 }

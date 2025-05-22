@@ -1,4 +1,4 @@
-const { coreApi, customApi, appsApi, getKubeconfig } = require("../util/k8s");
+const { coreApi, customApi, appsApi, getKubeconfig, isKymaCluster } = require("../util/k8s");
 const { generateRandomString, encodeBase64, decodeBase64, sleep, isUuid, isValidNamespaceName, isValidDeploymentName } = require("../util");
 
 module.exports = {
@@ -26,6 +26,9 @@ module.exports = {
                 k8sCore = await coreApi(kubeconfigResponse.kubeconfig);
                 k8sCustom = await customApi(kubeconfigResponse.kubeconfig);
                 k8sApp = await appsApi(kubeconfigResponse.kubeconfig);
+
+                const kyma = await isKymaCluster(kubeconfigResponse.kubeconfig);
+                if (!kyma) return { code: 500, type: 'error', message: 'Cluster must be a Kyma cluster, cannot continue' };
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
@@ -97,6 +100,9 @@ module.exports = {
             let k8sCore;
             try {
                 k8sCore = await coreApi(kubeconfigResponse.kubeconfig);
+                
+                const kyma = await isKymaCluster(kubeconfigResponse.kubeconfig);
+                if (!kyma) return { code: 500, type: 'error', message: 'Cluster must be a Kyma cluster, cannot continue' };
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }

@@ -84,21 +84,20 @@ rules:
    - list
   apiGroups:
    - ''
+   - apps
+   - operator.kyma-project.io
   resources:
    - namespaces
-- verbs:
-   - get
-   - patch
-  apiGroups:
-   - apps
-  resources:
    - deployments
+   - kymas
 - verbs:
    - patch
   apiGroups:
    - operator.kyma-project.io
+   - apps
   resources:
    - kymas
+   - deployments
 EOF
     kubectl label clusterrole deployment-manager app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
   fi
