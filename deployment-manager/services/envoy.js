@@ -1,5 +1,5 @@
 const { generateRandomString, isUuid, isValidNamespaceName, isValidDeploymentName } = require('../util');
-const { batchApi, coreApi, appsApi, customApi, getKubeconfig } = require('../util/k8s');
+const { batchApi, coreApi, appsApi, customApi, getKubeconfig, isKymaCluster } = require('../util/k8s');
 
 module.exports = {
     /**
@@ -22,6 +22,9 @@ module.exports = {
             try {
                 k8sBatch = await batchApi(kubeconfigResponse.kubeconfig);
                 k8sCore = await coreApi(kubeconfigResponse.kubeconfig);
+                
+                const kyma = await isKymaCluster(kubeconfigResponse.kubeconfig);
+                if (!kyma) return { code: 500, type: 'error', message: 'Cluster must be a Kyma cluster, cannot continue' };
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
@@ -77,6 +80,9 @@ module.exports = {
                 k8sApp = await appsApi(kubeconfigResponse.kubeconfig);
                 k8sCore = await coreApi(kubeconfigResponse.kubeconfig);
                 k8sCustom = await customApi(kubeconfigResponse.kubeconfig);
+                
+                const kyma = await isKymaCluster(kubeconfigResponse.kubeconfig);
+                if (!kyma) return { code: 500, type: 'error', message: 'Cluster must be a Kyma cluster, cannot continue' };
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
@@ -158,6 +164,9 @@ module.exports = {
             let k8sCustom;
             try {
                 k8sCustom = await customApi(kubeconfigResponse.kubeconfig);
+                
+                const kyma = await isKymaCluster(kubeconfigResponse.kubeconfig);
+                if (!kyma) return { code: 500, type: 'error', message: 'Cluster must be a Kyma cluster, cannot continue' };
             } catch (e) {
                 return { code: 500, type: 'error', message: 'Could not connect to cluster with provided kubeconfig' };
             }
