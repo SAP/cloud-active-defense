@@ -59,6 +59,9 @@ $menu-icon-size: 2rem;
             p {
                 font-size: 18px;
                 padding: 0.2rem 0.5rem;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
                 &:hover {
                     background-color: $backgroundPrimaryColor;
                 }
