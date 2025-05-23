@@ -9,7 +9,7 @@ spec:
   type: ClusterIP
   ports:
     - name: http
-      port: 5432
+      port: {{ .Values.db_port }}
       protocol: TCP
       targetPort: 5432
   selector:

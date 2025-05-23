@@ -4,17 +4,14 @@
 
 namespace: "controlpanel"
 
-controlpanel:
-  replicaCount: 1
-  image: "ghcr.io/sap/controlpanel-api:latest"
-  front_url: <CONTROLPANEL_FRONT_URL>
-  deployment_manager_url: http://deployment-manager-service
-  db_user: <DB_USER>
-  db_password: <DB_PASSWORD>
+replicaCount: 1
+image: "ghcr.io/sap/controlpanel-api:latest"
+front_url: <CONTROLPANEL_FRONT_URL> #https://controlpanel-front.<KYMA_DOMAIN>
+deployment_manager_url: http://deployment-manager-service
 
-deployment_manager:
-  image: "ghcr.io/sap/deployment-manager:latest"
-  db_password: <DEPLOYMENTMANAGER_DB_PASSWORD>
-
+db_user: <DB_USER>
+db_password: <DB_PASSWORD>
 db_port: 5432
 db_host: controlpanel-db-service
+
+deploymentmanager_db_password: <DEPLOYMENTMANAGER_DB_PASSWORD>
