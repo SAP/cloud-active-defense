@@ -6,7 +6,7 @@ metadata:
   labels:
     app: controlpanel-api
 spec:
-  replicas: {{ .Values.controlpanel.replicaCount }}
+  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: controlpanel-api
@@ -21,7 +21,7 @@ spec:
         command: ['sh', '-c', 'until nc -z -v controlpanel-db-service 5432; do echo waiting for db; sleep 2; done']
       containers:
         - name: controlpanel-api
-          image: {{ .Values.controlpanel.image }}
+          image: {{ .Values.image }}
           imagePullPolicy: Always
           ports:
             - containerPort: 8050
@@ -31,9 +31,9 @@ spec:
             - name: DB_HOST
               value: {{ .Values.db_host }}
             - name: CONTROLPANEL_FRONTEND_URL
-              value: {{ .Values.controlpanel.front_url }}
+              value: {{ .Values.front_url }}
             - name: DEPLOYMENT_MANAGER_URL
-              value: {{ .Values.controlpanel.deployment_manager_url }}
+              value: {{ .Values.deployment_manager_url }}
           envFrom:
             - secretRef:
                 name: controlpanel-db-secrets
