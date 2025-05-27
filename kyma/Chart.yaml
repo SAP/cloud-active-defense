@@ -21,12 +21,12 @@ version: 0.1.0
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
 dependencies:
-  - name: controlpanel-api
-    repository: file://./controlpanel-api
+  - name: controlpanel_api
+    repository: file://charts/controlpanel-api
     version: 0.1.0
-  - name: controlpanel-front
-    repository: file://./controlpanel-front
+  - name: controlpanel_front
+    repository: file://charts/controlpanel-front
     version: 0.1.0
-  - name: deployment-manager
-    repository: file://./deployment-manager
+  - name: deployment_manager
+    repository: file://charts/deployment-manager
     version: 0.1.0

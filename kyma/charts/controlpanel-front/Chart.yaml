@@ -1,6 +1,6 @@
 apiVersion: v2
-name: deployment-manager
-description: This chart creates a deployment for the deployment-manager
+name: controlpanel_front
+description: This chart creates a deployment for the controlpanel-front service.
 # A chart can be either an 'application' or a 'library' chart.
 #
 # Application charts are a collection of templates that can be packaged into versioned archives

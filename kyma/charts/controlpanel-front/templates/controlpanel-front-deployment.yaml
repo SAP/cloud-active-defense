@@ -2,11 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controlpanel-front
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.global.namespace }}
   labels:
     app: controlpanel-front
 spec:
-  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: controlpanel-front
@@ -15,8 +14,6 @@ spec:
       labels:
         app: controlpanel-front
     spec:
-      imagePullSecrets: #To remove
-      - name: artifactory-creds
       containers:
         - name: controlpanel-front
           image: {{ .Values.image }}
