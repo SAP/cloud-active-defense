@@ -14,61 +14,31 @@
 
 - Install [helm](https://helm.sh/docs/intro/install/) to manage kubernetes configuration files
 
+## 1. Setup install
+Before installing, you want to change some values in [values.yaml](./values.yaml)
+The values.yaml file is where all the variables are stored for the install and where you will have to set the missing ones
 
-## 1. Controlpanel & Deployment manager
+### For global:
+You will have to set
+- `db_user` with the database user you want, a default one will be set if not changed
+- `db_password` with a secure password, a default one will be set if not changed (**not recommended**)
 
-Run the `wizard` script to install the controlpanel & the deployment manager, from there you can manage Cloud Active Defense such as: deploy the proxy to secure your app, create and deploy new decoys, read the logs...
+### For controlpanel_api:
+You will have to set
+- `front_url` with the correct url of the controlpanel frontend (The pattern is https://controlpanel-front.<KYMA_DOMAIN> (e.g. https://controlpanel-front\.`c-28e44bf.kyma.ondemand.com`))
+- `deploymentmanager_db_password` with a secure password, a default one will be set if not changed (**not recommended**)
+Please use the same password set for deployment-manager chart (if already set)
 
-**Linux:**
+### In controlpanel_front:
+You will only have to set
+- `controlpanel_api_url` with the correct url of the controlpanel API (The pattern is https://controlpanel-api.<KYMA_DOMAIN> (e.g. https://controlpanel-api\.`c-28e44bf.kyma.ondemand.com`))
+
+## 2. Install
+
+Now that you set all the values, you only have to run this to install everything at once:
 ```shell
-bash ./wizard.sh
-```
-**Windows:**
-```
-./wizard.bat
+helm install controlpanel .
 ```
 
-## 2. Setup your cluster
-
-This step is mandatory it will help the deployment manager to access your cluster to secure your app. This will create a `kubeconfig.yaml` file that you must upload to the controlpanel
-
-To get the kubeconfig file run this command, it will create the file in `kyma` directory (This kubeconfig is available for 1 year)
-
-**Linux:**
-```shell
-bash ./install.sh
-```
-**Windows:**
-```shell
-./install.bat
-```
-
-Now that you have the kubeconfig file you must upload it into the controlpanel dashbord. Go to `System` page and click `Upload kubeconfig`
-![Controlpanel kubeconfig upload](../assets/controlpanel-upload-kubeconfig.png)
-
-## 3. Secure your app with Cloud Active Defense
-
-### Install demo app (optional)
-
-This step is not necessary to the install, it is only a sample app for demo purpose
-
-```shell
-helm install myapp myapp
-```
-
----
-
-To secure your app with Cloud Active Defense you must install your app first. Once this and the cluster setup are done, go back to `System` page and look for your application.
-First select the namespace with the select box and then click on the 'protected' switch for your application (deployment) in the list
-![Controlpanel select app](../assets/controlpanel-select-app.png)
-
-
-This step will install everything Cloud Active Defense needs on your cluster:
-- A volume with a wasm file (For envoy proxy)
-- A EnvoyFilter (The configuration for envoy proxy)
-- The Telemetry module to get the proxy logs
-- A LogPipeline to ship the logs to the controlpanel dashboard
-
-
-Voila! Cloud Active Defense is now installed
-You can add new decoys to start protecting your application!
+You can also install each helm chart separately to have more control over it, but it is not necessary
+To do that you must set all the values specified before but in it's own helm chart values
