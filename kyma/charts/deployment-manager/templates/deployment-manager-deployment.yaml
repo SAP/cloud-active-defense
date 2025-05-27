@@ -2,11 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: deployment-manager
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.global.namespace }}
   labels:
     app: deployment-manager
 spec:
-  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: deployment-manager
@@ -15,8 +14,6 @@ spec:
       labels:
         app: deployment-manager
     spec:
-      imagePullSecrets:
-      - name: artifactory-creds
       initContainers:
       - name: wait-for-db
         image: busybox
@@ -29,9 +26,9 @@ spec:
           - containerPort: 3000
           env:
             - name: DB_PORT
-              value: {{ .Values.db_port | quote }}
+              value: {{ .Values.global.db_port | quote }}
             - name: DB_HOST
-              value: {{ .Values.db_host }}
+              value: {{ .Values.global.db_host }}
           envFrom:
             - secretRef:
                 name: deployment-manager-db-secrets

@@ -1,0 +1,23 @@
+# Default values for sundew.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  namespace: "controlpanel"
+  db_user: <DB_USER>
+  db_password: <DB_PASSWORD>
+  db_port: 5432
+  db_host: controlpanel-db-service
+
+controlpanel_api:
+  image: "ghcr.io/sap/controlpanel-api:latest"
+  front_url: <CONTROLPANEL_FRONT_URL> #https://controlpanel-front.<KYMA_DOMAIN>
+  deployment_manager_url: "http://deployment-manager-service"
+  deploymentmanager_db_password: <DEPLOYMENTMANAGER_DB_PASSWORD>
+
+controlpanel_front:
+  image: "ghcr.io/sap/controlpanel-frontend:latest"
+  controlpanel_api_url: <CONTROLPANEL_API_URL> #https://controlpanel-api.<KYMA_DOMAIN>
+
+deployment-manager:
+  image: "ghcr.io/sap/deployment-manager:latest"

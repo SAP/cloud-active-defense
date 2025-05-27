@@ -2,11 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: controlpanel-api
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.global.namespace }}
   labels:
     app: controlpanel-api
 spec:
-  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: controlpanel-api
@@ -27,9 +26,9 @@ spec:
             - containerPort: 8050
           env:
             - name: DB_PORT
-              value: {{ .Values.db_port | quote }}
+              value: {{ .Values.global.db_port | quote }}
             - name: DB_HOST
-              value: {{ .Values.db_host }}
+              value: {{ .Values.global.db_host }}
             - name: CONTROLPANEL_FRONTEND_URL
               value: {{ .Values.front_url }}
             - name: DEPLOYMENT_MANAGER_URL

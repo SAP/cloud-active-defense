@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: controlpanel-front-service
-  namespace: {{ .Values.namespace }}
+  namespace: {{ .Values.global.namespace }}
   labels:
     app: controlpanel-front  
 spec:
