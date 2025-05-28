@@ -98,7 +98,7 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   }
 
   ngOnInit(): void {
-    this.decoyService.decoy$.subscribe(data => {
+    this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
       if (!data) return;
       if (!this.isUpdating) {
         this.isUpdating = true
