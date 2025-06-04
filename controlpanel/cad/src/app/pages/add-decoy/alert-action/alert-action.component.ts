@@ -68,6 +68,7 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
     })
   }
   validateDecoyForm(nextRoute: string): Observable<boolean> | Promise<boolean> | boolean {
+    if (!this.decoy.inject && nextRoute.includes('injection') && !this.isEdit) return false;
     if (nextRoute.includes('injection') || nextRoute.includes('detection')) return true;
     if (nextRoute.includes('review')) {
       this.alertForm.markAllAsTouched();

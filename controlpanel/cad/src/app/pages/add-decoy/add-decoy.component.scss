@@ -48,6 +48,23 @@
                 color: $primaryColor;
             }
         }
+        .disabled-step {
+            cursor: not-allowed;
+            &:hover {
+                opacity: 1;
+            }
+            &:hover .circle {
+                box-shadow: none;
+            }
+            .circle {
+                background-color: #f0f0f0;
+                color: #aaaaaa;
+                border-color: #7676764d;
+            }
+            p {
+                color: #aaaaaa;
+            }
+        }
         .active-separator {
             hr {
                 border-top-color: $primaryColor !important;

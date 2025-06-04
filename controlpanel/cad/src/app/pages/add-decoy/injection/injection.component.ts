@@ -90,6 +90,7 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   }
   validateDecoyForm(nextRoute: string): Observable<boolean> | Promise<boolean> | boolean {
     if (nextRoute.includes('detection') || nextRoute.includes('alert-action') || nextRoute.includes('review')) {
+      if ((nextRoute.includes('detection') || nextRoute.includes('alert-action')) && !this.decoy.detect && !this.isEdit) return false;
       if (nextRoute.includes('alert-action') && !this.decoy.detect) {
         this.toastr.warning("Cannot go to alert/action page, detect is not set yet", 'Not allowed');
         return false;
@@ -310,6 +311,17 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
     this.router.navigate(['../detection'], {
       relativeTo: this.activatedRoute
     })
+  }
+  nextStep() {
+    if (!this.decoy.detect && !this.isEdit) {
+      this.router.navigate(['../review'], {
+        relativeTo: this.activatedRoute
+      })
+    } else {
+      this.router.navigate(['../detection'], {
+        relativeTo: this.activatedRoute
+      })
+    }
   }
 
   updateIsEdit() {
