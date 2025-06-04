@@ -3,6 +3,7 @@ const Config = require('../models/Config-data')
 const Decoy = require('../models/Decoy-data')
 const Blocklist = require('../models/Blocklist')
 const protectedAppService = require('./protected-app')
+const { sortBlocklistDuplicates } = require('../util/blocklist')
 
 module.exports = {
     /**
@@ -42,10 +43,12 @@ module.exports = {
             const protectedApp = await ProtectedApp.findOne({ where: { namespace, application } });
             if (!protectedApp) return { type: 'error', code: 404, message: 'Invalid namespace or application supplied' };
             if (!blocklist) return { type: 'error', code: 400, message: 'Invalid blocklist supplied' };
-            if (blocklist.blocklist && blocklist.blocklist.length)
-                Blocklist.bulkCreate(blocklist.blocklist.map(item => ({ pa_id: protectedApp.id, content: item, type: 'blocklist' })));
-            if (blocklist.throttle && blocklist.throttle.length)
-                Blocklist.bulkCreate(blocklist.throttle.map(item => ({ pa_id: protectedApp.id, content: item, type: 'throttle' })));
+            const blocklistToUpdate = await sortBlocklistDuplicates(blocklist, protectedApp.id);
+
+            if (blocklistToUpdate.blocklist && blocklistToUpdate.blocklist.length)
+                Blocklist.bulkCreate(blocklistToUpdate.blocklist.map(item => ({ pa_id: protectedApp.id, content: item, type: 'blocklist' })));
+            if (blocklistToUpdate.throttle && blocklistToUpdate.throttle.length)
+                Blocklist.bulkCreate(blocklistToUpdate.throttle.map(item => ({ pa_id: protectedApp.id, content: item, type: 'throttle' })));
             return { type: 'success', code: 200, message: 'Successful operation' };
         } catch(e) {
             throw e;
