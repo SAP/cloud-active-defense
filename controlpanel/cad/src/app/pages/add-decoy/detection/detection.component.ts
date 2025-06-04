@@ -74,6 +74,7 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   }
   validateDecoyForm(nextRoute: string): Observable<boolean> | Promise<boolean> | boolean {
     if (nextRoute.includes('injection')) {
+      if (!this.decoy.inject && !this.isEdit) return false;
       if (this.decoy.detect && this.decoy.detect.seek && !this.decoy.detect.seek.inRequest && !this.decoy.detect.seek.inResponse && !this.decoy.detect.seek.withVerb) {
         delete this.decoy.detect;
       }
@@ -109,7 +110,7 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
       }
     })
 
-    this.decoyService.isEdit$.subscribe(data => {
+    this.isEditSubscription = this.decoyService.isEdit$.subscribe(data => {
       this.isEdit = data;
       this.updateIsEdit()
     });

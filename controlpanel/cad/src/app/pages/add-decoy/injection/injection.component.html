@@ -210,9 +210,9 @@
     </div>
     <div class="right-container">
         <div class="file-preview">{{ decoy | json }}</div>
-        <div class="next">
-            <button class="filled-btn" (click)="skipInjection()">Skip</button>
-            <button class="filled-btn" routerLink="../detection">Next step</button>
+        <div class="next" [ngClass]="{ 'fixed-right': !isEdit }">
+            <button *ngIf="isEdit" class="filled-btn" (click)="skipInjection()">Skip</button>
+            <button class="filled-btn" (click)="nextStep()">Next step</button>
         </div>
     </div>
 </div>

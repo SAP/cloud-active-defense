@@ -6,6 +6,7 @@ import { ToastrService } from 'ngx-toastr';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { UUID } from '../../models/types';
+import { Decoy } from '../../models/decoy';
 
 export interface Tab { 
   name: string,
@@ -41,7 +42,9 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
   isEdit = true;
   navigationSubscription?: Subscription;
   routeParamSubscription?: Subscription
+  decoySubscription?: Subscription;
   decoyId: UUID = '';
+  decoy: Decoy = { decoy:{}};
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute, private decoyService: DecoyService, private toastr: ToastrService){}
 
@@ -81,12 +84,16 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
         this.decoyService.updateDecoy({decoy:{}});
       }
     });
+    this.decoySubscription = this.decoyService.decoy$.subscribe(decoy => {
+      this.decoy = decoy || { decoy: {}};
+    })
   }
 
   ngOnDestroy(): void {
     this.navigationSubscription?.unsubscribe();
     this.routeParamSubscription?.unsubscribe();
     this.decoyService.updateDecoy(null);
+    this.decoySubscription?.unsubscribe();
   }
 
   updateActiveIndex() {
