@@ -22,16 +22,12 @@ The values.yaml file is where all the variables are stored for the install and w
 You will have to set
 - `db_user` with the database user you want, a default one will be set if not changed
 - `db_password` with a secure password, a default one will be set if not changed (**not recommended**)
+- `kyma_domain` with the correct kyma domain provided (e.g. `c-28e44bf.kyma.ondemand.com`)
 
 ### For controlpanel_api:
-You will have to set
-- `front_url` with the correct url of the controlpanel frontend (The pattern is https://controlpanel-front.<KYMA_DOMAIN> (e.g. https://controlpanel-front\.`c-28e44bf.kyma.ondemand.com`))
+You will only have to set
 - `deploymentmanager_db_password` with a secure password, a default one will be set if not changed (**not recommended**)
 Please use the same password set for deployment-manager chart (if already set)
-
-### In controlpanel_front:
-You will only have to set
-- `controlpanel_api_url` with the correct url of the controlpanel API (The pattern is https://controlpanel-api.<KYMA_DOMAIN> (e.g. https://controlpanel-api\.`c-28e44bf.kyma.ondemand.com`))
 
 ## 2. Install
 
