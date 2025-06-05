@@ -1,4 +1,4 @@
-@import '../../../styles/variables.scss';
+@use '../../../styles/variables.scss';
 
 .multi-select {
     position: relative;
@@ -24,7 +24,7 @@
         scrollbar-width: none;
         scroll-behavior: smooth;
         .source-item {
-            border: 2px solid $primaryColor;
+            border: 2px solid variables.$primaryColor;
             display: flex;
             align-items: center;
             height: 100%;

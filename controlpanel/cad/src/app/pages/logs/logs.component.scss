@@ -1,4 +1,4 @@
-@import '../../../styles/variables.scss';
+@use '../../../styles/variables.scss';
 
 .wrapper {
     width: 100%;
@@ -33,11 +33,11 @@
                     padding: 0.2rem 0.8rem;
                     font-weight: 500;
                     margin-left: 2rem;
-                    color: $primaryColor;
+                    color: variables.$primaryColor;
                     cursor: pointer;
                     transition: all 0.2s ease;
                     &:hover {
-                        background-color: rgba($primaryColor, 0.2);
+                        background-color: rgba(variables.$primaryColor, 0.2);
                         box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px,
                                     rgba(0, 0, 0, 0.14) 0px 3px 4px 0px,
                                     rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
@@ -47,10 +47,10 @@
                         mask: url('../../../../public/filter.svg') no-repeat center; 
                         width: 24px; 
                         height: 24px; 
-                        background-color: $primaryColor;
+                        background-color: variables.$primaryColor;
                     }
                     p {
-                        color: $primaryColor;
+                        color: variables.$primaryColor;
                     }
                     option {
                         background-color: #FFF;
@@ -82,7 +82,7 @@
                                 display: flex;
                                 flex-direction: row;
                                 align-items: center;
-                                border: $inputBorder 1px solid;
+                                border: variables.$inputBorder 1px solid;
                                 border-radius: 20px;
                                 padding: 0.2rem 0.6rem 0.2rem 0.2rem;
                                 height: fit-content;
@@ -101,7 +101,7 @@
                                 flex: 1;
                                 display: flex;
                                 border-radius: 6px;
-                                border: $inputBorder 1px solid;
+                                border: variables.$inputBorder 1px solid;
                                 :first-child {
                                     border-radius: 6px 0 0 6px;
                                 }
@@ -117,14 +117,14 @@
                                 }
                                 .select-operator {
                                     width: 70%;
-                                    border-right: solid $inputBorder 1px;
-                                    border-left: solid $inputBorder 1px;
+                                    border-right: solid variables.$inputBorder 1px;
+                                    border-left: solid variables.$inputBorder 1px;
                                 }
                                 .delete-btn {
                                     padding: 2px 1px;
                                     cursor: pointer;
                                     border: 0;
-                                    border-left: solid $inputBorder 1px;
+                                    border-left: solid variables.$inputBorder 1px;
                                     background-color: #F6F6F6;
                                     .delete-icon {
                                         margin: 0 auto;
@@ -136,7 +136,7 @@
                                 }
                             }
                             .add-search-value {
-                                background-color: $primaryColor;
+                                background-color: variables.$primaryColor;
                                 padding: 0 0.5rem;
                                 border: 0;
                                 color: #FFF;

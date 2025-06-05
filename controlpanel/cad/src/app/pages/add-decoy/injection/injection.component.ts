@@ -20,7 +20,6 @@ import { Observable, Subscription } from 'rxjs';
         TooltipComponent,
         ReactiveFormsModule,
         InjectionWhenTableComponent,
-        RouterLink
     ],
     templateUrl: './injection.component.html',
     styleUrl: './injection.component.scss'
