@@ -30,7 +30,7 @@ spec:
             - name: DB_HOST
               value: {{ .Values.global.db_host }}
             - name: CONTROLPANEL_FRONTEND_URL
-              value: {{ .Values.front_url }}
+              value: {{ printf "%s.%s" .Values.front_url (trimPrefix "." .Values.global.kyma_domain) }}
             - name: DEPLOYMENT_MANAGER_URL
               value: {{ .Values.deployment_manager_url }}
           envFrom:

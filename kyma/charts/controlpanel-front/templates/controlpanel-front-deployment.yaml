@@ -22,4 +22,4 @@ spec:
           - containerPort: 80
           env:
             - name: CONTROLPANEL_API_URL
-              value: {{ .Values.controlpanel_api_url }}
+              value: {{ printf "%s.%s" .Values.controlpanel_api_url (trimPrefix "." .Values.global.kyma_domain) }}

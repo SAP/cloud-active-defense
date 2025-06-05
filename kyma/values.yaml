@@ -8,16 +8,17 @@ global:
   db_password: <DB_PASSWORD>
   db_port: 5432
   db_host: controlpanel-db-service
+  kyma_domain: <KYMA_DOMAIN> # e.g. c-28e44bf.kyma.ondemand.com
 
 controlpanel_api:
   image: "ghcr.io/sap/controlpanel-api:latest"
-  front_url: <CONTROLPANEL_FRONT_URL> #https://controlpanel-front.<KYMA_DOMAIN>
+  front_url: https://controlpanel-front
   deployment_manager_url: "http://deployment-manager-service"
   deploymentmanager_db_password: <DEPLOYMENTMANAGER_DB_PASSWORD>
 
 controlpanel_front:
   image: "ghcr.io/sap/controlpanel-frontend:latest"
-  controlpanel_api_url: <CONTROLPANEL_API_URL> #https://controlpanel-api.<KYMA_DOMAIN>
+  controlpanel_api_url: https://controlpanel-api
 
 deployment-manager:
   image: "ghcr.io/sap/deployment-manager:latest"
