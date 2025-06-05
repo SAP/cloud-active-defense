@@ -135,20 +135,20 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
     if (!newActions) return;
     if (!this.decoy.detect) this.decoy.detect = { seek : { in: 'header' }};
     if (!this.decoy.detect.alert) this.decoy.detect.alert = { severity: this.alertForm.get('severity')?.value };
-    this.decoy.detect.respond = newActions.map(({ delayExtension, delay, durationExtension, duration, ...rest }) => {
+    this.decoy.detect.respond = newActions.map(({ delayExtension, delay, durationExtension, formDuration, ...rest }) => {
       let newDelay = '';
       let newDuration = '';
       let newRespond: RespondType = rest;
       if (delayExtension !== 'now' && delayExtension !== undefined && delay !== undefined) {
         newDelay = delay + delayExtension;
       } else newDelay = 'now'
-      if (durationExtension !== 'forever' && durationExtension !== undefined && duration !== undefined) {
-        newDuration = duration + durationExtension;
+      if (durationExtension !== 'forever' && durationExtension !== undefined && formDuration !== undefined) {
+        newDuration = formDuration + durationExtension;
       } else newDuration = 'forever'
       if (delay !== undefined) {
         newRespond.delay = newDelay as DelayType;
       }
-      if (duration !== undefined) {
+      if (formDuration !== undefined) {
         newRespond.duration = newDuration as DurationType;
       }
       return newRespond;

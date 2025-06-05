@@ -15,6 +15,12 @@
         th {
             text-align: start;
             padding: 0.2rem 0.5rem;
+            .info-icon {
+                height: 14px;
+                align-self: flex-start;
+                margin-top: -5px;
+                cursor: default;
+            }
         }
         .end-action {
             box-sizing: content-box;
