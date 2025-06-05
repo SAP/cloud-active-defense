@@ -105,7 +105,7 @@ h1 {
     width: 100%;
 }
 
-app-add-decoy, app-list-decoy, app-config {
+app-add-decoy, app-list-decoy, app-config, app-system {
     flex: 1;
     display: flex;
     flex-direction: column;
@@ -122,7 +122,7 @@ app-add-decoy, app-list-decoy, app-config {
     cursor: pointer;
     font-weight: 400;
     transition: box-shadow 0.2s ease, opacity 0.2s ease;
-
+    
     &:disabled {
         background-color: #C5C1C8;
     }
@@ -130,5 +130,25 @@ app-add-decoy, app-list-decoy, app-config {
         opacity: 0.9;
         box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 
                     0px 1px 2px rgba(0, 0, 0, 0.24);
+    }
+}
+
+.outlined-btn {
+    display: flex;
+    background-color: white;
+    color: $primaryColor;
+    font-size: 1rem;
+    border: 2px solid #D9D9D9;
+    padding: 0.5rem 0.8rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 400;
+    &:hover {
+        background-color: #f8f9fa;
+         box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.08),
+    }
+    p {
+        display: flex;
+        align-items: center;
     }
 }

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deployment-manager
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: deployment-manager
+spec:
+  selector:
+    matchLabels:
+      app: deployment-manager
+  template:
+    metadata:
+      labels:
+        app: deployment-manager
+    spec:
+      initContainers:
+      - name: wait-for-db
+        image: busybox
+        command: ['sh', '-c', 'until nc -z -v controlpanel-api-service 80; do echo waiting for db; sleep 2; done']
+      containers:
+        - name: deployment-manager
+          image: {{ .Values.image }}
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 3000
+          env:
+            - name: DB_PORT
+              value: {{ .Values.global.db_port | quote }}
+            - name: DB_HOST
+              value: {{ .Values.global.db_host }}
+          envFrom:
+            - secretRef:
+                name: deployment-manager-db-secrets
