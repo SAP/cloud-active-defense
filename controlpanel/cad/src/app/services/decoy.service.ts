@@ -11,7 +11,7 @@ import { UUID } from '../models/types';
   providedIn: 'root'
 })
 export class DecoyService {
-  private decoySubject = new BehaviorSubject<Decoy>({decoy:{}});
+  private decoySubject = new BehaviorSubject<Decoy | null>(null);
   decoy$ = this.decoySubject.asObservable();
 
   private isEditSubject = new BehaviorSubject<boolean>(true);
@@ -33,13 +33,13 @@ export class DecoyService {
       return { message: "Error when adding the decoy", type: 'error' };
     }
   }
-  get decoy(): Decoy {
+  get decoy(): Decoy | null {
     return this.decoySubject.value;
   }
   set decoy(v: Decoy) {
     this.decoySubject.next(v);
   }
-  updateDecoy(newDecoy: Decoy) {
+  updateDecoy(newDecoy: Decoy | null) {
     this.decoySubject.next(newDecoy);
   }
   async getDecoy(id: UUID): Promise<ApiResponse> {

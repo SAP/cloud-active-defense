@@ -3,18 +3,31 @@
     <div class="top-bar">
         <div class="progressbar">
             <ng-container *ngFor="let tab of tabs; index as i">
-                <a class="step" [routerLink]="tab.path" [ngClass]="{ 'active-step': i <= activeIndex }">
+                <a class="step"
+                   [routerLink]="tab.path"
+                   [ngClass]="{
+                     'active-step': (i <= activeIndex && isEdit) || (!isEdit && i == activeIndex) ,
+                     'disabled-step': (tab.name == 'Injection' && !decoy.inject && !isEdit) ||
+                                      (['Detection', 'Alert & Action'].includes(tab.name) && !decoy.detect && !isEdit)
+                   }">
                     <div class="circle">
                         {{ i + 1 }}
                     </div>
                     <p>{{ tab.name }}</p>
                 </a>
-                <div class="step-separator" *ngIf="i < tabs.length - 1" [ngClass]="{ 'active-separator': i < activeIndex }">
+                <div class="step-separator" 
+                     *ngIf="i < tabs.length - 1" 
+                     [ngClass]="{ 
+                        'active-separator': (i < activeIndex && isEdit) ||
+                        (!isEdit && tab.name == 'Alert & Action') ||
+                        (!isEdit && (tab.name == 'Alert & Action' || tab.name == 'Detection') && decoy.detect ) ||
+                        (!isEdit && tab.name == 'Injection' && decoy.detect && decoy.inject)
+                        }">
                     <hr/>
                 </div>
             </ng-container>
         </div>
-        <div class="edit">
+        <div class="edit" *ngIf="decoyId">
             <label class="switch">
                 <input type="checkbox" (change)="updateEditStatus()" [ngModel]="isEdit">
                 <span class="slider round"></span>

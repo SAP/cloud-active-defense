@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { DecoyService } from '../../../services/decoy.service';
 import { Decoy } from '../../../models/decoy';
 import { CommonModule } from '@angular/common';
@@ -14,16 +14,18 @@ import { UUID } from '../../../models/types';
     templateUrl: './review.component.html',
     styleUrl: './review.component.scss'
 })
-export class ReviewComponent implements ReturnBackReviewDeactivate {
+export class ReviewComponent implements ReturnBackReviewDeactivate, OnInit, OnDestroy {
   decoy: Decoy = {decoy:{}};
   reviewText = "";
   decoySubscription?: Subscription;
+  isEditSubscription?: Subscription;
   decoyId: UUID = "";
   isSaving = false;
+  isEdit = true;
 
   constructor(private decoyService: DecoyService, private toastr: ToastrService, private router: Router, private activatedRoute: ActivatedRoute) {
     this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
-        this.decoy = data;
+        this.decoy = data as Decoy;
     })
     this.activatedRoute.parent?.params.subscribe(async params => this.decoyId = params['id']);
     if (!this.decoy.detect && !this.decoy.inject) this.router.navigate(['../injection'], { relativeTo: this.activatedRoute });
@@ -31,14 +33,29 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
   }
 
   returnBackReview(nextRoute: string, currentRoute: string): Observable<boolean> | Promise<boolean> | boolean {
-    if (nextRoute.includes('injection') || nextRoute.includes('detection')) return true;
-    if (nextRoute.includes('alert-action') && this.decoy.detect) return true;
+    if (nextRoute.includes('decoy/list') && !this.isEdit) return true
+    if (nextRoute.includes('injection') && !this.decoy.inject && !this.isEdit) return false;
+    if ((nextRoute.includes('detection') || nextRoute.includes('alert-action')) && !this.decoy.detect && !this.isEdit) return false;
+
+    if ((nextRoute.includes('alert-action') || nextRoute.includes('detection')) && this.decoy.detect) return true;
+    if (nextRoute.includes('injection') && this.decoy.inject) return true;
     if (currentRoute.includes('review') && nextRoute.includes('alert-action') && !this.decoy.detect) {
       this.toastr.warning("Cannot go to alert/action page, detect is not set yet", 'Not allowed');
       return false;
     }
     if (this.isSaving) return true;
     return confirm("Are you sure to leave this page? All progress will be lost");
+  }
+
+  ngOnInit() {
+     this.isEditSubscription = this.decoyService.isEdit$.subscribe(data => {
+      this.isEdit = data;
+    });
+  }
+  
+  ngOnDestroy() {
+    this.decoySubscription?.unsubscribe();
+    this.isEditSubscription?.unsubscribe();
   }
 
   generateInjectText(): string {
@@ -220,6 +237,7 @@ export class ReviewComponent implements ReturnBackReviewDeactivate {
       if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error when saving decoy");
       else {
         this.toastr.success(apiResponse.message, 'Successfully created Decoy');
+        this.isSaving = true;
         this.router.navigate(['decoy/list']);
       }
     } else {

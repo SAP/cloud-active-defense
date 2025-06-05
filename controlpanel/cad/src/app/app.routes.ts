@@ -49,11 +49,7 @@ export const routes: Routes = [{
     {
         path: ':id',
         component: AddDecoyComponent,
-        children: [{
-            path: '',
-            redirectTo: 'injection',
-            pathMatch: 'full',
-        },
+        children: [
         {
             path: 'injection',
             component: InjectionComponent,

@@ -12,7 +12,7 @@ import { ValidateDecoyFormDeactivate } from '../../../guards/deactivate/validate
 
 @Component({
     selector: 'app-detection',
-    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterOutlet, RouterLink],
+    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterLink],
     templateUrl: './detection.component.html',
     styleUrl: './detection.component.scss'
 })
@@ -73,7 +73,13 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
     }, { validators: [CustomValidators.expectValueWithKey()] })
   }
   validateDecoyForm(nextRoute: string): Observable<boolean> | Promise<boolean> | boolean {
-    if (nextRoute.includes('injection')) return true;
+    if (nextRoute.includes('injection')) {
+      if (!this.decoy.inject && !this.isEdit) return false;
+      if (this.decoy.detect && this.decoy.detect.seek && !this.decoy.detect.seek.inRequest && !this.decoy.detect.seek.inResponse && !this.decoy.detect.seek.withVerb) {
+        delete this.decoy.detect;
+      }
+      return true;
+    }
     if (nextRoute.includes('alert-action') || nextRoute.includes('review')) {
       if (this.skip) return true;
       this.detectionForm.markAllAsTouched();
@@ -93,17 +99,18 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   }
 
   ngOnInit(): void {
-    this.decoyService.decoy$.subscribe(data => {
+    this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
+      if (!data) return;
       if (!this.isUpdating) {
         this.isUpdating = true
-        this.decoy = data;
+        this.decoy = data as Decoy;
         if (!this.decoy.detect) this.decoy.detect = { seek: { in: 'header' } };
-        this.fillForm(data);
+        this.fillForm(this.decoy);
         this.isUpdating = false;
       }
     })
 
-    this.decoyService.isEdit$.subscribe(data => {
+    this.isEditSubscription = this.decoyService.isEdit$.subscribe(data => {
       this.isEdit = data;
       this.updateIsEdit()
     });
@@ -211,10 +218,12 @@ export class DetectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
       request: decoyData.detect?.seek.inResponse != undefined ? 'inResponse' : 'inRequest',
       verb: decoyData.detect?.seek.withVerb || '',
       in: decoyData.detect?.seek.in || 'header',
-      key: decoyData.decoy.key || '',
+      key: decoyData.decoy.key || decoyData.decoy.dynamicKey || '',
       separator: decoyData.decoy.separator || '',
-      value: decoyData.decoy.value || '',
+      value: decoyData.decoy.value || decoyData.decoy.dynamicValue || '',
     })
+    if (decoyData.decoy.dynamicKey) this.onRegexChange('key');
+    if (decoyData.decoy.dynamicValue) this.onRegexChange('value');
   }
 
   skipDetection() {

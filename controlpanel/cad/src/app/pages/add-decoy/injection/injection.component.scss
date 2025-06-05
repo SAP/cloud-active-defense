@@ -21,6 +21,38 @@
                     display: flex;
                     justify-content: center;
                     align-items: center;
+
+                    .extra-item-icon-regex {
+                        margin: 0 auto;
+                        mask: url('../../../../../public/regex.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: #000;
+                    }
+                    .extra-item-icon-swap {
+                        margin: 0 auto;
+                        mask: url('../../../../../public/swap_horiz.svg') no-repeat center; 
+                        width: 24px; 
+                        height: 24px; 
+                        background-color: #000;
+                    }
+                    &:disabled .extra-item-icon-regex, &:disabled .extra-item-icon-swap {
+                        background-color: #86838A;
+                    }
+                    &:disabled {
+                        cursor: default;
+                    }
+                    &:hover {
+                        background-color: #a5d3ff;
+                        opacity: 0.8;
+                        border-radius: 10px;
+                    }
+                    &:has(.extra-item-icon-swap):focus .extra-item-icon-swap {
+                        animation: swap 0.5s ease-in-out;
+                    }
+                    &:has(.extra-item-icon-swap):active .extra-item-icon-swap {
+                        animation: none;
+                    }
                 }
             }
             .switch-string { 
@@ -49,5 +81,14 @@
             color: red;
             font-size: 14px;
         }
+    }
+}
+
+@keyframes swap {
+    from {
+        transform: rotateZ(0deg);
+    }
+    to {
+        transform: rotateZ(180deg);
     }
 }

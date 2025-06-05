@@ -124,108 +124,121 @@ func truncate(s string) string {
 func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, headers map[string]string, blocklist, throttlelist []config_parser.BlocklistType) ([]map[string]string, []map[string]string) {
   var updateBlocklist []map[string]string = []map[string]string{}
   var updateThrottleList []map[string]string = []map[string]string{}
+  var globalRespondAlreadyUsed bool = false;
   session := alerts[0].LogParameters["session"]
-  if config.Respond != nil && len(config.Respond) != 0 {
-    for _, respondItem := range config.Respond {
-      updateBlocklistItem := map[string]string{ "Delay": "now" ,"Duration": "forever", "RequestID": headers["x-request-id"] }
-      sources, err := getSource(respondItem.Source, session, headers["user-agent"])
-      if err != nil {
-        respondJson, _ := json.Marshal(respondItem)
-        proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error while setAlertAction: %s: %s\"}", err, respondJson)
-        continue;
-      }
-      if len(sources) == 0 || len(strings.Split(respondItem.Source, ",")) != len(sources) {
-        continue;
-      }
-      for _, source := range sources {
-        updateBlocklistItem[source[0]] = source[1]
-      }
-      updateBlocklistItem["Behavior"] = respondItem.Behavior
-      if respondItem.Delay != "" {
-        splitDelay := strings.Split(respondItem.Delay, "-")
-        if len(splitDelay) == 2 {
-          min, _ := strconv.Atoi(splitDelay[0][:len(splitDelay[0])-1])
-          max, _ := strconv.Atoi(splitDelay[1][:len(splitDelay[1])-1])
-          updateBlocklistItem["Delay"] = strconv.Itoa(rand.Intn(max - min + 1) + min) + string(respondItem.Delay[len(respondItem.Delay)-1])
+  
+  for _, alert := range alerts {
+    if alert.Filter.Detect.Respond != nil && len(alert.Filter.Detect.Respond) != 0 {
+      for _, respondItem := range alert.Filter.Detect.Respond {
+        updateBlocklistItem := map[string]string{ "Delay": "now" ,"Duration": "forever", "RequestID": headers["x-request-id"] }
+        sources, err := getSource(respondItem.Source, session, headers["user-agent"])
+        if err != nil {
+          respondJson, _ := json.Marshal(respondItem)
+          proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error while setAlertAction: %s: %s\"}", err, string(respondJson))
+          continue;
+        }
+        if len(sources) == 0 || len(strings.Split(respondItem.Source, ",")) != len(sources) {
+          continue;
+        }
+        for _, source := range sources {
+          updateBlocklistItem[source[0]] = source[1]
+        }
+        updateBlocklistItem["Behavior"] = respondItem.Behavior
+        if respondItem.Delay != "" {
+          splitDelay := strings.Split(respondItem.Delay, "-")
+          if len(splitDelay) == 2 {
+            min, _ := strconv.Atoi(splitDelay[0][:len(splitDelay[0])-1])
+            max, _ := strconv.Atoi(splitDelay[1][:len(splitDelay[1])-1])
+            updateBlocklistItem["Delay"] = strconv.Itoa(rand.Intn(max - min + 1) + min) + string(respondItem.Delay[len(respondItem.Delay)-1])
+          } else {
+            updateBlocklistItem["Delay"] = respondItem.Delay
+          }
+        }
+        if respondItem.Duration != "" {
+          updateBlocklistItem["Duration"] = respondItem.Duration
         } else {
-          updateBlocklistItem["Delay"] = respondItem.Delay
+          if (strings.Contains(respondItem.Source, "userAgent")) {
+            updateBlocklistItem["Duration"] = "720h"
+          } else if (strings.Contains(respondItem.Source, "ip")) {
+            updateBlocklistItem["Duration"] = "48h"
+          } else if (strings.Contains(respondItem.Source, "session")) {
+            updateBlocklistItem["Duration"] = "24h"
+          }
+        }
+        updateBlocklistItem["Time"] = strconv.Itoa(int(time.Now().Unix()))
+        if updateBlocklistItem["Behavior"] == "throttle" {
+          updateBlocklistItem["Property"] = respondItem.Property
+          if respondItem.Property == "" {
+            updateBlocklistItem["Property"] = "30-120"
+          }
+          if doesNotContains(throttlelist, updateBlocklistItem){
+            updateThrottleList = append(updateThrottleList, updateBlocklistItem)
+          }
+          continue;
+        }
+        if updateBlocklistItem["Behavior"] == "divert" {
+          if session != "" {
+            updateBlocklistItem["Behavior"] = "clone"
+          } else {
+            updateBlocklistItem["Behavior"] = "exhaust"
+          }
+        }
+        if doesNotContains(blocklist, updateBlocklistItem) {
+          updateBlocklist = append(updateBlocklist, updateBlocklistItem)
         }
       }
-      if respondItem.Duration != "" {
-        updateBlocklistItem["Duration"] = respondItem.Duration
-      }
-      updateBlocklistItem["Time"] = strconv.Itoa(int(time.Now().Unix()))
-      if updateBlocklistItem["Behavior"] == "throttle" {
-        updateBlocklistItem["Property"] = respondItem.Property
-        if respondItem.Property == "" {
-          updateBlocklistItem["Property"] = "30-120"
+    } else if !globalRespondAlreadyUsed && config.Respond != nil && len(config.Respond) != 0 {
+      for _, respondItem := range config.Respond {
+        updateBlocklistItem := map[string]string{ "Delay": "now" ,"Duration": "forever", "RequestID": headers["x-request-id"] }
+        sources, err := getSource(respondItem.Source, session, headers["user-agent"])
+        if err != nil {
+          respondJson, _ := json.Marshal(respondItem)
+          proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error while setAlertAction: %s: %s\"}", err, respondJson)
+          continue;
         }
-        if doesNotContains(throttlelist, updateBlocklistItem) {
-          updateThrottleList = append(updateThrottleList, updateBlocklistItem)
+        if len(sources) == 0 || len(strings.Split(respondItem.Source, ",")) != len(sources) {
+          continue;
         }
-        continue;
-      }
-      if updateBlocklistItem["Behavior"] == "divert" {
-        if session != "" {
-          updateBlocklistItem["Behavior"] = "clone"
-        } else {
-          updateBlocklistItem["Behavior"] = "exhaust"
+        for _, source := range sources {
+          updateBlocklistItem[source[0]] = source[1]
         }
-      }
-      if doesNotContains(blocklist, updateBlocklistItem) {
-        updateBlocklist = append(updateBlocklist, updateBlocklistItem)
-      }
-    }
-  }
-  if alerts[0].Filter.Detect.Respond != nil && len(alerts[0].Filter.Detect.Respond) != 0 {
-    for _, respondItem := range alerts[0].Filter.Detect.Respond {
-      updateBlocklistItem := map[string]string{ "Delay": "now" ,"Duration": "forever", "RequestID": headers["x-request-id"] }
-      sources, err := getSource(respondItem.Source, session, headers["user-agent"])
-      if err != nil {
-        respondJson, _ := json.Marshal(respondItem)
-        proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"error while setAlertAction: %s: %s\"}", err, string(respondJson))
-        continue;
-      }
-      if len(sources) == 0 || len(strings.Split(respondItem.Source, ",")) != len(sources) {
-        continue;
-      }
-      for _, source := range sources {
-        updateBlocklistItem[source[0]] = source[1]
-      }
-      updateBlocklistItem["Behavior"] = respondItem.Behavior
-      if respondItem.Delay != "" {
-        splitDelay := strings.Split(respondItem.Delay, "-")
-        if len(splitDelay) == 2 {
-          min, _ := strconv.Atoi(splitDelay[0][:len(splitDelay[0])-1])
-          max, _ := strconv.Atoi(splitDelay[1][:len(splitDelay[1])-1])
-          updateBlocklistItem["Delay"] = strconv.Itoa(rand.Intn(max - min + 1) + min) + string(respondItem.Delay[len(respondItem.Delay)-1])
-        } else {
-          updateBlocklistItem["Delay"] = respondItem.Delay
+        updateBlocklistItem["Behavior"] = respondItem.Behavior
+        if respondItem.Delay != "" {
+          splitDelay := strings.Split(respondItem.Delay, "-")
+          if len(splitDelay) == 2 {
+            min, _ := strconv.Atoi(splitDelay[0][:len(splitDelay[0])-1])
+            max, _ := strconv.Atoi(splitDelay[1][:len(splitDelay[1])-1])
+            updateBlocklistItem["Delay"] = strconv.Itoa(rand.Intn(max - min + 1) + min) + string(respondItem.Delay[len(respondItem.Delay)-1])
+          } else {
+            updateBlocklistItem["Delay"] = respondItem.Delay
+          }
         }
-      }
-      if respondItem.Duration != "" {
-        updateBlocklistItem["Duration"] = respondItem.Duration
-      }
-      updateBlocklistItem["Time"] = strconv.Itoa(int(time.Now().Unix()))
-      if updateBlocklistItem["Behavior"] == "throttle" {
-        updateBlocklistItem["Property"] = respondItem.Property
-        if respondItem.Property == "" {
-          updateBlocklistItem["Property"] = "30-120"
+        if respondItem.Duration != "" {
+          updateBlocklistItem["Duration"] = respondItem.Duration
         }
-        if doesNotContains(throttlelist, updateBlocklistItem){
-          updateThrottleList = append(updateThrottleList, updateBlocklistItem)
+        updateBlocklistItem["Time"] = strconv.Itoa(int(time.Now().Unix()))
+        if updateBlocklistItem["Behavior"] == "throttle" {
+          updateBlocklistItem["Property"] = respondItem.Property
+          if respondItem.Property == "" {
+            updateBlocklistItem["Property"] = "30-120"
+          }
+          if doesNotContains(throttlelist, updateBlocklistItem) {
+            updateThrottleList = append(updateThrottleList, updateBlocklistItem)
+            globalRespondAlreadyUsed = true
+          }
+          continue;
         }
-        continue;
-      }
-      if updateBlocklistItem["Behavior"] == "divert" {
-        if session != "" {
-          updateBlocklistItem["Behavior"] = "clone"
-        } else {
-          updateBlocklistItem["Behavior"] = "exhaust"
+        if updateBlocklistItem["Behavior"] == "divert" {
+          if session != "" {
+            updateBlocklistItem["Behavior"] = "clone"
+          } else {
+            updateBlocklistItem["Behavior"] = "exhaust"
+          }
         }
-      }
-      if doesNotContains(blocklist, updateBlocklistItem) {
-        updateBlocklist = append(updateBlocklist, updateBlocklistItem)
+        if doesNotContains(blocklist, updateBlocklistItem) {
+          updateBlocklist = append(updateBlocklist, updateBlocklistItem)
+          globalRespondAlreadyUsed = true
+        }
       }
     }
   }

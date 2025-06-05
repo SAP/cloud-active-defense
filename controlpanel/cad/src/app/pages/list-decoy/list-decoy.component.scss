@@ -34,8 +34,14 @@
         }
         tbody {
             tr {
-                cursor: pointer;
                 box-sizing: border-box;
+                &.decoy-row {
+                    cursor: pointer;
+                    transition: all 0.2s ease-in-out;
+                    &:hover {
+                        background-color: #d5ebff;
+                    }
+                }
                 td {
                     padding: 0.8rem 1rem;
                     .sub-text {
@@ -45,28 +51,24 @@
                         width: 1.5rem;
                         height: 1.5rem;
                     }
-                    .status-true {
-                        mask: url('../../../../public/check.svg') no-repeat center; 
-                        width: 24px; 
-                        height: 24px; 
-                        background-color: green;
-                    }
-                    .status-false {
-                        mask: url('../../../../public/close_small.svg') no-repeat center; 
-                        width: 24px; 
-                        height: 24px; 
-                        background-color: red;
-                    }
                 }
                 .options {
                     text-align: center;
                     .option-btn {
                         border: 0;
                         background-color: transparent;
-                        margin: 0 0.5rem;
+                        padding: 0 0.5rem;
                         cursor: pointer;
-                        img {
+                        &:hover .option-delete-icon {
+                            background-color: red;
+                        }
+                        .option-delete-icon {
+                            mask: url('../../../../public/delete.svg') no-repeat center;
+                            mask-size: contain;
                             width: 2rem;
+                            height: 2rem;
+                            background-color: #000;
+                            transition: background-color 0.3s ease;
                         }
                     }
                 }
