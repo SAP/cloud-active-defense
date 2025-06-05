@@ -156,6 +156,14 @@ func SetAlertAction(alerts []AlertParam, config config_parser.ConfigType, header
         }
         if respondItem.Duration != "" {
           updateBlocklistItem["Duration"] = respondItem.Duration
+        } else {
+          if (strings.Contains(respondItem.Source, "userAgent")) {
+            updateBlocklistItem["Duration"] = "720h"
+          } else if (strings.Contains(respondItem.Source, "ip")) {
+            updateBlocklistItem["Duration"] = "48h"
+          } else if (strings.Contains(respondItem.Source, "session")) {
+            updateBlocklistItem["Duration"] = "24h"
+          }
         }
         updateBlocklistItem["Time"] = strconv.Itoa(int(time.Now().Unix()))
         if updateBlocklistItem["Behavior"] == "throttle" {

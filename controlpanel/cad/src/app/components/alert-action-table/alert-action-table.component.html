@@ -1,11 +1,51 @@
+<app-tooltip [showTooltip]="showTooltip"
+[title]="tooltipTitle"
+[text]="tooltipText"
+[link]="tooltipLink"
+[topPosition]="topPosition"
+[leftPosition]="leftPosition"
+(tooltipHover)="onHoverInfo()"
+(tooltipLeave)="onLeaveInfo()">
+</app-tooltip>
 <table class="action-table">
     <thead>
         <tr>
-            <th id="source">Source</th>
-            <th id="behavior">Behavior</th>
-            <th id="delay">Delay</th>
-            <th id="duration">Duration</th>
-            <th id="property">Property</th>
+            <th id="source">
+                Source
+                <img class="info-icon" src="info.svg"
+                (mouseenter)="onHoverInfo('source', 'Defines what to look for in subsequent request(s)', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#source', $event)"
+                (mouseout)="onLeaveInfo()"
+                />
+            </th>
+            
+            <th id="behavior">
+                Behavior
+                <img class="info-icon" src="info.svg"
+                (mouseenter)="onHoverInfo('behavior', 'What will happen to requests matching with what is specified in the source field', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#behavior', $event)"
+                (mouseout)="onLeaveInfo()"
+                />
+            </th>
+            <th id="delay">
+                Delay
+                <img class="info-icon" src="info.svg"
+                (mouseenter)="onHoverInfo('delay', 'The number of seconds / minutes / hours to wait before applying the response. \'n\' is for \'now\' (no delay)', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#delay', $event)"
+                (mouseout)="onLeaveInfo()"
+                />
+            </th>
+            <th id="duration">
+                Duration
+                <img class="info-icon" src="info.svg"
+                (mouseenter)="onHoverInfo('duration', 'The number of seconds / minutes / hours the response will be applied before expiring. \'d\' is for the default/recommanded maximum value of time and \'f\' is for \'forever\' (infinite duration)', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#duration', $event)"
+                (mouseout)="onLeaveInfo()"
+                />
+            </th>
+            <th id="property">
+                Property
+                <img class="info-icon" src="info.svg"
+                (mouseenter)="onHoverInfo('property', 'How many seconds to throttle the request. Can only be in seconds and can be a range of seconds when using \'-\' (e.g. 20-60)', 'https://github.com/SAP/cloud-active-defense/wiki/Detect#property', $event)"
+                (mouseout)="onLeaveInfo()"
+                />
+            </th>
             <th class="end-action"></th>
         </tr>
         <tr class="tr-separator"><td class="row-separator" colspan="6"><hr class="head-separator"/></td></tr>
@@ -34,11 +74,12 @@
             </td>
             <td>
                 <div class="table-form-inputception">
-                    <input class="input-action-table inner-input" type="text" name="duration" id="duration" [(ngModel)]="action.duration" (input)="onItemChange()" [disabled]="action.durationExtension == 'forever' || !isEdit" appOnlyNumbers>
+                    <input class="input-action-table inner-input" type="text" name="duration" id="duration" [(ngModel)]="action.formDuration" (input)="onItemChange()" [disabled]="action.durationExtension == 'forever' || !isEdit" appOnlyNumbers>
                     <select class="inner-select" name="durationExtension" id="durationExtension" [(ngModel)]="action.durationExtension" (change)="onDurationExtensionChange(action.durationExtension, i); onItemChange()" [disabled]="!isEdit">
                         <option value="s">s</option>
                         <option value="m">m</option>
                         <option value="h">h</option>
+                        <option value="default">d</option>
                         <option value="forever">f</option>
                     </select>
                 </div>
