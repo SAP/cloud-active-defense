@@ -5,18 +5,15 @@ metadata:
   namespace: {{ .Values.namespace }}
   labels:
     app: myapp
-    protects: myapp
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       app: myapp
-      protects: myapp
   template:
     metadata:
       labels:
         app: myapp
-        protects: myapp
     spec:
       containers:
         - name: myapp

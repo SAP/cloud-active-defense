@@ -1,0 +1,8 @@
+# Default values for sundew.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  namespace: "controlpanel"
+
+image: "ghcr.io/sap/controlpanel-frontend:latest"
+controlpanel_api_url: <CONTROLPANEL_API_URL> #https://controlpanel-api.<KYMA_DOMAIN>

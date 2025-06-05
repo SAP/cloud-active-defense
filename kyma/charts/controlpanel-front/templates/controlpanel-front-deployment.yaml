@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controlpanel-front
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: controlpanel-front
+spec:
+  selector:
+    matchLabels:
+      app: controlpanel-front
+  template:
+    metadata:
+      labels:
+        app: controlpanel-front
+    spec:
+      containers:
+        - name: controlpanel-front
+          image: {{ .Values.image }}
+          imagePullPolicy: Always
+          ports:
+          - containerPort: 80
+          env:
+            - name: CONTROLPANEL_API_URL
+              value: {{ .Values.controlpanel_api_url }}

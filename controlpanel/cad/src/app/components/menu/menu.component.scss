@@ -144,6 +144,11 @@ $menu-icon-size: 2rem;
                 }
             }
         }
+        .menu-separator {
+            margin: 0.2rem 1rem;
+            border: none;
+            border-bottom: 1px solid #9C9C9C;
+        }
     }
     .end-item {
         margin-top: auto;

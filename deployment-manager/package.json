@@ -1,0 +1,21 @@
+{
+  "name": "deployment-manager",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "author": "cedric.hebert@sap.com",
+  "license": "ISC",
+  "description": "Deployment manager will manage all API call to client kubernetes cluster to create/update/delete necessary resources for cloud active defense",
+  "dependencies": {
+    "@kubernetes/client-node": "^1.0.0",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "pg": "^8.14.1",
+    "sequelize": "^6.37.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  }
+}
