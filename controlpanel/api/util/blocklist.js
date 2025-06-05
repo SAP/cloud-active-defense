@@ -44,7 +44,11 @@ async function sortBlocklistDuplicates(newBlocklist, pa_id) {
         sourceKeys.every(key => existing.content[key] === newItem[key]) &&
         sourceKeys.every(key => existing.content[key] !== undefined) &&
         sourceKeys.length === Object.keys(existing.content).filter(key => sourceKeys.includes(key) && existing.content[key] !== undefined).length);
-        if (match && isNewBlocklistBehaviorPriority(match, newItem)) {
+        if (!match) {
+            finaleThrottlelist.push(newItem);
+            continue;
+        }
+        if (isNewBlocklistBehaviorPriority(match, newItem)) {
             Blocklist.destroy({ where: { id: match.id } })
             finaleThrottlelist.push(newItem);
         }
