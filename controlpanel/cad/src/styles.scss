@@ -136,7 +136,7 @@ app-add-decoy, app-list-decoy, app-config, app-system {
 .outlined-btn {
     display: flex;
     background-color: white;
-    color: $primaryColor;
+    color: variables.$primaryColor;
     font-size: 1rem;
     border: 2px solid #D9D9D9;
     padding: 0.5rem 0.8rem;

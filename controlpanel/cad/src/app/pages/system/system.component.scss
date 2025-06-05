@@ -1,4 +1,4 @@
-@import '../../../styles/variables.scss';
+@use '../../../styles/variables.scss';
 
 
 .wrapper {
@@ -49,14 +49,14 @@
                     mask: url('../../../../public/upload.svg') no-repeat center; 
                     width: 24px; 
                     height: 24px; 
-                    background-color: $primaryColor;
+                    background-color: variables.$primaryColor;
                 }
                 .download-icon {
                     margin: 0 0.8rem 0 0;
                     mask: url('../../../../public/download.svg') no-repeat center; 
                     width: 24px; 
                     height: 24px; 
-                    background-color: $primaryColor;
+                    background-color: variables.$primaryColor;
                 }
             }
         }
@@ -189,7 +189,7 @@
                         mask: url('../../../../public/loading.svg') no-repeat center; 
                         mask-size: contain;
                         height: 2rem;
-                        background-color: $primaryColor;
+                        background-color: variables.$primaryColor;
                         animation: loading-anim 1.5s linear infinite;
                     }
                 }

@@ -1,4 +1,4 @@
-@import '../../../styles/variables.scss';
+@use '../../../styles/variables.scss';
 
 .top-bar {
     display: flex;
@@ -40,12 +40,12 @@
         }
         .active-step {
             .circle {
-                background-color: $primaryColor;
+                background-color: variables.$primaryColor;
                 color: white;
-                border-color: $primaryColor;
+                border-color: variables.$primaryColor;
             }
             p {
-                color: $primaryColor;
+                color: variables.$primaryColor;
             }
         }
         .disabled-step {
@@ -67,7 +67,7 @@
         }
         .active-separator {
             hr {
-                border-top-color: $primaryColor !important;
+                border-top-color: variables.$primaryColor !important;
             }
         }
         .done {

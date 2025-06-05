@@ -1,4 +1,4 @@
-@import '../../../styles/variables.scss';
+@use '../../../styles/variables.scss';
 $menu-icon-size: 2rem;
 
 .menu {
@@ -63,13 +63,13 @@ $menu-icon-size: 2rem;
                 white-space: nowrap;
                 text-overflow: ellipsis;
                 &:hover {
-                    background-color: $backgroundPrimaryColor;
+                    background-color: variables.$backgroundPrimaryColor;
                 }
             }
             .app-separator {
                 margin: 0 0.5rem;
                 border: none;
-                border-bottom: 1px solid $inputBorder;
+                border-bottom: 1px solid variables.$inputBorder;
             }
         }
     }
@@ -78,9 +78,6 @@ $menu-icon-size: 2rem;
         display: flex;
         flex-direction: column;
         .menu-item .menu-link, .dropdown-menu-item {
-            &:hover, &:hover .dropdown {
-                background-color: bisque;
-            }
             position: relative;
             display: flex;
             flex-direction: row;
@@ -90,6 +87,9 @@ $menu-icon-size: 2rem;
             margin: 0.3rem 0;
             text-decoration: none;
             color: #000;
+            &:hover, &:hover .dropdown {
+                background-color: bisque;
+            }
             &:visited {
                 color: initial;
             }
