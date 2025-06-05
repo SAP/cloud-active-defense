@@ -187,17 +187,17 @@
             <div class="extra-group" [ngStyle]="{ 'margin-top': !this.decoy.inject?.store?.at?.method ? 'calc((20px*2) + 29px)' : 0 }">
                 <div class="extra-item" *ngIf="!displayStringInput" [ngClass]="{ 'switch-regex': keyRegexActive }">
                     <button class="extra-item-btn" (click)="onRegexChange('key')" [disabled]="!isEdit">
-                        <img src="regex.svg" alt="">
+                        <div class="extra-item-icon-regex"></div>
                     </button>
                 </div>
                 <div class="extra-item switch-string">
                     <button class="extra-item-btn" (click)="displayStringInput=!displayStringInput" [disabled]="!isEdit">
-                        <img src="swap_horiz.svg" alt="">
+                        <div class="extra-item-icon-swap"></div>
                     </button>
                 </div>
                 <div class="extra-item" *ngIf="!displayStringInput" [ngClass]="{ 'switch-regex': valueRegexActive }">
                     <button class="extra-item-btn" (click)="onRegexChange('value')" [disabled]="!isEdit">
-                        <img src="regex.svg" alt="">
+                        <div class="extra-item-icon-regex"></div>
                     </button>
                 </div>
                 
@@ -210,9 +210,9 @@
     </div>
     <div class="right-container">
         <div class="file-preview">{{ decoy | json }}</div>
-        <div class="next">
-            <button class="filled-btn" (click)="skipInjection()">Skip</button>
-            <button class="filled-btn" routerLink="../detection">Next step</button>
+        <div class="next" [ngClass]="{ 'fixed-right': !isEdit }">
+            <button *ngIf="isEdit" class="filled-btn" (click)="skipInjection()">Skip</button>
+            <button class="filled-btn" (click)="nextStep()">Next step</button>
         </div>
     </div>
 </div>

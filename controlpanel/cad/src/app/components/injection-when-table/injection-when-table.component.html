@@ -26,7 +26,7 @@
             <td class="when-type"><input class="" type="checkbox" name="type" id="type" [(ngModel)]="when.type" (change)="onItemChange()" [disabled]="!isEdit"></td>
             <td class="end-when">
                 <button (click)="onClickDeleteWhen(i)" class="when-delete-btn" [disabled]="!isEdit">
-                    <div class="when-delete-icon" [ngStyle]="{ backgroundColor: !isEdit ? 'grey' : 'black' }"></div>
+                    <div class="when-delete-icon" [ngClass]="{ 'disable-when-delete-icon': !isEdit }"></div>
                 </button>
             </td>
        </tr>

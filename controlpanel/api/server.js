@@ -572,8 +572,10 @@ app.listen(8050, async () => {
 
         const defaultCustomer = await Customer.findOrCreate({ where: { name: 'default' }});
         const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default', cu_id: defaultCustomer[0].id }); 
-        createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
-        updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
+        if (defaultApp.type == 'success') {
+            createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
+            updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
+        }
 
         if (process.env.ENVOY_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
             ApiKey.findOrCreate({ where: { key: process.env.ENVOY_API_KEY, permissions: ["configmanager"], pa_id: defaultApp.data.id }});

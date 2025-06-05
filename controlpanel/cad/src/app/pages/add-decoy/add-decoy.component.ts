@@ -5,6 +5,8 @@ import { DecoyService } from '../../services/decoy.service';
 import { ToastrService } from 'ngx-toastr';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { UUID } from '../../models/types';
+import { Decoy } from '../../models/decoy';
 
 export interface Tab { 
   name: string,
@@ -40,6 +42,9 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
   isEdit = true;
   navigationSubscription?: Subscription;
   routeParamSubscription?: Subscription
+  decoySubscription?: Subscription;
+  decoyId: UUID = '';
+  decoy: Decoy = { decoy:{}};
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute, private decoyService: DecoyService, private toastr: ToastrService){}
 
@@ -54,23 +59,41 @@ export class AddDecoyComponent implements OnInit, OnDestroy {
     this.updateActiveIndex();
     
     this.routeParamSubscription = this.activatedRoute.params.subscribe(async params => {
-      const decoyId = params['id'];
-      if (decoyId) {
+      this.decoyId = params['id'];
+      if (this.decoyId) {
         this.decoyService.isEdit = false;
         this.isEdit = false;
-        const apiResponse = await this.decoyService.getDecoy(decoyId);
+        const apiResponse = await this.decoyService.getDecoy(this.decoyId);
         if (apiResponse.type == 'error') this.toastr.error(apiResponse.message, "Error");
+        else if (apiResponse.type == 'success' && !this.decoyService.decoy?.inject && this.decoyService.decoy?.detect) {
+          await this.router.navigate(['detection'], {
+            relativeTo: this.activatedRoute
+          })
+          this.activeIndex = 1;
+        }
+        else if (apiResponse.type == 'success' && this.decoyService.decoy?.inject) {
+          await this.router.navigate(['injection'], {
+            relativeTo: this.activatedRoute
+          })
+          this.activeIndex = 0;
+        }
+        else this.toastr.error("Error when fetching decoy", "Error");
       } else {
         this.decoyService.isEdit = true;
         this.isEdit = true;
-        this.decoyService.decoy = {decoy:{}};
+        this.decoyService.updateDecoy({decoy:{}});
       }
     });
+    this.decoySubscription = this.decoyService.decoy$.subscribe(decoy => {
+      this.decoy = decoy || { decoy: {}};
+    })
   }
 
   ngOnDestroy(): void {
     this.navigationSubscription?.unsubscribe();
     this.routeParamSubscription?.unsubscribe();
+    this.decoyService.updateDecoy(null);
+    this.decoySubscription?.unsubscribe();
   }
 
   updateActiveIndex() {

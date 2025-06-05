@@ -15,7 +15,7 @@
             <tr class="tr-separator"><td class="row-separator" colspan="7"><hr class="head-separator"/></td></tr>
         </thead>
         <tbody>
-            <tr *ngFor="let decoyData of decoys" [routerLink]="'/decoy/' + decoyData.id">
+            <tr *ngFor="let decoyData of decoys" [routerLink]="'/decoy/' + decoyData.id" class="decoy-row">
                 <td>
                     <p>{{ displayDecoy(decoyData.decoy) }}</p>
                     <p [ngClass]="{ 'sub-text': displayDecoy(decoyData.decoy) }">{{ decoyData.decoy.decoy.string && decoyData.decoy.decoy.string }}</p>
@@ -51,7 +51,9 @@
                     <input class="deployed-checkbox" type="checkbox" name="deployed" id="deployed" [(ngModel)]="decoyData.deployed" (change)="setDeployed(decoyData)" (click)="$event.stopPropagation()">
                 </td>
                 <td class="options">
-                    <button class="option-btn"><img src="delete.svg" alt="" (click)="$event.stopPropagation(); deleteDecoy(decoyData.id!)"></button>
+                    <button class="option-btn">
+                        <div class="option-delete-icon" (click)="$event.stopPropagation(); deleteDecoy(decoyData.id!)"></div>
+                    </button>
                 </td>
             </tr>
             <tr class="empty-list" *ngIf="!decoys.length">

@@ -3,7 +3,7 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { CommonModule } from '@angular/common';
 import { TooltipComponent } from '../../../components/tooltip/tooltip.component';
 import { ActivatedRoute, Router, RouterOutlet } from '@angular/router';
-import { Decoy, isInType, isRequestType, isVerbType, RequestType, VerbType, InType, isSeverityType, SeverityType, RespondType, DelayType, DurationType } from '../../../models/decoy';
+import { Decoy, isSeverityType, SeverityType, RespondType, DelayType, DurationType } from '../../../models/decoy';
 import { DecoyService } from '../../../services/decoy.service';
 import { WhenAlertSelectComponent } from '../../../components/when-alert-select/when-alert-select.component';
 import { AlertActionTableComponent, FormRespond } from '../../../components/alert-action-table/alert-action-table.component';
@@ -14,7 +14,7 @@ import { CustomValidators } from '../../../validators/customValidators';
 
 @Component({
     selector: 'app-alert-action',
-    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, RouterOutlet, WhenAlertSelectComponent, AlertActionTableComponent],
+    imports: [FormsModule, CommonModule, TooltipComponent, ReactiveFormsModule, WhenAlertSelectComponent, AlertActionTableComponent],
     templateUrl: './alert-action.component.html',
     styleUrl: './alert-action.component.scss'
 })
@@ -68,6 +68,7 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
     })
   }
   validateDecoyForm(nextRoute: string): Observable<boolean> | Promise<boolean> | boolean {
+    if (!this.decoy.inject && nextRoute.includes('injection') && !this.isEdit) return false;
     if (nextRoute.includes('injection') || nextRoute.includes('detection')) return true;
     if (nextRoute.includes('review')) {
       this.alertForm.markAllAsTouched();
@@ -88,9 +89,9 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
     this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
       if (!this.isUpdating){
         this.isUpdating = true
-        this.decoy = data;
+        this.decoy = data as Decoy;
         if (!this.decoy.detect) this.router.navigate(['../detection'], { relativeTo: this.activatedRoute });
-        this.fillForm(data);
+        this.fillForm(this.decoy);
         this.isUpdating = false;
       }
     })
@@ -134,20 +135,20 @@ export class AlertActionComponent implements OnInit, ValidateDecoyFormDeactivate
     if (!newActions) return;
     if (!this.decoy.detect) this.decoy.detect = { seek : { in: 'header' }};
     if (!this.decoy.detect.alert) this.decoy.detect.alert = { severity: this.alertForm.get('severity')?.value };
-    this.decoy.detect.respond = newActions.map(({ delayExtension, delay, durationExtension, duration, ...rest }) => {
+    this.decoy.detect.respond = newActions.map(({ delayExtension, delay, durationExtension, formDuration, ...rest }) => {
       let newDelay = '';
       let newDuration = '';
       let newRespond: RespondType = rest;
       if (delayExtension !== 'now' && delayExtension !== undefined && delay !== undefined) {
         newDelay = delay + delayExtension;
       } else newDelay = 'now'
-      if (durationExtension !== 'forever' && durationExtension !== undefined && duration !== undefined) {
-        newDuration = duration + durationExtension;
+      if (durationExtension !== 'forever' && durationExtension !== undefined && formDuration !== undefined) {
+        newDuration = formDuration + durationExtension;
       } else newDuration = 'forever'
       if (delay !== undefined) {
         newRespond.delay = newDelay as DelayType;
       }
-      if (duration !== undefined) {
+      if (formDuration !== undefined) {
         newRespond.duration = newDuration as DurationType;
       }
       return newRespond;

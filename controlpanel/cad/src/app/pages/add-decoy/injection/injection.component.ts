@@ -90,6 +90,7 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   }
   validateDecoyForm(nextRoute: string): Observable<boolean> | Promise<boolean> | boolean {
     if (nextRoute.includes('detection') || nextRoute.includes('alert-action') || nextRoute.includes('review')) {
+      if ((nextRoute.includes('detection') || nextRoute.includes('alert-action')) && !this.decoy.detect && !this.isEdit) return false;
       if (nextRoute.includes('alert-action') && !this.decoy.detect) {
         this.toastr.warning("Cannot go to alert/action page, detect is not set yet", 'Not allowed');
         return false;
@@ -110,11 +111,12 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
   
   ngOnInit(): void {
     this.decoySubscription = this.decoyService.decoy$.subscribe(data => {
+      if (!data) return;
       if (!this.isUpdating){
         this.isUpdating = true
-        this.decoy = data;
+        this.decoy = data as Decoy;
         if (!this.decoy.inject) this.decoy.inject = { store: { as: 'header' } };
-        this.fillForm(data);
+        this.fillForm(this.decoy);
         this.isUpdating = false;
       }
     })
@@ -286,9 +288,9 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
       request: decoyData.inject?.store.inResponse || decoyData.inject?.store.inRequest ? (decoyData.inject?.store.inResponse ? 'inResponse' : 'inRequest') : 'inResponse',      
       verb: decoyData.inject?.store.withVerb || '',
       as: decoyData.inject?.store.as || 'header',
-      key: decoyData.decoy.key || '',
+      key: decoyData.decoy.key || decoyData.decoy.dynamicKey || '',
       separator: decoyData.decoy.separator || '',
-      value: decoyData.decoy.value || '',
+      value: decoyData.decoy.value || decoyData.decoy.dynamicValue || '',
       string: decoyData.decoy.string || '',
       atMethod: decoyData.inject?.store.at?.method || '',
       atProperty: decoyData.inject?.store.at?.property || ''
@@ -299,6 +301,8 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
     if (decoyData.inject?.whenTrue){
       this.whenArray = [...this.whenArray, ...decoyData.inject.whenTrue.map(item => ({ ...item, type: true }))];
     }
+    if (decoyData.decoy.dynamicKey) this.onRegexChange('key');
+    if (decoyData.decoy.dynamicValue) this.onRegexChange('value');
   }
 
   skipInjection() {
@@ -307,6 +311,17 @@ export class InjectionComponent implements OnInit, ValidateDecoyFormDeactivate, 
     this.router.navigate(['../detection'], {
       relativeTo: this.activatedRoute
     })
+  }
+  nextStep() {
+    if (!this.decoy.detect && !this.isEdit) {
+      this.router.navigate(['../review'], {
+        relativeTo: this.activatedRoute
+      })
+    } else {
+      this.router.navigate(['../detection'], {
+        relativeTo: this.activatedRoute
+      })
+    }
   }
 
   updateIsEdit() {

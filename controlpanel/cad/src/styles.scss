@@ -1,9 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 
-@import 'styles/variables';
+@use "styles/variables";
 
 // regular style toast
-@import 'ngx-toastr/toastr';
+@use "ngx-toastr/toastr";
 
 *, *::before, *::after {
    padding: 0;
@@ -112,7 +112,7 @@ app-add-decoy, app-list-decoy, app-config, app-system {
 }
 
 .filled-btn {
-    background-color: $primaryColor;
+    background-color: variables.$primaryColor;
     color: white;
     font-size: 1.5rem;
     border: 0;
@@ -121,6 +121,16 @@ app-add-decoy, app-list-decoy, app-config, app-system {
     border-radius: 5px;
     cursor: pointer;
     font-weight: 400;
+    transition: box-shadow 0.2s ease, opacity 0.2s ease;
+    
+    &:disabled {
+        background-color: #C5C1C8;
+    }
+    &:hover {
+        opacity: 0.9;
+        box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.12), 
+                    0px 1px 2px rgba(0, 0, 0, 0.24);
+    }
 }
 
 .outlined-btn {
