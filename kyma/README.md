@@ -38,3 +38,65 @@ helm install controlpanel .
 
 You can also install each helm chart separately to have more control over it, but it is not necessary
 To do that you must set all the values specified before but in it's own helm chart values
+
+## 3. Install + protect demo
+
+### Install
+Now that you have installed the controlpanel, you could try to protect the demo app provided
+
+First let's install the demo app (myapp):
+```shell
+helm install myapp myapp
+```
+
+### Protect
+Now to access the controlpanel go to `https://controlpanel-front.<KYMA_DOMAIN>` (e.g. `https://controlpanel-front.c-28e44bf.kyma.ondemand.com`)
+
+> [!WARNING]
+> #### 🚧 Temporary Workaround 🚧
+> You need to fetch the customer ID to continue the demo
+> For that you must find the database pod name from the kyma dashboard, go to `controlpanel` namespace -> `Workloads` -> `Pods` and copy the pod name (e.g. `controlpanel-db-798cfb559b-tsdpr`)
+> And execute that command (change **DB_USER** according to what you set)
+> ```shell
+> kubectl exec -it -n controlpanel <POD_NAME> -- psql -U<DB_USER> -W -d cad
+> ```
+> A prompt will ask the password, also use the password you set for the database
+> Execute this inside the psql terminal and copy the ID:
+> ```sql
+> SELECT id FROM customers;
+> ```
+>
+> When you are on the controlpanel go to `System`  tab and add this in the URL:
+> ```
+>?cu_id=<ID_YOU_COPIED>
+> ```
+Once this is done, click on `Download setup script` button and execute the provided script
+After that, click on `Upload kubeconfig` and use the kubeconfig file that the script just output
+![Upload kubeconfig](../assets/controlpanel-upload-kubeconfig.png)
+
+From there you can select the desired namespace and turn on the deployment to protect (`demo-ns` as namespace and `myapp` as deployment for the demo)
+![Select app](../assets/controlpanel-select-app.png)
+
+> [!NOTE]
+> The protect loading can take few seconds
+
+### Test
+
+You might want to see if the application is protected by Cloud Active Defense now
+
+Because a new app is protected you should have a new option in the select box at the top-left (`demo-ns/myapp` for the demo). Select it and go to `Decoys` and `List` tab
+
+On the `Decoys list` tab you have a "default" decoy to test if everything is working properly
+Check that decoy to deploy it
+![](../assets/controlpanel-deploy-decoy.png)
+
+Now to access the demo app, go to `https://myapp.<KYMA_DOMAIN>` (e.g. `https://myapp.c-28e44bf.kyma.ondemand.com`)
+
+You should be granted by a 'welcome' page. Inspect the network traffic (In Firefox: CTRL+SHIFT+I, visit 'Network', then click on the / request), notice the presence of an HTTP Response Header saying x-cloud-active-defense=ACTIVE
+![](../assets/header.png)
+
+That means your application is protected
+
+To go further you can udapte that decoy or add a new one with a 'detect' section and trigger it in the demo app. By doing this you should have an alert in `Logs` tab
+
+There are some decoys examples/ideas in the wiki to play with to see the full potential of Cloud Active Defense
