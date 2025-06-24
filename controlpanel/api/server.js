@@ -5,6 +5,7 @@ const swaggerUi = require('swagger-ui-express');
 const axios = require('axios');
 require('dotenv').config({ path: __dirname + '/.env' });
 const { initializeDatabase } = require('./models/index');
+const Keycloak = require('keycloak-connect');
 
 const configmanager = require('./routes/configmanager');
 const decoys = require('./routes/decoys');
@@ -25,20 +26,22 @@ const checkDeploymentManagerURL = require('./middleware/deployment-manager');
 const Customer = require('./models/Customer');
 const ApiKey = require('./models/Api-key');
 const { generateRandomString } = require('./util');
+const keycloak = require('./config/keycloak');
 
 const app = express();
+app.use(keycloak.middleware());
 app.use(express.json());
 app.use(cors({ origin: process.env.CONTROLPANEL_FRONTEND_URL }));
 
 app.use('/configmanager', configmanagerAuth, configmanager);
-app.use('/decoys', decoys);
-app.use('/decoy', decoy);
+app.use('/decoys', keycloak.protect(), decoys);
+app.use('/decoy', keycloak.protect(), decoy);
 app.use('/statistics', statistics);
 app.use('/logs', logs);
-app.use('/config', config)
+app.use('/config', keycloak.protect(), config)
 app.use('/user', user);
-app.use('/protected-app', protectedApp);
-app.use('/deployment-manager', checkDeploymentManagerURL, deploymentManager);
+app.use('/protected-app', keycloak.protect(), protectedApp);
+app.use('/deployment-manager', keycloak.protect(), checkDeploymentManagerURL, deploymentManager);
 app.use('/customer', customer);
 
 const swaggerDefinition = {
@@ -546,6 +549,24 @@ const swaggerDefinition = {
                         format: 'date-time',
                         example: '2023-10-01T12:00:00.000Z',
                     },
+                }
+            },
+            Customer: {
+                type: 'object',
+                properties: {
+                    id: {
+                        type: 'string',
+                        format: 'uuid',
+                        example: '928b9fa6-a36d-4063-b104-8380d0b08e90',
+                    },
+                    name: {
+                        type: 'string',
+                        example: 'Acme.com',
+                    },
+                    kubeconfig: {
+                        type: 'string',
+                        example: 'apiVersion: v1\n  kind: Config...'
+                    }
                 }
             }
         }

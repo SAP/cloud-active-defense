@@ -21,5 +21,18 @@ module.exports = {
             fs.unlinkSync(kubeconfigPath);
             throw e;
         }
+    },
+    /**
+     * Create a new customer
+     * @param {string} name Name of the customer to create
+     * @returns {{type: 'success' | 'error', code: number, message: string, data?: object}}
+     */
+    createCustomer: async (name) => {
+        try {
+            const customer = await Customer.create({ name });
+            return { type: 'success', code: 201, message: 'Customer created successfully', data: customer };
+        } catch (e) {
+            throw e;
+        }
     }
 }

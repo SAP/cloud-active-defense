@@ -42,10 +42,15 @@ function generateRandomString(length) {
   return result;
 }
 
+function isEmail(str) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+}
+
 module.exports = {
     isJSON,
     isUUID,
     isValidRegex,
     isUrl,
-    generateRandomString
+    generateRandomString,
+    isEmail
 }
