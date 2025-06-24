@@ -120,6 +120,7 @@ services:
       - controlpanel-api
     environment:
       - CONTROLPANEL_API_URL=http://localhost:8050
+      - KEYCLOAK_URL=http://localhost:8080
 
   controlpanel-db:
     image: postgres
@@ -132,13 +133,46 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: cad
     volumes:
-    - postgres_data:/var/lib/postgresql/data
+    - controlpanel_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    ports:
+      - "8080:8080"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - CONTROLPANEL_API_URL=http://controlpanel-api-dev:8050
+    command: start-dev --db postgres --db-url-host keycloak-db --db-username keycloak --db-password keycloak --import-realm
+    volumes:
+      - ./keycloak/realm-import.json:/opt/keycloak/data/import/cad-realm.json
+      - ./keycloak/demo-event/target/cad-registration-event-listener.jar:/opt/keycloak/providers/cad-registration-event-listener.jar
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+
+  keycloak-db:
+    image: postgres
+    restart: always
+    container_name: keycloak-db
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: keycloak
+    volumes:
+    - keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
-  configvolume: {}
-  postgres_data:
+  controlpanel_data:
+  keycloak_data:
