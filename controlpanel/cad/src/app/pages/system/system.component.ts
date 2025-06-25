@@ -29,7 +29,7 @@ export class SystemComponent {
   async onNamespaceSelect() {
     this.deployments = [];
     this.deploymentsLoading = true;
-    const deploymentApiResponse = await this.deploymentManagerService.getDeployments(this.route.snapshot.queryParams['cu_id'], this.selectedNamespace)
+    const deploymentApiResponse = await this.deploymentManagerService.getDeployments(this.selectedNamespace)
       if (deploymentApiResponse.type == 'error') this.toastr.error(deploymentApiResponse.message, 'Error')
       else this.deployments = deploymentApiResponse.data as Deployment[];
       this.deploymentsLoading = false;
@@ -77,7 +77,7 @@ export class SystemComponent {
       deployment.loadingInstall = true;
     }, 400);
 
-    const installApiResponse = await this.deploymentManagerService.installCADForApp(this.route.snapshot.queryParams['cu_id'], this.selectedNamespace, deployment.name)
+    const installApiResponse = await this.deploymentManagerService.installCADForApp(this.selectedNamespace, deployment.name)
     if (installApiResponse.type == 'error') {
       deployment.protected = false
       this.toastr.error(installApiResponse.message, 'Error')
