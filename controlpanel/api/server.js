@@ -5,6 +5,7 @@ const swaggerUi = require('swagger-ui-express');
 const axios = require('axios');
 require('dotenv').config({ path: __dirname + '/.env' });
 const { initializeDatabase } = require('./models/index');
+const Sequelize = require('sequelize');
 
 const configmanager = require('./routes/configmanager');
 const decoys = require('./routes/decoys');
@@ -592,7 +593,12 @@ app.listen(8050, async () => {
         console.log("Control panel API started on port 8050 !");
         await initializeDatabase();
 
+        if (process.env.KEYCLOAK_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
+            ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: process.env.KEYCLOAK_API_KEY, }});
+        }
+
         setInterval(async () => {
+            ApiKey.update({ key: generateRandomString(65), expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { permissions: ["keycloak"], expirationDate: { [Sequelize.Op.lte]: new Date() }}});
             const customersWithExpiredKeys = await Customer.getCustomersWithExpiredApiKeys();
             for (const customer of customersWithExpiredKeys)
                 for (const app of customer.protectedApps)

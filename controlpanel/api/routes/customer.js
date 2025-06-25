@@ -2,6 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/kubeconfig/',limits: {fileSize: 1_000_000} });
 const keycloak = require('../config/keycloak');
+const keycloakAuth = require('../middleware/keycloak-authentication');
 
 const customerService = require('../services/customer');
 const { authorizationFromCu_id } = require('../middleware/customer-authorization');
@@ -128,7 +129,7 @@ router.post('/upload-kubeconfig', keycloak.protect(), authorizationFromCu_id, up
  *                 data:
  *                   $ref: '#/components/schemas/Customer'
  */
-router.post('/', async (req, res) => {
+router.post('/', keycloakAuth, async (req, res) => {
     try {
         const result = await customerService.createCustomer(req.body.name);
         return res.status(result.code).send(result);
