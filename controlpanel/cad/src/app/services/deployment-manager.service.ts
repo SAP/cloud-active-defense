@@ -21,9 +21,6 @@ export class DeploymentManagerService {
   
   async getNamespaces(cu_id: string): Promise<ApiResponse> {
     try {
-      if (!cu_id) {
-        return { message: "No customer ID found", type: 'error' };
-      }
       const apiResponse = await lastValueFrom(this.deploymentManagerApi.getNamespaces(cu_id));
       return apiResponse;
     } catch(e: any) {
@@ -31,13 +28,10 @@ export class DeploymentManagerService {
       else return { message: "Error when fetching config", type: 'error' };
     }
   }
-  async getDeployments(cu_id: string, namespace: string): Promise<ApiResponse> {
+  async getDeployments(namespace: string): Promise<ApiResponse> {
     try {
-      if (!cu_id) {
-        return { message: "No customer ID found", type: 'error' };
-      }
       this.cancelRequest$.next();
-      return lastValueFrom(this.deploymentManagerApi.getDeployments(namespace, cu_id).pipe(takeUntil(this.cancelRequest$)));
+      return lastValueFrom(this.deploymentManagerApi.getDeployments(namespace).pipe(takeUntil(this.cancelRequest$)));
     } catch(e: any) {
       if (e.error) return e.error;
       else return { message: "Error when fetching config", type: 'error' };
@@ -45,9 +39,6 @@ export class DeploymentManagerService {
   }
   async uploadKubeconfig(cu_id: string, file: File): Promise<ApiResponse> {
     try {
-      if (!cu_id) {
-        return { message: "No customer ID found", type: 'error' };
-      }
       const formData = new FormData();
       formData.append('kubeconfig', file, file.name);
       const apiResponse = await lastValueFrom(this.deploymentManagerApi.uploadKubeconfig(cu_id, formData));
@@ -81,12 +72,9 @@ export class DeploymentManagerService {
       return { message: "Error when downloading setup script", type: 'error' };
     }
   }
-  async installCADForApp(cu_id: string, namespace: string, deploymentName: string): Promise<ApiResponse> {
+  async installCADForApp(namespace: string, deploymentName: string): Promise<ApiResponse> {
     try {
-      if (!cu_id) {
-        return { message: "No customer ID found", type: 'error' };
-      }
-      const apiResponse = await lastValueFrom(this.deploymentManagerApi.installCADForApp(cu_id, namespace, deploymentName));
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.installCADForApp(namespace, deploymentName));
       return apiResponse;
     } catch(e: any) {
       if (e.error) return e.error;
