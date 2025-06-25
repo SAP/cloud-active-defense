@@ -19,9 +19,9 @@ export class DeploymentManagerService {
 
   constructor(private deploymentManagerApi: DeploymentManagerApiService) { }
   
-  async getNamespaces(cu_id: string): Promise<ApiResponse> {
+  async getNamespaces(): Promise<ApiResponse> {
     try {
-      const apiResponse = await lastValueFrom(this.deploymentManagerApi.getNamespaces(cu_id));
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.getNamespaces());
       return apiResponse;
     } catch(e: any) {
       if (e.error) return e.error;
@@ -37,11 +37,11 @@ export class DeploymentManagerService {
       else return { message: "Error when fetching config", type: 'error' };
     }
   }
-  async uploadKubeconfig(cu_id: string, file: File): Promise<ApiResponse> {
+  async uploadKubeconfig(file: File): Promise<ApiResponse> {
     try {
       const formData = new FormData();
       formData.append('kubeconfig', file, file.name);
-      const apiResponse = await lastValueFrom(this.deploymentManagerApi.uploadKubeconfig(cu_id, formData));
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.uploadKubeconfig(formData));
       return apiResponse;
     } catch(e: any) {
       if (e.error) return e.error;

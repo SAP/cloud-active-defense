@@ -49,7 +49,7 @@ export class SystemComponent {
           this.toastr.error('Please select a valid YAML file.', 'Error');
           return;
         } 
-        const kubeconfigApiResponse = await this.deploymentManagerService.uploadKubeconfig(this.route.snapshot.queryParams['cu_id'], selectedFile)
+        const kubeconfigApiResponse = await this.deploymentManagerService.uploadKubeconfig(selectedFile)
         if (kubeconfigApiResponse.type == 'error') this.toastr.error(kubeconfigApiResponse.message, 'Error')
         else {
           this.deploymentManagerError = false;
@@ -92,7 +92,7 @@ export class SystemComponent {
 
   async fetchNamespaces() {
     this.namespacesLoading = true;
-    const namespaceApiResponse = await this.deploymentManagerService.getNamespaces(this.route.snapshot.queryParams['cu_id']); 
+    const namespaceApiResponse = await this.deploymentManagerService.getNamespaces(); 
     if (namespaceApiResponse.type == 'error') {
       this.deploymentManagerError = true;
       this.toastr.error(namespaceApiResponse.message, 'Error')

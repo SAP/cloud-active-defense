@@ -10,13 +10,13 @@ export class DeploymentManagerApiService {
 
   constructor(private http: HttpClient, private globalState: GlobalStateService) { }
 
-  getNamespaces(cu_id: string) {
-    return this.http.get<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/namespaces}`);
+  getNamespaces() {
+    return this.http.get<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/namespaces`);
   }
   getDeployments(namespace: string) {
     return this.http.get<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/deployments/${namespace}`);
   }
-  uploadKubeconfig(cu_id: string, file: FormData) {
+  uploadKubeconfig(file: FormData) {
     return this.http.post<ApiResponse>(`${this.globalState.API_URL}/customer/upload-kubeconfig`, file);
   }
   downloadSetupScriptSH() {
