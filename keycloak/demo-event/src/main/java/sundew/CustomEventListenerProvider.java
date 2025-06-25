@@ -31,6 +31,7 @@ public class CustomEventListenerProvider implements EventListenerProvider {
         if (EventType.REGISTER.equals(event.getType())) {
             try {
             	String controlpanelApiUrl = System.getenv("CONTROLPANEL_API_URL");
+                String keycloakApiKey = System.getenv("KEYCLOAK_API_KEY");
 	        	RealmModel realm = this.model.getRealm(event.getRealmId());
 	            UserModel newRegisteredUser = this.session.users().getUserById(realm, event.getUserId());
                 
@@ -42,6 +43,7 @@ public class CustomEventListenerProvider implements EventListenerProvider {
 	            HttpRequest request = HttpRequest.newBuilder()
 	            .uri(new URI(controlpanelApiUrl + "/customer"))
 	            .header("content-Type", "application/json")
+                .header("Authorization", keycloakApiKey)
 	            .method("POST", HttpRequest.BodyPublishers.ofString(customerPayload))
 	            .build();
 	            
