@@ -53,6 +53,7 @@ const extractCustomersFromToken = async (token) => {
     if (!data || !data.groups) return null;
 
     const customer = await Customer.findOne({ where: { name: data.groups }, attributes: ['id']});
+    if (!customer) return null;
     return customer.id;
 }
 
