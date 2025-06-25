@@ -1,6 +1,7 @@
 const express = require('express');
 
 const configService = require('../services/config');
+const { authorizationFromPa_id } = require('../middleware/customer-authorization');
 
 const router = express.Router();
 
@@ -80,7 +81,7 @@ const router = express.Router();
  * 
  * 
  */
-router.get('/:pa_id', async (req, res) => {
+router.get('/:pa_id', authorizationFromPa_id, async (req, res) => {
     try {
         const result = await configService.getConfig(req.params['pa_id']);
         return res.status(result.code).send(result);
@@ -231,7 +232,7 @@ router.get('/:pa_id', async (req, res) => {
  *                       type: string
  *                       example: Invalid protectedApp id provided
  */
-router.put('/', async (req, res) => {
+router.put('/', authorizationFromPa_id, async (req, res) => {
     try {
         const result = await configService.updateConfig(req.body);
         return res.status(result.code).send(result);

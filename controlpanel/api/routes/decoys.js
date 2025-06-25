@@ -1,5 +1,6 @@
 const express = require('express');
 const decoysService = require('../services/decoys');
+const { authorizationFromPa_id } = require('../middleware/customer-authorization');
 
 const router = express.Router();
 
@@ -78,7 +79,7 @@ const router = express.Router();
  * 
  * 
  */
-router.get('/:pa_id', async (req, res) => {
+router.get('/:pa_id', authorizationFromPa_id, async (req, res) => {
     try {
         const result = await decoysService.getDecoysList(req.params.pa_id);
         return res.status(result.code).send(result);

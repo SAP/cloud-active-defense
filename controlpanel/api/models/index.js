@@ -33,19 +33,19 @@ async function initializeDatabase() {
   }
 }
 
-Decoy.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApps'});
+Decoy.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
 ProtectedApp.hasMany(Decoy, {foreignKey: 'pa_id', as: 'decoys' });
 
-Config.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApps'});
+Config.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
 ProtectedApp.hasMany(Config, {foreignKey: 'pa_id', as: 'configs' });
 
-Logs.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApps'});
+Logs.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
 ProtectedApp.hasMany(Logs, {foreignKey: 'pa_id', as: 'logs' });
 
-ApiKey.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedapps'});
+ApiKey.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
 ProtectedApp.hasMany(ApiKey, {foreignKey: 'pa_id', as: 'apiKeys' });
 
-ProtectedApp.belongsTo(Customer, {foreignKey: 'cu_id', as: 'customers' });
+ProtectedApp.belongsTo(Customer, {foreignKey: 'cu_id', as: 'customer' });
 Customer.hasMany(ProtectedApp, {foreignKey: 'cu_id', as: 'protectedApps' });
 
 module.exports = { sequelize, initializeDatabase };

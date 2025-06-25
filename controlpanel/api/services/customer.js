@@ -1,5 +1,9 @@
 const fs = require('fs');
 const Customer = require('../models/Customer');
+const ApiKey = require('../models/Api-key');
+const { createProtectedApp } = require('./protected-app');
+const { createDecoy } = require('./decoy');
+const { updateConfig } = require('./config');
 
 module.exports = {
     /**
@@ -30,6 +34,18 @@ module.exports = {
     createCustomer: async (name) => {
         try {
             const customer = await Customer.create({ name });
+            const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default', cu_id: customer.id }); 
+            if (defaultApp.type == 'success') {
+                createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
+                updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
+            }
+            
+            if (process.env.ENVOY_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
+                ApiKey.findOrCreate({ where: { key: process.env.ENVOY_API_KEY, permissions: ["configmanager"], pa_id: defaultApp.data.id }});
+            }
+            if (process.env.FLUENTBIT_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
+                ApiKey.findOrCreate({ where: { key: process.env.FLUENTBIT_API_KEY, permissions: ["fluentbit"], pa_id: defaultApp.data.id }});
+            }
             return { type: 'success', code: 201, message: 'Customer created successfully', data: customer };
         } catch (e) {
             throw e;
