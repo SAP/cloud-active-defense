@@ -1,6 +1,7 @@
 const express = require('express');
 
 const protectedAppService = require('../services/protected-app');
+const { authorizationFromCu_id } = require('../middleware/customer-authorization');
 
 const router = express.Router();
 
@@ -53,9 +54,9 @@ const router = express.Router();
  *                   example: Server error
  */
 
-router.get('/', async (req, res) => {
+router.get('/', authorizationFromCu_id, async (req, res) => {
     try {
-        const result = await protectedAppService.getProtectedApps();
+        const result = await protectedAppService.getProtectedApps(req.cu_id);
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);
@@ -83,6 +84,10 @@ router.get('/', async (req, res) => {
  *               application:
  *                 type: string
  *                 example: myapp
+ *               cu_id:
+ *                 type: string
+ *                 format: uuid
+ *                 example: 123e4567-e89b-12d3-a456-426614174000
  *     responses:
  *       201:
  *         description: Protected app created successfully
@@ -161,9 +166,9 @@ router.get('/', async (req, res) => {
  *                 data:
  *                   $ref: '#/components/schemas/ProtectedApp'
  */
-router.post('/', async (req, res) => {
+router.post('/', authorizationFromCu_id, async (req, res) => {
     try {
-        const result = await protectedAppService.createProtectedApp(req.body);
+        const result = await protectedAppService.createProtectedApp({...req.body, cu_id: req.cu_id});
         return res.status(result.code).send(result);
     } catch(e) {
         console.error(e);

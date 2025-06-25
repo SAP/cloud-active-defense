@@ -4,23 +4,16 @@ const upload = multer({ dest: 'uploads/kubeconfig/',limits: {fileSize: 1_000_000
 const keycloak = require('../config/keycloak');
 
 const customerService = require('../services/customer');
+const { authorizationFromCu_id } = require('../middleware/customer-authorization');
 
 const router = express.Router();
 
 /**
  * @swagger
- * /customer/{cu_id}/upload-kubeconfig:
+ * /customer/upload-kubeconfig:
  *   post:
  *     summary: Upload kubeconfig for a customer
  *     tags: [Customer]
- *     parameters:
- *       - name: cu_id
- *         in: path
- *         required: true
- *         description: The UUID of the customer
- *         schema:
- *           type: string
- *           example: 123e4567-e89b-12d3-a456-426614174001
  *     requestBody:
  *       required: true
  *       content:
@@ -88,9 +81,9 @@ const router = express.Router();
  *                   type: string
  *                   example: Customer not found
  */
-router.post('/:id/upload-kubeconfig', keycloak.protect(), upload.single('kubeconfig'), async (req, res) => {
+router.post('/upload-kubeconfig', keycloak.protect(), authorizationFromCu_id, upload.single('kubeconfig'), async (req, res) => {
     try {
-        const result = await customerService.uploadKubeconfig(req.params.id, req.file.path);
+        const result = await customerService.uploadKubeconfig(req.cu_id, req.file.path);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);

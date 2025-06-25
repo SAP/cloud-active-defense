@@ -5,7 +5,6 @@ const swaggerUi = require('swagger-ui-express');
 const axios = require('axios');
 require('dotenv').config({ path: __dirname + '/.env' });
 const { initializeDatabase } = require('./models/index');
-const Keycloak = require('keycloak-connect');
 
 const configmanager = require('./routes/configmanager');
 const decoys = require('./routes/decoys');
@@ -18,9 +17,6 @@ const protectedApp = require('./routes/protected-app');
 const deploymentManager = require('./routes/deployment-manager');
 const customer = require('./routes/customer');
 
-const { createProtectedApp } = require('./services/protected-app');
-const { createDecoy } = require('./services/decoy');
-const { updateConfig } = require('./services/config');
 const configmanagerAuth = require('./middleware/configmanager-authentication');
 const checkDeploymentManagerURL = require('./middleware/deployment-manager');
 const Customer = require('./models/Customer');
@@ -73,6 +69,11 @@ const swaggerDefinition = {
                     application: {
                         type: 'string',
                         example: 'myapp',
+                    },
+                    cu_id: {
+                        type: 'string',
+                        format: 'uuid',
+                        example: '928b9fa6-a36d-4063-b104-8380d0b08e90',
                     },
                     createdAt: {
                         type: 'string',
@@ -590,20 +591,6 @@ app.listen(8050, async () => {
     try {
         console.log("Control panel API started on port 8050 !");
         await initializeDatabase();
-
-        const defaultCustomer = await Customer.findOrCreate({ where: { name: 'default' }});
-        const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default', cu_id: defaultCustomer[0].id }); 
-        if (defaultApp.type == 'success') {
-            createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
-            updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
-        }
-
-        if (process.env.ENVOY_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
-            ApiKey.findOrCreate({ where: { key: process.env.ENVOY_API_KEY, permissions: ["configmanager"], pa_id: defaultApp.data.id }});
-        }
-        if (process.env.FLUENTBIT_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
-            ApiKey.findOrCreate({ where: { key: process.env.FLUENTBIT_API_KEY, permissions: ["fluentbit"], pa_id: defaultApp.data.id }});
-        }
 
         setInterval(async () => {
             const customersWithExpiredKeys = await Customer.getCustomersWithExpiredApiKeys();
