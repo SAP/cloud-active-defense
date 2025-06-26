@@ -107,6 +107,7 @@ services:
       - CONTROLPANEL_FRONTEND_URL=http://localhost
       - ***REMOVED*** #If you want to set a custom key, don't forget to update the key in envoy.yaml!
       - ***REMOVED*** #If you want to set a custom key, don't forget to update the key in fluentbit config here!
+      - ***REMOVED*** #If you want to set a custom key, don't forget to update the key in keycloak config here!
 
   controlpanel:
     container_name: controlpanel
@@ -120,7 +121,7 @@ services:
       - controlpanel-api
     environment:
       - CONTROLPANEL_API_URL=http://localhost:8050
-      - KEYCLOAK_URL=http://localhost:8080
+      - KEYCLOAK_URL=http://host.docker.internal:8080
 
   controlpanel-db:
     image: postgres
@@ -148,7 +149,8 @@ services:
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - ***REMOVED***
-      - CONTROLPANEL_API_URL=http://controlpanel-api-dev:8050
+      - CONTROLPANEL_API_URL=http://controlpanel-api:8050
+      - ***REMOVED***
     command: start-dev --db postgres --db-url-host keycloak-db --db-username keycloak --db-password keycloak --import-realm
     volumes:
       - ./keycloak/realm-import.json:/opt/keycloak/data/import/cad-realm.json
