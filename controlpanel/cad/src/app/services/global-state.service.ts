@@ -14,6 +14,10 @@ export class GlobalStateService {
 
   get selectedApp(): ProtectedApp {
     const local = localStorage.getItem('protectedApp');
+    if (local && local === 'undefined') {
+      localStorage.removeItem('protectedApp');
+      return { application: '', id: '', namespace: '' };
+    }
     return this.selectedAppSubject?.value || (local && JSON.parse(local)) || {};
   }
   set selectedApp(protectedApp: ProtectedApp) {
