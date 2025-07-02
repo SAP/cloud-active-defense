@@ -9,7 +9,7 @@ const authorizationFromPa_id = async (req, res, next) => {
     const customer_id = await extractCustomersFromToken(token);
     if (!customer_id) return res.status(401).json({ code: 401, type: 'error', message: 'Invalid authorization token' });
     
-    const pa_id = req.params.pa_id || (req.body ?? req.body.pa_id);
+    const pa_id = req.params.pa_id || (req.body && req.body.pa_id);
     if (!pa_id) return res.status(400).json({ code: 400, type: 'error', message: 'Protected app ID is missing' });
     
     const protectedApp = await ProtectedApp.findOne({ where: { id: pa_id }, include: [{model: Customer, as: 'customer'}]});
@@ -33,7 +33,7 @@ const authorizationFromDecoyId = async (req, res, next) => {
     const customer_id = await extractCustomersFromToken(token);
     if (!customer_id) return res.status(401).json({ code: 401, type: 'error', message: 'Invalid authorization token' });
     
-    const decoyId = req.params.id || (req.body ?? req.body.id);
+    const decoyId = req.params.id || (req.body && req.body.id);
     if (!decoyId) return res.status(400).json({ code: 400, type: 'error', message: 'Decoy ID is missing' });
     
     const decoy = await Decoy.findOne({ where: { id: decoyId }, include: [{ model: ProtectedApp, as: 'protectedApp' }] });

@@ -1,6 +1,6 @@
 const express = require('express');
 const decoyService = require('../services/decoy');
-const { authorizationFromDecoyId } = require('../middleware/customer-authorization');
+const { authorizationFromDecoyId, authorizationFromPa_id } = require('../middleware/customer-authorization');
 
 const router = express.Router();
 
@@ -209,7 +209,7 @@ router.get('/:id', authorizationFromDecoyId, async (req, res) => {
  *                   type: string
  *                   example: Invalid protectedApp id provided
  */
-router.post('/', authorizationFromDecoyId, async (req, res) => {
+router.post('/', authorizationFromPa_id, async (req, res) => {
     try {
         const result = await decoyService.createDecoy(req.body);
         return res.status(result.code).send(result);
