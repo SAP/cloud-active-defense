@@ -14,7 +14,7 @@ done
 curl -v http://localhost:3000/ >$tempfile 2>&1
 
 # Check INJECTION (in $tempfile)
-status=$(grep "Welcome" $tempfile)
+status=$(grep "Login" $tempfile)
 
 # Output result & time
 if [ -z "$status" ]; then
@@ -26,7 +26,7 @@ fi
 check_1_time=$(date +%s.%N)
 execution_time=$(echo "$check_1_time $start_time" | awk '{print $1 - $2}')
 echo "Execution time: $execution_time seconds"
-
+sleep 100
 # Cleanup
 rm $tempfile
 
