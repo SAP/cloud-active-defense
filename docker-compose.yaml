@@ -14,11 +14,16 @@ services:
     ports:
     - "8000:8000"
     depends_on:
-    - myapp
-    - clone
-    - exhaust
-    - fluent
-    - controlpanel-api
+      myapp:
+        condition: service_started
+      clone:
+        condition: service_started
+      exhaust:
+        condition: service_started
+      fluent:
+        condition: service_started
+      controlpanel-api:
+        condition: service_healthy
     logging:
       driver: fluentd
   
@@ -66,6 +71,11 @@ services:
   #       condition: service_healthy
   #     fluent:
   #       condition: service_started
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:8050/health"]
+  #     interval: 2s
+  #     timeout: 5s
+  #     retries: 10
   #   volumes:
   #     - ./controlpanel/api:/app:cached
   #     - /app/node_modules
@@ -99,6 +109,11 @@ services:
         condition: service_healthy
       fluent:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8050/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres

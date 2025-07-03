@@ -4,7 +4,7 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const axios = require('axios');
 require('dotenv').config({ path: __dirname + '/.env' });
-const { initializeDatabase } = require('./models/index');
+const { initializeDatabase, isInitialized } = require('./models/index');
 const Sequelize = require('sequelize');
 
 const configmanager = require('./routes/configmanager');
@@ -40,6 +40,11 @@ app.use('/user', user);
 app.use('/protected-app', keycloak.protect(), protectedApp);
 app.use('/deployment-manager', keycloak.protect(), checkDeploymentManagerURL, deploymentManager);
 app.use('/customer', customer);
+
+app.get('/health', (req, res) => {
+    if (isInitialized()) return res.status(200).json({ type: 'success', code: 200, message: 'Healthy' });
+    return res.status(503).json({ type: 'error', code: 503, message: 'Not healthy' });
+});
 
 const swaggerDefinition = {
     openapi: '3.1.0',
