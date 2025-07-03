@@ -27,7 +27,7 @@ sleep 60
 # Create test customer
 curl -s -X POST http://localhost:8050/customer -H "Content-Type: application/json" -H "Authorization: Q4nV2xJ7pL9sT8wZ1yK5bM3cR6gH0fD2uS8eA4vN7qX5mP1zW6oB9tY3lC0rF2hG8k" -d '{"name": "test@test.com"}' > /dev/null
 
-keycloak_token=$(docker exec -it controlpanel-api curl -s -X POST http://host.docker.internal:8080/realms/cad/protocol/openid-connect/token -H 'content-type: application/x-www-form-urlencoded' -d 'client_id=cad' -d 'username=test&password=test&grant_type=password' | jq --raw-output '.access_token')
+keycloak_token=$(docker exec controlpanel-api curl -s -X POST http://host.docker.internal:8080/realms/cad/protocol/openid-connect/token -H 'content-type: application/x-www-form-urlencoded' -d 'client_id=cad' -d 'username=test&password=test&grant_type=password' | jq --raw-output '.access_token')
 export KEYCLOAK_TOKEN="$keycloak_token"
 
 # Get protected app id from controlpanel-api
