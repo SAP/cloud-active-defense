@@ -7,6 +7,8 @@ const Logs = require("./Logs");
 const ApiKey = require("./Api-key");
 const Customer = require("./Customer");
 
+let dbInitialized = false;
+
 async function initializeDatabase() {
   await sequelize.sync();
 
@@ -26,11 +28,16 @@ async function initializeDatabase() {
         GRANT SELECT ON TABLE customers TO deployment_manager;
       `, { replacements: { password }});
     }
+    dbInitialized = true;
     console.log("Database connected successfully.");
   } catch (error) {
     console.error("Unable to connect to the database...\n", error);
     throw error;
   }
+}
+
+function isInitialized() {
+  return dbInitialized;
 }
 
 Decoy.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
@@ -48,4 +55,4 @@ ProtectedApp.hasMany(ApiKey, {foreignKey: 'pa_id', as: 'apiKeys' });
 ProtectedApp.belongsTo(Customer, {foreignKey: 'cu_id', as: 'customer' });
 Customer.hasMany(ProtectedApp, {foreignKey: 'cu_id', as: 'protectedApps' });
 
-module.exports = { sequelize, initializeDatabase };
+module.exports = { sequelize, initializeDatabase, isInitialized };
