@@ -29,6 +29,8 @@ services:
       - DB_HOST=controlpanel-db
       - DB_PORT=5432
       - KEYCLOAK_API_KEY=Q4nV2xJ7pL9sT8wZ1yK5bM3cR6gH0fD2uS8eA4vN7qX5mP1zW6oB9tY3lC0rF2hG8k
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   controlpanel-db:
     container_name: controlpanel-db
