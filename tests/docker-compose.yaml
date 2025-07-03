@@ -11,16 +11,24 @@ services:
     image: controlpanel-apitest
     ports:
     - "8050:8050"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8050/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
     depends_on:
       controlpanel-db:
         condition: service_healthy
       fluent:
+        condition: service_started
+      keycloak:
         condition: service_started
     environment:
       - POSTGRES_USER=postgres-test
       - POSTGRES_PASSWORD=postgres-test
       - DB_HOST=controlpanel-db
       - DB_PORT=5432
+      - KEYCLOAK_API_KEY=Q4nV2xJ7pL9sT8wZ1yK5bM3cR6gH0fD2uS8eA4vN7qX5mP1zW6oB9tY3lC0rF2hG8k
 
   controlpanel-db:
     container_name: controlpanel-db
@@ -43,11 +51,16 @@ services:
     ports:
     - "8000:8000"
     depends_on:
-    - myapp
-    - fluent
-    - clone
-    - exhaust
-    - controlpanel-api
+      myapp:
+        condition: service_started
+      fluent:
+        condition: service_started
+      clone:
+        condition: service_started
+      exhaust:
+        condition: service_started
+      controlpanel-api:
+        condition: service_healthy
     logging:
       driver: fluentd
   
@@ -76,3 +89,11 @@ services:
     logging:
       driver: fluentd
 
+  keycloak:
+    image: keycloaktest
+    container_name: keycloak
+    ports:
+      - "8080:8080"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
