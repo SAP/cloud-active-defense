@@ -29,6 +29,13 @@ You will only have to set
 - `deploymentmanager_db_password` with a secure password, a default one will be set if not changed (**not recommended**)
 Please use the same password set for deployment-manager chart (if already set)
 
+### For keycloak:
+You will have to set
+- `db_user` with the database user you want for keycloak, a default one will be set if not changed
+- `db_password` with a secure password, a default one will be set if not changed (**not recommended**)
+- `kc_username` with the keycloak user you want for keycloak admin panel, a default one will be set if not changed
+- `kc_password` with a secure password for keycloak admin panel, a default one will be set if not changed (**not recommended**)
+
 ## 2. Install
 
 Now that you set all the values, you only have to run this to install everything at once:
@@ -36,8 +43,17 @@ Now that you set all the values, you only have to run this to install everything
 helm install controlpanel .
 ```
 
-You can also install each helm chart separately to have more control over it, but it is not necessary
-To do that you must set all the values specified before but in it's own helm chart values
+> [!TIP]
+> You can also install each helm chart separately to have more control over it, but it is not necessary
+> To do that you must set all the values specified before but in it's own helm chart values
+
+This command installs: 
+- Controlpanel API/Frontend (This is where you will be able to manager decoys/config, look Cloud Active Defense alerts...)
+- Deployment manager (It will help to install all the necessary configuration to setup your cluster with Cloud Active Defense)
+- Keycloak (That manages authentication to both controlpanel API and dashboard )
+
+> [!NOTE]
+> The install can sometimes take few minutes, so please be patient before testing
 
 ## 3. Install + protect demo
 
@@ -52,25 +68,12 @@ helm install myapp myapp
 ### Protect
 Now to access the controlpanel go to `https://controlpanel-front.<KYMA_DOMAIN>` (e.g. `https://controlpanel-front.c-28e44bf.kyma.ondemand.com`)
 
-> [!WARNING]
-> #### 🚧 Temporary Workaround 🚧
-> You need to fetch the customer ID to continue the demo
-> For that you must find the database pod name from the kyma dashboard, go to `controlpanel` namespace -> `Workloads` -> `Pods` and copy the pod name (e.g. `controlpanel-db-798cfb559b-tsdpr`)
-> And execute that command (change **DB_USER** according to what you set)
-> ```shell
-> kubectl exec -it -n controlpanel <POD_NAME> -- psql -U<DB_USER> -W -d cad
-> ```
-> A prompt will ask the password, also use the password you set for the database
-> Execute this inside the psql terminal and copy the ID:
-> ```sql
-> SELECT id FROM customers;
-> ```
->
-> When you are on the controlpanel go to `System`  tab and add this in the URL:
-> ```
->?cu_id=<ID_YOU_COPIED>
-> ```
-Once this is done, click on `Download setup script` button and execute the provided script
+Keycloak will redirect you to its own login page, from here click register and created create a new account (or login if you already have an account)
+![Keycloak register](../assets/keycloak-register.png)
+
+Now that you are logged in keycloak should have redirected you to the controlpanel dashboard
+
+Go to `System` tab and click on `Download setup script` button and execute the provided script
 After that, click on `Upload kubeconfig` and use the kubeconfig file that the script just output
 ![Upload kubeconfig](../assets/controlpanel-upload-kubeconfig.png)
 
