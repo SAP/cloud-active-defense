@@ -600,6 +600,22 @@ app.listen(8050, async () => {
 
         if (process.env.KEYCLOAK_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
             ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: process.env.KEYCLOAK_API_KEY, }});
+        } else {
+            for (let i = 0; i < 5; i++) {
+                await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for 3 second before retrying
+                try {
+                    const keycloakApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/keycloak/apikey`);
+                    if (keycloakApiKeyResponse.status === 200) {
+                        ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: keycloakApiKeyResponse.data.data }});
+                        break;
+                    } else {
+                        console.error("Failed to create Keycloak API key, please check your deployment manager URL and ensure it is running.");
+                    }
+                    continue;
+                } catch (e) {
+                    continue;
+                }
+            }
         }
 
         setInterval(async () => {

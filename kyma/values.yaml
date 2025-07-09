@@ -15,10 +15,22 @@ controlpanel_api:
   front_url: https://controlpanel-front
   deployment_manager_url: "http://deployment-manager-service"
   deploymentmanager_db_password: <DEPLOYMENTMANAGER_DB_PASSWORD>
+  keycloak_url: "https://keycloak"
 
 controlpanel_front:
   image: "ghcr.io/sap/controlpanel-frontend:latest"
   controlpanel_api_url: https://controlpanel-api
+  keycloak_url: "https://keycloak"
 
 deployment-manager:
   image: "ghcr.io/sap/deployment-manager:latest"
+
+keycloak:
+  db_host: keycloak-db-service
+  db_user: <DB_USER>
+  db_password: <DB_PASSWORD>
+  db_port: 5432
+  kc_username: <KC_USER>
+  kc_password: <KC_PASSWORD>
+  image: "ghcr.io/sap/keycloak-controlpanel:latest"
+  front_url: https://controlpanel-front

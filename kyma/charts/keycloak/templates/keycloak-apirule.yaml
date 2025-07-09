@@ -1,14 +1,14 @@
 apiVersion: gateway.kyma-project.io/v1beta1
 kind: APIRule
 metadata:
-  name: controlpanel-api-apirule
+  name: keycloak-apirule
   namespace: {{ .Values.global.namespace }}
   labels:
-    app: controlpanel-api
+    app: keycloak
 spec:
-  host: controlpanel-api
+  host: keycloak
   service:
-    name: controlpanel-api-service
+    name: keycloak-service
     port: 80
   gateway: kyma-system/kyma-gateway
   rules:

@@ -48,7 +48,7 @@
         }
       ],
       "redirectUris": [
-        "http://localhost/*"
+        "${APP_URL}"
       ],
       "webOrigins": [
         "*"

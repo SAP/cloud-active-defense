@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-db
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: keycloak-db
+spec:
+  selector:
+    matchLabels:
+      app: keycloak-db
+  template:
+    metadata:
+      labels:
+        app: keycloak-db
+    spec:
+      containers:
+        - name: keycloak-db
+          image: postgres
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - secretRef:
+                name: keycloak-db-secrets
+          env:
+            - name: POSTGRES_DB
+              value: keycloak
+            - name: PGDATA
+              value: /var/lib/postgresql/data/keycloak
+          volumeMounts:
+            - name: keycloak-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: keycloak-data
+          persistentVolumeClaim:
+            claimName: keycloak-pvc
