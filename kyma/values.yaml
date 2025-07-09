@@ -3,24 +3,23 @@
 # Declare variables to be passed into your templates.
 
 global:
-  namespace: "controlpanel"
+  namespace: "controlpanel" # Please do not change this value
   db_user: <DB_USER>
   db_password: <DB_PASSWORD>
   db_port: 5432
   db_host: controlpanel-db-service
   kyma_domain: <KYMA_DOMAIN> # e.g. c-28e44bf.kyma.ondemand.com
+  keycloak_url: "https://keycloak"
+  front_url: "https://controlpanel-front"
 
 controlpanel_api:
   image: "ghcr.io/sap/controlpanel-api:latest"
-  front_url: https://controlpanel-front
   deployment_manager_url: "http://deployment-manager-service"
   deploymentmanager_db_password: <DEPLOYMENTMANAGER_DB_PASSWORD>
-  keycloak_url: "https://keycloak"
 
 controlpanel_front:
   image: "ghcr.io/sap/controlpanel-frontend:latest"
   controlpanel_api_url: https://controlpanel-api
-  keycloak_url: "https://keycloak"
 
 deployment-manager:
   image: "ghcr.io/sap/deployment-manager:latest"
@@ -33,4 +32,3 @@ keycloak:
   kc_username: <KC_USER>
   kc_password: <KC_PASSWORD>
   image: "ghcr.io/sap/keycloak-controlpanel:latest"
-  front_url: https://controlpanel-front
