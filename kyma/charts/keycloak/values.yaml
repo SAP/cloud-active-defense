@@ -1,0 +1,14 @@
+# Default values for sundew.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+global:
+  namespace: "controlpanel"
+
+db_host: keycloak-db-service
+db_user: <DB_USER>
+db_password: <DB_PASSWORD>
+db_port: 5432
+kc_username: <KC_USER>
+kc_password: <KC_PASSWORD>
+
+image: "ghcr.io/sap/keycloak-controlpanel:latest"

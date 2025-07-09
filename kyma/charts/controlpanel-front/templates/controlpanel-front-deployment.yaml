@@ -23,3 +23,5 @@ spec:
           env:
             - name: CONTROLPANEL_API_URL
               value: {{ printf "%s.%s" .Values.controlpanel_api_url (trimPrefix "." .Values.global.kyma_domain) }}
+            - name: KEYCLOAK_URL
+              value: {{ printf "%s.%s" .Values.global.keycloak_url (trimPrefix "." .Values.global.kyma_domain) }}

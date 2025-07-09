@@ -5,4 +5,4 @@ COPY ./demo-event/target/cad-registration-event-listener.jar /opt/keycloak/provi
 
 EXPOSE 8080
 
-CMD ["start-dev", "--db", "postgres", "--import-realm"]
+CMD ["start", "--db", "postgres", "--import-realm"]
