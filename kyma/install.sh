@@ -31,24 +31,24 @@ ask_kubeconfig_path() {
 }
 
 installServiceAccount() {
-  if kubectl get serviceaccount | grep -q deployment-manager; then
+  if kubectl get serviceaccount | grep -q remote-dm-sa; then
     echo "Deleting existing service account"
-    kubectl delete serviceaccount deployment-manager > /dev/null
+    kubectl delete serviceaccount remote-dm-sa > /dev/null
   else
     echo "Creating service account 🔧"
   fi
-  kubectl create serviceaccount deployment-manager > /dev/null
-  kubectl label serviceaccount deployment-manager app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
+  kubectl create serviceaccount remote-dm-sa > /dev/null
+  kubectl label serviceaccount remote-dm-sa app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
 }
 
 installClusterRole() {
-  if ! kubectl get clusterrole | grep -q deployment-manager; then
+  if ! kubectl get clusterrole | grep -q remote-dm-cr; then
     echo "Creating cluster role 🔧"
     kubectl apply -f - <<EOF > /dev/null
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: deployment-manager
+  name: remote-dm-cr
 rules:
 - verbs:
    - create
@@ -99,20 +99,20 @@ rules:
    - kymas
    - deployments
 EOF
-    kubectl label clusterrole deployment-manager app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
+    kubectl label clusterrole remote-dm-cr app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
   fi
 }
 
 installClusterRoleBinding() {
-  if ! kubectl get clusterrolebinding | grep -q deployment-manager-binding; then
+  if ! kubectl get clusterrolebinding | grep -q remote-dm-crb; then
     echo "Creating cluster role binding 🔧"
-    kubectl create clusterrolebinding deployment-manager-binding --clusterrole=deployment-manager --serviceaccount=default:deployment-manager > /dev/null
-    kubectl label clusterrolebinding deployment-manager-binding app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
+    kubectl create clusterrolebinding remote-dm-crb --clusterrole=remote-dm-cr --serviceaccount=default:remote-dm-sa > /dev/null
+    kubectl label clusterrolebinding remote-dm-crb app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
   fi
 }
 
 requestToken() {
-  token=$(kubectl create token deployment-manager --duration=8766h)
+  token=$(kubectl create token remote-dm-sa --duration=8766h)
   if [[ $? -ne 0 ]]; then
     echo "Failed to create token, please check your service account and try again."
     exit 1
