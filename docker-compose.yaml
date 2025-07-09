@@ -162,14 +162,18 @@ services:
     container_name: keycloak
     ports:
       - "8080:8080"
+      - "8443:8443"
     environment:
       - KC_BOOTSTRAP_ADMIN_USERNAME=admin
       - ***REMOVED***
       - KC_DB_URL_HOST=keycloak-db
+      - KC_HOSTNAME=http://host.docker.internal:8080
+      - KC_HTTP_ENABLED=true
       - KC_DB_USERNAME=keycloak
       - ***REMOVED***
       - CONTROLPANEL_API_URL=http://controlpanel-api:8050
       - ***REMOVED***
+      - APP_URL=http://localhost
     depends_on:
       keycloak-db:
         condition: service_healthy
