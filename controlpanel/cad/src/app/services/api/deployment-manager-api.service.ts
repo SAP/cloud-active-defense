@@ -20,10 +20,10 @@ export class DeploymentManagerApiService {
     return this.http.post<ApiResponse>(`${this.globalState.API_URL}/customer/${cu_id}/upload-kubeconfig`, file);
   }
   downloadSetupScriptSH() {
-    return this.http.get(`https://raw.githubusercontent.com/SAP/cloud-active-defense/refs/heads/main/kyma/wizard.sh`, { responseType: 'blob' });
+    return this.http.get(`https://raw.githubusercontent.com/SAP/cloud-active-defense/refs/heads/main/kyma/install.sh`, { responseType: 'blob' });
   }
   downloadSetupScriptBAT() {
-    return this.http.get(`https://raw.githubusercontent.com/SAP/cloud-active-defense/refs/heads/main/kyma/wizard.bat`, { responseType: 'blob' });
+    return this.http.get(`https://raw.githubusercontent.com/SAP/cloud-active-defense/refs/heads/main/kyma/install.bat`, { responseType: 'blob' });
   }
   installCADForApp(cu_id: string, namespace: string, deploymentName: string) {
     return this.http.post<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/install/${cu_id}`, {deploymentAppName: deploymentName, namespace});
