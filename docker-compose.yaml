@@ -173,7 +173,7 @@ services:
       - KC_DB_PASSWORD=keycloak
       - CONTROLPANEL_API_URL=http://controlpanel-api:8050
       - KEYCLOAK_API_KEY=a7K9Z2pQw8X1sV4Lr6T0bN3yJ5GmC8HqW2E7D1S9U6F0PzK4M5xQ2vN8tR6wB3r9bv
-      - APP_URL=http://localhost
+      - APP_URL=http://localhost/*
     depends_on:
       keycloak-db:
         condition: service_healthy
