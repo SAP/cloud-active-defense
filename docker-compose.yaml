@@ -173,7 +173,7 @@ services:
       - ***REMOVED***
       - CONTROLPANEL_API_URL=http://controlpanel-api:8050
       - ***REMOVED***
-      - APP_URL=http://localhost
+      - APP_URL=http://localhost/*
     depends_on:
       keycloak-db:
         condition: service_healthy
