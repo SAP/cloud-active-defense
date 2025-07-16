@@ -130,7 +130,7 @@ module.exports = {
                 if (log.log.length > 1500) {
                     errors.push({ log, error: '.log attribute is too long' });
                 }
-                const matchLog = log.log.match(/.*cad-filter:\s*(?<log>.*)(?:\s|\\t).*$/);
+                const matchLog = log.log.match(/^cad-filter:\s*(?<log>[^\s]+).*$/);
                 if (matchLog != null) log.log = matchLog.groups.log;
                 if (!isJSON(log.log)) {
                     errors.push({ log, error: '.log attribute is not a JSON' });
