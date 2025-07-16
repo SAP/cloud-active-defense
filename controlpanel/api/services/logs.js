@@ -127,6 +127,9 @@ module.exports = {
                 if (typeof log.date != 'number') {
                     errors.push({ log, error: '.data is not a number' });
                 }
+                if (log.log.length > 1500) {
+                    errors.push({ log, error: '.log attribute is too long' });
+                }
                 const matchLog = log.log.match(/.*cad-filter:\s*(?<log>.*)(?:\s|\\t).*$/);
                 if (matchLog != null) log.log = matchLog.groups.log;
                 if (!isJSON(log.log)) {
