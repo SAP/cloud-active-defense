@@ -3,6 +3,7 @@ const Customer = require('../models/Customer');
 const ApiKey = require('../models/Api-key');
 const protectedAppService = require('./protected-app');
 const ProtectedApp = require('../models/ProtectedApp');
+const { isUUID } = require('../util');
 
 module.exports = {
     /**
@@ -35,6 +36,11 @@ module.exports = {
      */
     getNamespaces: async(cu_id) => {
         try {
+            if (!cu_id) return { type: 'error', code: 400, message: 'Customer ID is required' };
+            if (!isUUID(cu_id)) return { type: 'error', code: 400, message: 'Invalid customer id supplied' };
+            const customer = await Customer.findOne({ where: { id: cu_id } });
+            if (!customer) return { type: 'error', code: 404, message: 'Customer not found' };
+            
             const response = await axios.get(`${process.env.DEPLOYMENT_MANAGER_URL}/resources/namespaces/${cu_id}`, { validateStatus:_=>true } )
             if (response.data.type !== 'success') return { ...response.data, message: `Something went wrong in deployment manager: ${response.data.message}` };
             return { type: 'success', code: 200, message: 'Namespaces retrieved successfully', data: response.data.data };
@@ -50,6 +56,13 @@ module.exports = {
      */
     getDeployments: async (cu_id, namespace) => {
         try {
+            if (!cu_id) return { type: 'error', code: 400, message: 'Customer ID is required' };
+            if (!isUUID(cu_id)) return { type: 'error', code: 400, message: 'Invalid customer id supplied' };
+            const customer = await Customer.findOne({ where: { id: cu_id } });
+            if (!customer) return { type: 'error', code: 404, message: 'Customer not found' };
+            if (!namespace) return { type: 'error', code: 400, message: 'Namespace is required' };
+            if (!/^[a-zA-Z0-9-_]+$/.test(namespace)) return { type: 'error', code: 400, message: 'Invalid namespace supplied' };
+
             const response = await axios.get(`${process.env.DEPLOYMENT_MANAGER_URL}/resources/${namespace}/deployments/${cu_id}`, { validateStatus:_=>true } )
             if (response.data.type !== 'success') return { ...response.data, message: `Something went wrong in deployment manager: ${response.data.message}` };
             const protectedApps = await ProtectedApp.findAll({ where: { namespace, cu_id } });
