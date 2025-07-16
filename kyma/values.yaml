@@ -21,7 +21,7 @@ controlpanel_front:
   image: "ghcr.io/sap/controlpanel-frontend:latest"
   controlpanel_api_url: https://controlpanel-api
 
-deployment-manager:
+deployment_manager:
   image: "ghcr.io/sap/deployment-manager:latest"
 
 keycloak:
