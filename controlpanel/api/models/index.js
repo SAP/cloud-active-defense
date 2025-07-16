@@ -40,17 +40,17 @@ function isInitialized() {
   return dbInitialized;
 }
 
-Decoy.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
-ProtectedApp.hasMany(Decoy, {foreignKey: 'pa_id', as: 'decoys' });
+Decoy.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp', onDelete: 'CASCADE'});
+ProtectedApp.hasMany(Decoy, {foreignKey: 'pa_id', as: 'decoys', onDelete: 'CASCADE'});
 
-Config.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
-ProtectedApp.hasMany(Config, {foreignKey: 'pa_id', as: 'configs' });
+Config.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp', onDelete: 'CASCADE'});
+ProtectedApp.hasMany(Config, {foreignKey: 'pa_id', as: 'configs', onDelete: 'CASCADE'});
 
-Logs.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
-ProtectedApp.hasMany(Logs, {foreignKey: 'pa_id', as: 'logs' });
+Logs.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp', onDelete: 'CASCADE'});
+ProtectedApp.hasMany(Logs, {foreignKey: 'pa_id', as: 'logs', onDelete: 'CASCADE'});
 
-ApiKey.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp'});
-ProtectedApp.hasMany(ApiKey, {foreignKey: 'pa_id', as: 'apiKeys' });
+ApiKey.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp', onDelete: 'CASCADE'});
+ProtectedApp.hasMany(ApiKey, {foreignKey: 'pa_id', as: 'apiKeys', onDelete: 'CASCADE'});
 
 ProtectedApp.belongsTo(Customer, {foreignKey: 'cu_id', as: 'customer' });
 Customer.hasMany(ProtectedApp, {foreignKey: 'cu_id', as: 'protectedApps' });

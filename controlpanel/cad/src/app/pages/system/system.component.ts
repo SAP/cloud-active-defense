@@ -106,4 +106,17 @@ export class SystemComponent {
     }
     this.namespacesLoading = false;
   }
+
+  async cleanCluster() {
+    if (!confirm('Are you sure you want to clean the cluster? This will delete all necessary resources for Cloud Active Defense in your cluster and decoys in every namespaces')) return;
+    const cleanApiResponse = await this.deploymentManagerService.cleanCluster();
+    if (cleanApiResponse.type == 'error') {
+      this.toastr.error(cleanApiResponse.message, 'Error');
+    } else {
+      this.toastr.success(cleanApiResponse.message, 'Success');
+      this.fetchNamespaces();
+      const applistResponse = await this.applistService.getAppList();
+      if (applistResponse.type == 'error') this.toastr.error(applistResponse.message, 'Error');
+    }
+  }
 }

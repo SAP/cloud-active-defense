@@ -81,4 +81,13 @@ export class DeploymentManagerService {
       else return { message: "Error when installing CAD for app", type: 'error' };
     }
   }
+  async cleanCluster(): Promise<ApiResponse> {
+    try {
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.cleanCluster());
+      return apiResponse;
+    } catch(e: any) {
+      if (e.error) return e.error;
+      else return { message: "Error when cleaning cluster for app", type: 'error' };
+    }
+  }
 }
