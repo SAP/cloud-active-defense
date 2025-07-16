@@ -55,7 +55,7 @@ module.exports = {
                 if (!allowedFields.includes(key)) continue;
                 else filter.content = {};
                 const value = query[key];
-                if (!value) continue;
+                if (typeof value !== 'string' || !value) continue;
                 // if (key == 'severity' || key == 'behavior') {
                 //     filter.content[key] = value.split(',');
                 //     continue;
