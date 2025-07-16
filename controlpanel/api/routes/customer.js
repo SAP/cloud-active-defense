@@ -138,5 +138,149 @@ router.post('/', keycloakAuth, async (req, res) => {
         return res.status(500).send({ code: 500, message: "Server error", type: 'error' });
     }
 });
+/**
+ * @swagger
+ * /customer/clean:
+ *   delete:
+ *     summary: Clean up customer data and cluster
+ *     tags: [Customer]
+ *     responses:
+ *       200:
+ *         description: Cluster cleaned successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 type:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 code:
+ *                   type: integer
+ *                   enum: [200]
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Cluster cleaned successfully
+ *       404:
+ *         description: Customer not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 type:
+ *                   type: string
+ *                   enum: [error]
+ *                   example: error
+ *                 code:
+ *                   type: integer
+ *                   enum: [404]
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Customer not found
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *               - type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [error]
+ *                     example: error
+ *                   code:
+ *                     type: integer
+ *                     enum: [400]
+ *                     example: 400
+ *                   message:
+ *                     type: string
+ *                     example: No kubeconfig uploaded
+ *               - type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [error]
+ *                     example: error
+ *                   code:
+ *                     type: integer
+ *                     enum: [400]
+ *                     example: 400
+ *                   message:
+ *                     type: string
+ *                     example: Customer ID is required
+ *               - type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [error]
+ *                     example: error
+ *                   code:
+ *                     type: integer
+ *                     enum: [400]
+ *                     example: 400
+ *                   message:
+ *                     type: string
+ *                     example: Invalid customer ID, must be a valid UUID
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *               - type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [error]
+ *                     example: error
+ *                   code:
+ *                     type: integer
+ *                     enum: [500]
+ *                     example: 500
+ *                   message:
+ *                     type: string
+ *                     example: Cluster must be a Kyma cluster, cannot continue
+ *               - type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [error]
+ *                     example: error
+ *                   code:
+ *                     type: integer
+ *                     enum: [500]
+ *                     example: 500
+ *                   message:
+ *                     type: string
+ *                     example: Could not connect to cluster with provided kubeconfig
+ *               - type: object
+ *                 properties:
+ *                   type:
+ *                     type: string
+ *                     enum: [error]
+ *                     example: error
+ *                   code:
+ *                     type: integer
+ *                     enum: [500]
+ *                     example: 500
+ *                   message:
+ *                     type: string
+ *                     example: |
+ *                       Not all the namespaces could be cleaned: Could not clean the following namespaces: ...
+ */
+router.delete('/clean', keycloak.protect(), authorizationFromCu_id, async (req, res) => {
+    try {
+        const result = await customerService.cleanCustomer(req.cu_id);
+        return res.status(result.code).send(result);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).send({ code: 500, message: "Server error", type: 'error' });
+    }
+});
 
 module.exports = router;

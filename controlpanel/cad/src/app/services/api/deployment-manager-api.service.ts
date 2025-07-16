@@ -28,4 +28,7 @@ export class DeploymentManagerApiService {
   installCADForApp(namespace: string, deploymentName: string) {
     return this.http.post<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/install`, {deploymentAppName: deploymentName, namespace});
   }
+  cleanCluster() {
+    return this.http.delete<ApiResponse>(`${this.globalState.API_URL}/customer/clean`);
+  }
 }

@@ -5,6 +5,9 @@ const { createProtectedApp } = require('./protected-app');
 const { createDecoy } = require('./decoy');
 const { updateConfig } = require('./config');
 const path = require('path');
+const { cleanCluster } = require('./deployment-manager');
+const ProtectedApp = require('../models/ProtectedApp');
+const sequelize = require('sequelize');
 
 const UPLOADS_DIR = path.resolve('uploads/kubeconfig/');
 
@@ -58,6 +61,33 @@ module.exports = {
                 ApiKey.findOrCreate({ where: { key: process.env.FLUENTBIT_API_KEY, permissions: ["fluentbit"], pa_id: defaultApp.data.id }});
             }
             return { type: 'success', code: 201, message: 'Customer created successfully', data: customer };
+        } catch (e) {
+            throw e;
+        }
+    },
+    /**
+     * Clean everything related to a customer, including cluster, protected apps, decoys, configs, logs, and apiKeys
+     * @param {DataTypes.UUID} cu_id 
+     * @returns {{type: 'success' | 'error', code: number, message: string}}
+     */
+    cleanCustomer: async (cu_id) => {
+        try {
+            const customer = await Customer.findOne({ where: { id: cu_id } });
+            if (!customer) return { type: 'error', code: 404, message: 'Customer not found' };
+            if (!customer.kubeconfig) return { type: 'error', code: 400, message: 'No kubeconfig uploaded' };
+
+            console.trace(`Cleaning customer ${cu_id}...`);
+            await ProtectedApp.destroy({ where: {
+                cu_id: cu_id,
+                [sequelize.Op.or]: [
+                { namespace: { [sequelize.Op.ne]: 'default' } },
+                { application: { [sequelize.Op.ne]: 'default' } }
+                ]
+            } }); // Will automatically delete associated models in cascade (decoys, config, logs, apiKeys)
+
+            const dpResponse = await cleanCluster(cu_id);
+            
+            return dpResponse;
         } catch (e) {
             throw e;
         }
