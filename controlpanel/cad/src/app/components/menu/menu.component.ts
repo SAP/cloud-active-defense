@@ -7,6 +7,7 @@ import { GlobalStateService } from '../../services/global-state.service';
 import { isProtectedAppEmpty, ProtectedApp } from '../../models/protected-app';
 import { DecoyService } from '../../services/decoy.service';
 import { isEmptyObject } from '../../utils';
+import { KeycloakService } from '../../services/keycloak.service';
 
 
 
@@ -25,7 +26,7 @@ export class MenuComponent implements OnInit{
   defaultApp: ProtectedApp = { id: '', namespace: '', application: '' };
   selectedApp: ProtectedApp = { id: '', namespace: '', application: '' };
 
-  constructor(private applistService: AppListService, private toastr: ToastrService, private globalState: GlobalStateService, private decoyService: DecoyService) { }
+  constructor(private applistService: AppListService, private toastr: ToastrService, private globalState: GlobalStateService, private decoyService: DecoyService, private keycloakService: KeycloakService) { }
 
   async ngOnInit() {
     const response = await this.applistService.getAppList();
@@ -47,5 +48,8 @@ export class MenuComponent implements OnInit{
   updateSelectedApp(app: ProtectedApp) {
     if (app === this.globalState.selectedApp && !isProtectedAppEmpty(app)) return;
     else this.globalState.selectedApp = app;
+  }
+  logout() {
+    this.keycloakService.keycloak?.logout();
   }
 }
