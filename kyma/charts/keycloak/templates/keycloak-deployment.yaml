@@ -14,8 +14,6 @@ spec:
       labels:
         app: keycloak
     spec:
-      imagePullSecrets:
-        - name: artifactory-creds
       initContainers:
       - name: wait-for-db
         image: busybox
