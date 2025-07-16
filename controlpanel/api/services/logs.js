@@ -35,7 +35,7 @@ module.exports = {
                     allowedFields.push(...eventFields);
                 }
             }
-            if (query.time && ['h', 'd', 'm'].includes(query.time[query.time.length-1]) && !isNaN(query.time.slice(0, -1))) {
+            if (query.time && typeof query.time == 'string' && ['h', 'd', 'm'].includes(query.time[query.time.length-1]) && !isNaN(query.time.slice(0, -1))) {
                 switch (query.time[query.time.length - 1]) {
                     case 'h':
                         filter.date = { [Op.gte]: Math.floor(new Date(new Date() - query.time.slice(0, -1) * 60 * 60 * 1000).getTime() / 1000) };
