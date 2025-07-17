@@ -5,7 +5,7 @@
     <table class="list-container">
         <thead>
             <tr>
-                <th class="decoy-head">Decoy</th>
+                <th class="decoy-space">Decoy</th>
                 <th>Inject</th>
                 <th>Detect</th>
                 <th>Action</th>
@@ -16,7 +16,7 @@
         </thead>
         <tbody>
             <tr *ngFor="let decoyData of decoys" [routerLink]="'/decoy/' + decoyData.id" class="decoy-row">
-                <td>
+                <td class="decoy-space">
                     <p>{{ displayDecoy(decoyData.decoy) }}</p>
                     <p [ngClass]="{ 'sub-text': displayDecoy(decoyData.decoy) }">{{ decoyData.decoy.decoy.string && decoyData.decoy.decoy.string }}</p>
                 </td>

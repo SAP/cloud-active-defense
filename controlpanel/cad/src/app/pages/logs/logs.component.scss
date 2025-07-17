@@ -168,7 +168,9 @@
         table-layout: fixed;
         border-collapse: collapse;
         padding-bottom: 10px;
-
+        .log-content-space {
+            width: 72%;
+        }
         thead {
             .head-separator {
                 width: 100%;
@@ -177,17 +179,11 @@
                 text-align: start;
                 padding: 1rem 1rem;
             }
-            .log-type {
-                width: 6%;
-            }
-            .row-options {
-                width: 5%;
-            }
-            .head-log-content {
-                width: 72%;
-            }
         }
         tbody {
+            display: block;
+            max-height: 70vh;
+            overflow-y: auto;
             tr {
                 box-sizing: border-box;
                 &.log-row {
@@ -256,6 +252,11 @@
                     font-weight: 600;
                 }
             }
+        }
+        thead, tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
         }
     }
 }
