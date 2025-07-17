@@ -35,7 +35,7 @@ module.exports = {
                     allowedFields.push(...eventFields);
                 }
             }
-            if (query.time && ['h', 'd', 'm'].includes(query.time[query.time.length-1]) && !isNaN(query.time.slice(0, -1))) {
+            if (query.time && typeof query.time == 'string' && ['h', 'd', 'm'].includes(query.time[query.time.length-1]) && !isNaN(query.time.slice(0, -1))) {
                 switch (query.time[query.time.length - 1]) {
                     case 'h':
                         filter.date = { [Op.gte]: Math.floor(new Date(new Date() - query.time.slice(0, -1) * 60 * 60 * 1000).getTime() / 1000) };
@@ -55,7 +55,7 @@ module.exports = {
                 if (!allowedFields.includes(key)) continue;
                 else filter.content = {};
                 const value = query[key];
-                if (!value) continue;
+                if (typeof value !== 'string' || !value) continue;
                 // if (key == 'severity' || key == 'behavior') {
                 //     filter.content[key] = value.split(',');
                 //     continue;
@@ -126,6 +126,9 @@ module.exports = {
                 }
                 if (typeof log.date != 'number') {
                     errors.push({ log, error: '.data is not a number' });
+                }
+                if (log.log.length > 1500) {
+                    errors.push({ log, error: '.log attribute is too long' });
                 }
                 const matchLog = log.log.match(/.*cad-filter:\s*(?<log>.*)(?:\s|\\t).*$/);
                 if (matchLog != null) log.log = matchLog.groups.log;

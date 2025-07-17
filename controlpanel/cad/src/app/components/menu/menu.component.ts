@@ -38,7 +38,7 @@ export class MenuComponent implements OnInit{
     })
 
     this.globalState.selectedApp$.subscribe(data => {
-      if (isEmptyObject(data) || !this.applist.find(app=>app.id == data.id) || this.defaultApp.id != data.id) this.selectedApp = this.defaultApp;
+      if (isEmptyObject(data) || !this.applist.find(app=>app.id == data.id) && this.defaultApp.id != data.id) this.selectedApp = this.defaultApp;
       else this.selectedApp = data;
         this.updateSelectedApp(this.selectedApp);
         // Reset decoy
