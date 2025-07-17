@@ -23,7 +23,7 @@
     <table class="list-container">
         <thead>
             <tr>
-                <th class="deployment-name">Deployment Name</th>
+                <th class="deployment-name-space">Deployment Name</th>
                 <th class="centered">Protected</th>
                 <th class="centered">Deployment Status</th>
             </tr>
@@ -31,7 +31,7 @@
         </thead>
         <tbody>
             <tr *ngFor="let deployment of deployments" class="deployment-row">
-                <td>
+                <td class="deployment-name-space">
                     {{ deployment.name }}
                 </td>
                 <td class="centered">

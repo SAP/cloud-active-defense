@@ -16,6 +16,9 @@
         table-layout: fixed;
         border-collapse: collapse;
         padding-bottom: 10px;
+        .decoy-space {
+            width: 30%;
+        }
         thead {
             .head-separator {
                 width: 100%;
@@ -23,16 +26,15 @@
             th {
                 text-align: start;
                 padding: 1rem 1rem;
-                width: 20%;
-            }
-            .decoy-head {
-                width: 35%;
             }
             .row-options {
                 width: 15%;
             }
         }
         tbody {
+            display: block;
+            max-height: 70vh;
+            overflow-y: auto;
             tr {
                 box-sizing: border-box;
                 &.decoy-row {
@@ -96,6 +98,11 @@
                 background-color: #FFCCCC;
             }
         }
+    }
+    thead, tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
     }
     .buttons {
         display: flex;

@@ -119,9 +119,9 @@
         <thead>
             <tr>    
                 <th>Timestamp</th>
-                <th class="log-type">Type</th>
-                <th class="head-log-content">Log</th>
-                <th class="row-options"></th>
+                <th>Type</th>
+                <th class="log-content-space">Log</th>
+                <th></th>
             </tr>
             <tr class="tr-separator"><td class="row-separator" colspan="4"><hr class="head-separator"/></td></tr>
         </thead>
@@ -134,7 +134,7 @@
                 <td>
                     {{ log.type }}
                 </td>
-                <td>
+                <td class="log-content-space">
                     <div class="log-content">
                         {{ log.content | json }}
                     </div>

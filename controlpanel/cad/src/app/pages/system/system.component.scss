@@ -75,6 +75,10 @@
             text-align: center;
             width: 10%;
         }
+        .deployment-name-space {
+            text-align: left;
+            width: 50%;
+        }
         thead {
             th {
                 padding: 2rem 1rem 1rem 1rem;
@@ -82,12 +86,11 @@
             .head-separator {
                 width: 100%;
             }
-            .deployment-name {
-                text-align: left;
-                width: 50%;
-            }
         }
         tbody {
+            display: block;
+            max-height: 65vh;
+            overflow-y: auto;
             tr {
                 &.deployment-row {
                     transition: all 0.2s ease-in-out;
@@ -197,6 +200,11 @@
                     background-color: transparent;
                 }
             }
+        }
+        thead, tr {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
         }
     }
     
