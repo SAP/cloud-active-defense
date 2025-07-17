@@ -16,5 +16,9 @@ spec:
       port: 80
       protocol: TCP
       targetPort: 8080
+    - name: health
+      port: 9000
+      protocol: TCP
+      targetPort: 9000
   selector:
     app: keycloak
