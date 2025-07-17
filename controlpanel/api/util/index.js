@@ -16,7 +16,7 @@ function isUUID(value) {
 function isValidRegex(str) {
   if (!str) return true;
     try {
-        new RegExp(str);
+        new RegExp(escapeRegExp(str));
         return true
     } catch {
         return false
@@ -44,6 +44,10 @@ function generateRandomString(length) {
 
 function isEmail(str) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+}
+
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 module.exports = {
