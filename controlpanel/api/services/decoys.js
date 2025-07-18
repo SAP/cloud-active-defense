@@ -32,8 +32,8 @@ module.exports = {
      */
     uploadDecoys: async (pa_id, decoysfilePath) => {
         try {
-            const resolvedPath = path.resolve(decoysfilePath);
-            if (!resolvedPath.startsWith(UPLOADS_DIR)) {
+            const resolvedPath = fs.realpathSync(path.resolve(decoysfilePath));          
+            if (!resolvedPath.startsWith(UPLOADS_DIR + path.sep)) {
                 return { type: 'error', code: 400, message: 'Invalid file path' };
             }
 
@@ -70,7 +70,10 @@ module.exports = {
 
         } catch(e) {
             try {
-                fs.unlinkSync(decoysfilePath);
+                const safePath = fs.realpathSync(path.resolve(decoysfilePath));
+                if (safePath.startsWith(UPLOADS_DIR + path.sep)) {
+                    fs.unlinkSync(safePath);
+                }
             } catch (unlinkError) {
                 console.error('Error deleting file:', unlinkError);
             }
