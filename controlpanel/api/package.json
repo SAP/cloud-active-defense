@@ -15,6 +15,7 @@
     "dotenv": "^16.4.7",
     "multer": "^2.0.1",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.0.1",
     "pg": "^8.13.1",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.5",
