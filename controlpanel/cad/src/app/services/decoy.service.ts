@@ -86,6 +86,34 @@ export class DecoyService {
       return { message: "Error when fetching decoys list", type: 'error' };
     }
   }
+  async uploadDecoys(file: File): Promise<ApiResponse> {
+    try {
+      const formData = new FormData();
+      formData.append('decoys', file, file.name);
+      const result = await lastValueFrom(this.decoyApi.uploadDecoys(this.globalState.selectedApp, formData));
+
+      return result;
+    } catch (e: any) {
+      if (e.error.type) {
+        if (e.error.type === 'error' && e.error.action === 'download') {
+          try {
+            const blob = await lastValueFrom(this.decoyApi.downloadErrorDecoys(e.error.data as string))
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = e.error.data as string;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+          } catch (downloadError) {
+            console.error("Error downloading file:", downloadError);
+          }
+        }
+        return { message: e.error.message, type: e.error.type };
+      }
+      return { message: "Error when uploading decoys", type: 'error' };
+    }
+  }
 
   get isEdit(): boolean {
     return this.isEditSubject.value;

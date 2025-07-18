@@ -17,6 +17,12 @@ export class DecoyApiService {
   getDecoys(protectedApp: ProtectedApp) {
     return this.http.get<ApiResponse>(`${this.globalState.API_URL}/decoys/${protectedApp.id}`);
   }
+  uploadDecoys(protectedApp: ProtectedApp, file: FormData) {
+    return this.http.post<ApiResponse>(`${this.globalState.API_URL}/decoys/upload/${protectedApp.id}`, file);
+  }
+  downloadErrorDecoys(fileName: string) {
+    return this.http.get(`${this.globalState.API_URL}/decoys/download-errors/${fileName}`, { responseType: 'blob' });
+  }
 
   getDecoy(id: UUID) {
     return this.http.get<ApiResponse>(`${this.globalState.API_URL}/decoy/${id}`);

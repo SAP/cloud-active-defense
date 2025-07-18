@@ -66,4 +66,27 @@ export class ListDecoyComponent implements OnInit, OnDestroy {
       this.getDecoyList();
     }
   }
+  async onDecoysUpload(fileInput: HTMLInputElement) {
+    fileInput.click();
+
+    fileInput.onchange = async (event: Event) => {
+      const input = event.target as HTMLInputElement;
+      if (input.files && input.files.length > 0) {
+        const selectedFile = input.files[0];
+        const validExtensions = ['.json'];
+        const fileExtension = selectedFile.name.substring(selectedFile.name.lastIndexOf('.')).toLowerCase();
+        if (!validExtensions.includes(fileExtension)) {
+          this.toastr.error('Please select a valid JSON file.', 'Error');
+          return;
+        }
+        const uploadResponse = await this.decoyService.uploadDecoys(selectedFile);
+        if (uploadResponse.type == 'error') this.toastr.error(uploadResponse.message, 'Error');
+        else {
+          this.getDecoyList();
+          this.toastr.success(uploadResponse.message, 'Success');
+        }
+      }
+      fileInput.value = '';
+    };
+  }
 }

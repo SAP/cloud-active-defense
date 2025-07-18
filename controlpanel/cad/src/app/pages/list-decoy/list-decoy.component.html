@@ -2,6 +2,13 @@
 <!-- <div class="search">
 </div> -->
 <div class="wrapper">
+    <div class="top-bar">
+        <input type="file" accept=".json" style="display: none;" name="decoys" #fileInput>
+        <button class="outlined-btn" (click)="onDecoysUpload(fileInput)">
+            <div class="upload-icon"></div>
+            <p>Upload decoys</p>
+        </button>
+    </div>
     <table class="list-container">
         <thead>
             <tr>
@@ -64,6 +71,4 @@
             </tr>
         </tbody>
     </table>
-    <div class="buttons">
-    </div>
 </div>
