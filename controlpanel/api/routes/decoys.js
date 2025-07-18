@@ -2,6 +2,7 @@ const express = require('express');
 const decoysService = require('../services/decoys');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/decoys/',limits: {fileSize: 1_000_000} });
+const { fileLimiter } = require('../util/rate-limiting')
 
 const router = express.Router();
 
@@ -262,7 +263,7 @@ router.post('/upload/:pa_id', upload.single('decoys'), async (req, res) => {
  *                 example: Invalid filename
 
  */
-router.get('/download-errors/:filename', async (req, res) => {
+router.get('/download-errors/:filename', fileLimiter, async (req, res) => {
     try {
         const result = await decoysService.downloadErrorFile(req.params.filename);
         if (result.type == 'error') return res.status(result.code).send(result);
