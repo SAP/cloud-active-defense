@@ -6,6 +6,20 @@
     flex: 1;
     flex-direction: column;
     justify-content: space-between;
+    .top-bar {
+        width: 100%;
+        display: flex;
+        justify-content: end;
+        .upload-icon {
+            display: flex;
+            align-items: center;
+            margin: 0 0.8rem 0 0;
+            mask: url('../../../../public/upload.svg') no-repeat center; 
+            width: 24px; 
+            height: 24px; 
+            background-color: variables.$primaryColor;
+        }
+    }
     .list-container {
         width: 100%;
         border-radius: 20px;
