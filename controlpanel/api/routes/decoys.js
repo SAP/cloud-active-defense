@@ -242,6 +242,24 @@ router.post('/upload/:pa_id', upload.single('decoys'), async (req, res) => {
  *               message:
  *                 type: string
  *                 example: File not found
+ *       400:
+ *        description: Invalid filename
+ *        content:
+ *          application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               code:
+ *                 type: integer
+ *                 enum: [400]
+ *                 example: 400
+ *               type:
+ *                 type: string
+ *                 enum: [error]
+ *                 example: error
+ *               message:
+ *                 type: string
+ *                 example: Invalid filename
 
  */
 router.get('/download-errors/:filename', async (req, res) => {

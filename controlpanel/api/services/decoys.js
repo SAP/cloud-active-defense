@@ -84,9 +84,10 @@ module.exports = {
      */
     downloadErrorFile: async (filename) => {
         try {
-            const filePath = path.join(DOWNLOADS_DIR, filename);
-            if (!fs.existsSync(filePath)) return { type: 'error', code: 404, message: 'File not found' };
-            return { type: 'success', code: 200, message: 'File is ready for download', data: filePath };
+            const resolvedPath = path.resolve(DOWNLOADS_DIR, filename);
+            if (!resolvedPath.startsWith(DOWNLOADS_DIR)) return { type: 'error', code: 400, message: 'Invalid filename' };
+            if (!fs.existsSync(resolvedPath)) return { type: 'error', code: 404, message: 'File not found' };
+            return { type: 'success', code: 200, message: 'File is ready for download', data: resolvedPath };
         } catch (e) {
             throw e;
         }
