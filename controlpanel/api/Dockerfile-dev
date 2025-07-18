@@ -11,4 +11,4 @@ COPY . .
 
 EXPOSE 8050
 
-CMD ["nodemon", "--watch", ".", "--legacy-watch", "server.js"]
+CMD ["nodemon", "--watch", ".", "--legacy-watch", "--ignore", "downloads/", "server.js"]
