@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: controlpanel-db
-          image: postgres
+          image: postgres:17.5-alpine
           imagePullPolicy: Always
           ports:
             - containerPort: 5432
