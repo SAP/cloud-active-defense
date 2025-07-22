@@ -2,6 +2,7 @@ const express = require('express');
 
 const logsService = require('../services/logs');
 const fluentAuth = require('../middleware/fluentbit-authentication');
+const { authorizationFromPa_id } = require('../middleware/customer-authorization');
 
 const router = express.Router();
 
@@ -70,7 +71,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Invalid pa_id supplied
  */
-router.get('/:pa_id', async (req, res) => {
+router.get('/:pa_id', authorizationFromPa_id, async (req, res) => {
     try {
         const result = await logsService.getLogs(req.params.pa_id, req.query);
         return res.status(result.code).send(result);

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: keycloak
+spec:
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      initContainers:
+      - name: wait-for-db
+        image: busybox
+        command: ['sh', '-c', 'until nc -z -v keycloak-db-service 5432; do echo waiting for db; sleep 2; done']
+      - name: wait-for-secret
+        image: bitnami/kubectl:latest
+        command: ['sh', '-c', 'until [ "$(kubectl get secret keycloak-secrets -n controlpanel -o jsonpath="{.data.KEYCLOAK_API_KEY}" | base64 -d)" != "" ]; do echo "Waiting for secret"; sleep 5; done']
+      containers:
+        - name: keycloak
+          image: {{ .Values.image }}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+            - containerPort: 8443
+          env:
+            - name: CONTROLPANEL_API_URL
+              value: http://controlpanel-api-service
+            - name: APP_URL
+              value: {{ printf "%s.%s/*" .Values.global.front_url (trimPrefix "." .Values.global.kyma_domain)}}
+            - name: KC_DB_URL_HOST
+              value: {{ .Values.db_host }}
+            - name: KC_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db-secrets
+                  key: POSTGRES_USER
+            - name: KC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: keycloak-db-secrets
+                  key: POSTGRES_PASSWORD
+            - name: KC_HOSTNAME
+              value: {{ printf "%s.%s" "https://keycloak" (trimPrefix "." .Values.global.kyma_domain) }}
+            - name: KC_HTTP_ENABLED
+              value: "true"
+          envFrom:
+            - secretRef:
+                name: keycloak-db-secrets
+            - secretRef:
+                name: keycloak-secrets
+      serviceAccountName: keycloak-sa

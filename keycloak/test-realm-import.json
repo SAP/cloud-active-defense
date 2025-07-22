@@ -1,0 +1,62 @@
+{
+  "realm": "cad",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "cad",
+      "enabled": true,
+      "publicClient": true,
+      "directAccessGrantsEnabled": true,
+      "protocolMappers": [
+        {
+          "name": "cad",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "config": {
+            "included.client.audience": "cad",
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "group-in-token",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "config": {
+            "introspection.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "groups"
+          }
+        }
+      ],
+      "redirectUris": [
+        "http://localhost/*"
+      ],
+      "webOrigins": [
+        "*"
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username" : "test",
+      "enabled": true,
+      "email" : "test@test.com",
+      "firstName": "Test",
+      "lastName": "Test",
+      "credentials" : [
+        { "type" : "password", "value" : "test" }
+      ],
+      "groups": ["test@test.com"]
+    }
+  ],
+  "groups": [
+    {
+      "name": "test@test.com",
+      "path": "/test@test.com"
+    }
+  ]
+}

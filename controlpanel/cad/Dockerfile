@@ -10,7 +10,7 @@ COPY . .
 
 RUN npm run build --prod
 
-FROM nginx:alpine
+FROM nginx:1.28.0-alpine
 
 RUN rm /etc/nginx/conf.d/default.conf
 

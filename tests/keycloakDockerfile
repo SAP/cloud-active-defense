@@ -1,0 +1,7 @@
+FROM quay.io/keycloak/keycloak:latest
+
+COPY ./test-realm-import.json /opt/keycloak/data/import/cad-realm.json
+
+EXPOSE 8080
+
+CMD ["start-dev", "--import-realm"]

@@ -14,6 +14,10 @@ spec:
       labels:
         app: controlpanel-front
     spec:
+      initContainers:
+      - name: wait-for-keycloak
+        image: busybox
+        command: ['sh', '-c', 'until wget keycloak-service:9000; do echo waiting for keycloak; sleep 8; done']
       containers:
         - name: controlpanel-front
           image: {{ .Values.image }}
@@ -23,3 +27,5 @@ spec:
           env:
             - name: CONTROLPANEL_API_URL
               value: {{ printf "%s.%s" .Values.controlpanel_api_url (trimPrefix "." .Values.global.kyma_domain) }}
+            - name: KEYCLOAK_URL
+              value: {{ printf "%s.%s" .Values.global.keycloak_url (trimPrefix "." .Values.global.kyma_domain) }}

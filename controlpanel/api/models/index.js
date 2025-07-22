@@ -7,6 +7,8 @@ const Logs = require("./Logs");
 const ApiKey = require("./Api-key");
 const Customer = require("./Customer");
 
+let dbInitialized = false;
+
 async function initializeDatabase() {
   await sequelize.sync();
 
@@ -26,6 +28,7 @@ async function initializeDatabase() {
         GRANT SELECT ON TABLE customers TO deployment_manager;
       `, { replacements: { password }});
     }
+    dbInitialized = true;
     console.log("Database connected successfully.");
   } catch (error) {
     console.error("Unable to connect to the database...\n", error);
@@ -33,19 +36,23 @@ async function initializeDatabase() {
   }
 }
 
-Decoy.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApps'});
-ProtectedApp.hasMany(Decoy, {foreignKey: 'pa_id', as: 'decoys' });
+function isInitialized() {
+  return dbInitialized;
+}
 
-Config.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApps'});
-ProtectedApp.hasMany(Config, {foreignKey: 'pa_id', as: 'configs' });
+Decoy.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp', onDelete: 'CASCADE'});
+ProtectedApp.hasMany(Decoy, {foreignKey: 'pa_id', as: 'decoys', onDelete: 'CASCADE'});
 
-Logs.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApps'});
-ProtectedApp.hasMany(Logs, {foreignKey: 'pa_id', as: 'logs' });
+Config.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp', onDelete: 'CASCADE'});
+ProtectedApp.hasMany(Config, {foreignKey: 'pa_id', as: 'configs', onDelete: 'CASCADE'});
 
-ApiKey.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedapps'});
-ProtectedApp.hasMany(ApiKey, {foreignKey: 'pa_id', as: 'apiKeys' });
+Logs.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp', onDelete: 'CASCADE'});
+ProtectedApp.hasMany(Logs, {foreignKey: 'pa_id', as: 'logs', onDelete: 'CASCADE'});
 
-ProtectedApp.belongsTo(Customer, {foreignKey: 'cu_id', as: 'customers' });
+ApiKey.belongsTo(ProtectedApp, {foreignKey: 'pa_id', as: 'protectedApp', onDelete: 'CASCADE'});
+ProtectedApp.hasMany(ApiKey, {foreignKey: 'pa_id', as: 'apiKeys', onDelete: 'CASCADE'});
+
+ProtectedApp.belongsTo(Customer, {foreignKey: 'cu_id', as: 'customer' });
 Customer.hasMany(ProtectedApp, {foreignKey: 'cu_id', as: 'protectedApps' });
 
-module.exports = { sequelize, initializeDatabase };
+module.exports = { sequelize, initializeDatabase, isInitialized };

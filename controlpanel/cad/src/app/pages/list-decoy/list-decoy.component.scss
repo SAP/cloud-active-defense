@@ -3,13 +3,13 @@
     width: 100%;
     padding: 0 4%;
     display: flex;
-    flex: 1;
     flex-direction: column;
     justify-content: space-between;
     .top-bar {
         width: 100%;
         display: flex;
         justify-content: end;
+        margin-bottom: 1rem;
         .upload-icon {
             display: flex;
             align-items: center;

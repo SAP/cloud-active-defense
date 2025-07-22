@@ -32,3 +32,4 @@ spec:
           envFrom:
             - secretRef:
                 name: deployment-manager-db-secrets
+      serviceAccountName: deployment-manager-sa

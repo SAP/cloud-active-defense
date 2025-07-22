@@ -47,10 +47,10 @@ globalconfig=$(cat <<EOF
 EOF
 )
 # Send the decoy configuration to the API
-decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -d "$config" http://localhost:8050/decoy | jq -r '.data.id')
-curl -X PATCH -s -H "Content-Type: application/json" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
+decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "$config" http://localhost:8050/decoy | jq -r '.data.id')
+curl -X PATCH -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
 # Send the global configuration to the API
-curl -X PUT -s -H "Content-Type: application/json" -d "$globalconfig" http://localhost:8050/config > /dev/null
+curl -X PUT -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "$globalconfig" http://localhost:8050/config > /dev/null
 
 # wait a few seconds for the proxy to read the new config
 sleep 3
@@ -86,6 +86,6 @@ echo "Execution time: $execution_time seconds"
 
 # Cleanup
 rm $tempfile
-curl -X DELETE -s http://localhost:8050/decoy/$decoy_id > /dev/null
-curl -X PUT -s -H "Content-Type: application/json" -d "{\"pa_id\": \"$PROTECTEDAPP_ID\", \"config\": {}}" http://localhost:8050/config > /dev/null
+curl -X DELETE -s -H "Authorization: Bearer $KEYCLOAK_TOKEN" http://localhost:8050/decoy/$decoy_id > /dev/null
+curl -X PUT -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "{\"pa_id\": \"$PROTECTEDAPP_ID\", \"config\": {}}" http://localhost:8050/config > /dev/null
 

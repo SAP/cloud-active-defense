@@ -10,14 +10,14 @@ export class DeploymentManagerApiService {
 
   constructor(private http: HttpClient, private globalState: GlobalStateService) { }
 
-  getNamespaces(cu_id: string) {
-    return this.http.get<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/namespaces/${cu_id}`);
+  getNamespaces() {
+    return this.http.get<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/namespaces`);
   }
-  getDeployments(namespace: string, cu_id: string) {
-    return this.http.get<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/deployments/${cu_id}/${namespace}`);
+  getDeployments(namespace: string) {
+    return this.http.get<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/deployments/${namespace}`);
   }
-  uploadKubeconfig(cu_id: string, file: FormData) {
-    return this.http.post<ApiResponse>(`${this.globalState.API_URL}/customer/${cu_id}/upload-kubeconfig`, file);
+  uploadKubeconfig(file: FormData) {
+    return this.http.post<ApiResponse>(`${this.globalState.API_URL}/customer/upload-kubeconfig`, file);
   }
   downloadSetupScriptSH() {
     return this.http.get(`https://raw.githubusercontent.com/SAP/cloud-active-defense/refs/heads/main/kyma/install.sh`, { responseType: 'blob' });
@@ -25,7 +25,10 @@ export class DeploymentManagerApiService {
   downloadSetupScriptBAT() {
     return this.http.get(`https://raw.githubusercontent.com/SAP/cloud-active-defense/refs/heads/main/kyma/install.bat`, { responseType: 'blob' });
   }
-  installCADForApp(cu_id: string, namespace: string, deploymentName: string) {
-    return this.http.post<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/install/${cu_id}`, {deploymentAppName: deploymentName, namespace});
+  installCADForApp(namespace: string, deploymentName: string) {
+    return this.http.post<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/install`, {deploymentAppName: deploymentName, namespace});
+  }
+  cleanCluster() {
+    return this.http.delete<ApiResponse>(`${this.globalState.API_URL}/customer/clean`);
   }
 }

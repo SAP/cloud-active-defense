@@ -4,7 +4,8 @@ const swaggerJsDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const axios = require('axios');
 require('dotenv').config({ path: __dirname + '/.env' });
-const { initializeDatabase } = require('./models/index');
+const { initializeDatabase, isInitialized } = require('./models/index');
+const Sequelize = require('sequelize');
 
 const configmanager = require('./routes/configmanager');
 const decoys = require('./routes/decoys');
@@ -17,29 +18,33 @@ const protectedApp = require('./routes/protected-app');
 const deploymentManager = require('./routes/deployment-manager');
 const customer = require('./routes/customer');
 
-const { createProtectedApp } = require('./services/protected-app');
-const { createDecoy } = require('./services/decoy');
-const { updateConfig } = require('./services/config');
 const configmanagerAuth = require('./middleware/configmanager-authentication');
 const checkDeploymentManagerURL = require('./middleware/deployment-manager');
 const Customer = require('./models/Customer');
 const ApiKey = require('./models/Api-key');
 const { generateRandomString } = require('./util');
+const keycloak = require('./config/keycloak');
 
 const app = express();
+app.use(keycloak.middleware());
 app.use(express.json());
 app.use(cors({ origin: process.env.CONTROLPANEL_FRONTEND_URL }));
 
 app.use('/configmanager', configmanagerAuth, configmanager);
-app.use('/decoys', decoys);
-app.use('/decoy', decoy);
+app.use('/decoys', keycloak.protect(), decoys);
+app.use('/decoy', keycloak.protect(), decoy);
 app.use('/statistics', statistics);
 app.use('/logs', logs);
-app.use('/config', config)
+app.use('/config', keycloak.protect(), config)
 app.use('/user', user);
-app.use('/protected-app', protectedApp);
-app.use('/deployment-manager', checkDeploymentManagerURL, deploymentManager);
+app.use('/protected-app', keycloak.protect(), protectedApp);
+app.use('/deployment-manager', keycloak.protect(), checkDeploymentManagerURL, deploymentManager);
 app.use('/customer', customer);
+
+app.get('/health', (req, res) => {
+    if (isInitialized()) return res.status(200).json({ type: 'success', code: 200, message: 'Healthy' });
+    return res.status(503).json({ type: 'error', code: 503, message: 'Not healthy' });
+});
 
 const swaggerDefinition = {
     openapi: '3.1.0',
@@ -70,6 +75,11 @@ const swaggerDefinition = {
                     application: {
                         type: 'string',
                         example: 'myapp',
+                    },
+                    cu_id: {
+                        type: 'string',
+                        format: 'uuid',
+                        example: '928b9fa6-a36d-4063-b104-8380d0b08e90',
                     },
                     createdAt: {
                         type: 'string',
@@ -547,6 +557,24 @@ const swaggerDefinition = {
                         example: '2023-10-01T12:00:00.000Z',
                     },
                 }
+            },
+            Customer: {
+                type: 'object',
+                properties: {
+                    id: {
+                        type: 'string',
+                        format: 'uuid',
+                        example: '928b9fa6-a36d-4063-b104-8380d0b08e90',
+                    },
+                    name: {
+                        type: 'string',
+                        example: 'Acme.com',
+                    },
+                    kubeconfig: {
+                        type: 'string',
+                        example: 'apiVersion: v1\n  kind: Config...'
+                    }
+                }
             }
         }
     }
@@ -570,21 +598,28 @@ app.listen(8050, async () => {
         console.log("Control panel API started on port 8050 !");
         await initializeDatabase();
 
-        const defaultCustomer = await Customer.findOrCreate({ where: { name: 'default' }});
-        const defaultApp = await createProtectedApp({ namespace: 'default', application: 'default', cu_id: defaultCustomer[0].id }); 
-        if (defaultApp.type == 'success') {
-            createDecoy({ pa_id: defaultApp.data.id, decoy:{decoy:{key:"x-cloud-active-defense",separator:"=",value:"ACTIVE"},inject:{store:{inResponse:".*",as:"header"}}}});
-            updateConfig({ pa_id:defaultApp.data.id, deployed: true, config:{alert:{session:{in:"cookie",key:"SESSION"}}}});
-        }
-
-        if (process.env.ENVOY_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
-            ApiKey.findOrCreate({ where: { key: process.env.ENVOY_API_KEY, permissions: ["configmanager"], pa_id: defaultApp.data.id }});
-        }
-        if (process.env.FLUENTBIT_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
-            ApiKey.findOrCreate({ where: { key: process.env.FLUENTBIT_API_KEY, permissions: ["fluentbit"], pa_id: defaultApp.data.id }});
+        if (process.env.KEYCLOAK_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
+            ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: process.env.KEYCLOAK_API_KEY, }});
+        } else {
+            for (let i = 0; i < 5; i++) {
+                await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for 3 second before retrying
+                try {
+                    const keycloakApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/keycloak/apikey`);
+                    if (keycloakApiKeyResponse.status === 200) {
+                        ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: keycloakApiKeyResponse.data.data }});
+                        break;
+                    } else {
+                        console.error("Failed to create Keycloak API key, please check your deployment manager URL and ensure it is running.");
+                    }
+                    continue;
+                } catch (e) {
+                    continue;
+                }
+            }
         }
 
         setInterval(async () => {
+            ApiKey.update({ key: generateRandomString(65), expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { permissions: ["keycloak"], expirationDate: { [Sequelize.Op.lte]: new Date() }}});
             const customersWithExpiredKeys = await Customer.getCustomersWithExpiredApiKeys();
             for (const customer of customersWithExpiredKeys)
                 for (const app of customer.protectedApps)

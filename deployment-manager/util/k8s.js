@@ -13,10 +13,30 @@ async function connectToK8s(kubeconfig) {
         throw e;
     }
 }
+async function connectTocurrentK8s() {
+    try {
+        const k8s = await import('@kubernetes/client-node');       
+        const kc = new k8s.KubeConfig();
+        kc.loadFromDefault();
+        await canConnectToCluster(kc);
+        return kc;
+    } catch(e) {
+        throw e;
+    }
+}
 async function coreApi(kubeconfig) {
     try {
         const k8s = await import('@kubernetes/client-node');
         const kc = await connectToK8s(kubeconfig);
+        return kc.makeApiClient(k8s.CoreV1Api);
+    } catch(e) {
+        throw e;
+    }
+}
+async function currentCoreApi() {
+    try {
+        const k8s = await import('@kubernetes/client-node');
+        const kc = await connectTocurrentK8s();
         return kc.makeApiClient(k8s.CoreV1Api);
     } catch(e) {
         throw e;
@@ -98,7 +118,9 @@ async function getKubeconfig(cu_id) {
 }
 module.exports = {
     connectToK8s,
+    connectTocurrentK8s,
     coreApi,
+    currentCoreApi,
     appsApi,
     batchApi,
     customApi,

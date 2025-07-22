@@ -58,6 +58,28 @@
                     height: 24px; 
                     background-color: variables.$primaryColor;
                 }
+                .clean-icon {
+                    margin: 0 0.8rem 0 0;
+                    mask: url('../../../../public/clean.svg') no-repeat center; 
+                    width: 24px; 
+                    height: 24px; 
+                    background-color: red;
+                }
+            }
+            .clean-cluster {
+                color: red;
+                border-color: red;
+                transition: all 0.2s ease-in-out;
+                
+                &:hover {
+                    background-color: red;
+                    color: #FFF;
+                    .clean-icon {
+                        background-color: #FFF;
+                        animation: mop-cleaning 1.2s ease-in-out;
+                        transform-origin: 50% 25%; // axis lower for even more realistic mop effect
+                    }
+                }
             }
         }
     }
@@ -217,4 +239,10 @@
     to {
         transform: rotate(360deg);
     }
+}
+@keyframes mop-cleaning {
+    0%   { transform: rotate(0deg); }
+    33%  { transform: rotate(30deg); }
+    66%  { transform: rotate(-30deg); }
+    100%  { transform: rotate(0deg); }
 }
