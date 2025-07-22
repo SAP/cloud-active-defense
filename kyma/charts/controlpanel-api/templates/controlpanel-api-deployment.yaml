@@ -30,9 +30,11 @@ spec:
             - name: DB_HOST
               value: {{ .Values.global.db_host }}
             - name: CONTROLPANEL_FRONTEND_URL
-              value: {{ printf "%s.%s" .Values.front_url (trimPrefix "." .Values.global.kyma_domain) }}
+              value: {{ printf "%s.%s" .Values.global.front_url (trimPrefix "." .Values.global.kyma_domain) }}
             - name: DEPLOYMENT_MANAGER_URL
               value: {{ .Values.deployment_manager_url }}
+            - name: KEYCLOAK_URL
+              value: {{ printf "%s.%s" .Values.global.keycloak_url (trimPrefix "." .Values.global.kyma_domain) }}
           envFrom:
             - secretRef:
                 name: controlpanel-db-secrets

@@ -42,6 +42,10 @@ function generateRandomString(length) {
   return result;
 }
 
+function isEmail(str) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(str);
+}
+
 function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -51,5 +55,6 @@ module.exports = {
     isUUID,
     isValidRegex,
     isUrl,
-    generateRandomString
+    generateRandomString,
+    isEmail
 }

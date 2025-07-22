@@ -14,11 +14,16 @@ services:
     ports:
     - "8000:8000"
     depends_on:
-    - myapp
-    - clone
-    - exhaust
-    - fluent
-    - controlpanel-api
+      myapp:
+        condition: service_started
+      clone:
+        condition: service_started
+      exhaust:
+        condition: service_started
+      fluent:
+        condition: service_started
+      controlpanel-api:
+        condition: service_healthy
     logging:
       driver: fluentd
   
@@ -66,6 +71,11 @@ services:
   #       condition: service_healthy
   #     fluent:
   #       condition: service_started
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "curl -f http://localhost:8050/health"]
+  #     interval: 2s
+  #     timeout: 5s
+  #     retries: 10
   #   volumes:
   #     - ./controlpanel/api:/app:cached
   #     - /app/node_modules
@@ -99,6 +109,11 @@ services:
         condition: service_healthy
       fluent:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8050/health"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
@@ -107,6 +122,7 @@ services:
       - CONTROLPANEL_FRONTEND_URL=http://localhost
       - ENVOY_API_KEY=F3mTzUj8nRbW4pQc7gHxN1AvD5sL6KfVZ0yPuJkE2R9qXi8MwB7lChGvTa1ZoS3Nd #If you want to set a custom key, don't forget to update the key in envoy.yaml!
       - FLUENTBIT_API_KEY=A7nW2zQj9rMgP4kEmB5vDfL1sY6uHxVqJc0tKbR3wNp8oUiZhXlC2yFoGvTd9Sa8Nm #If you want to set a custom key, don't forget to update the key in fluentbit config here!
+      - KEYCLOAK_API_KEY=a7K9Z2pQw8X1sV4Lr6T0bN3yJ5GmC8HqW2E7D1S9U6F0PzK4M5xQ2vN8tR6wB3r9bv #If you want to set a custom key, don't forget to update the key in keycloak config here!
 
   controlpanel:
     container_name: controlpanel
@@ -120,9 +136,10 @@ services:
       - controlpanel-api
     environment:
       - CONTROLPANEL_API_URL=http://localhost:8050
+      - KEYCLOAK_URL=http://host.docker.internal:8080
 
   controlpanel-db:
-    image: postgres
+    image: postgres:17.5-alpine
     restart: always
     container_name: controlpanel-db
     ports:
@@ -132,13 +149,51 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: cad
     volumes:
-    - postgres_data:/var/lib/postgresql/data
+    - controlpanel_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  keycloak:
+    build: keycloak
+    # image: ghcr.io/sap/controlpanel-keycloak:latest
+    container_name: keycloak
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    environment:
+      - KC_BOOTSTRAP_ADMIN_USERNAME=admin
+      - KC_BOOTSTRAP_ADMIN_PASSWORD=admin
+      - KC_DB_URL_HOST=keycloak-db
+      - KC_HOSTNAME=http://host.docker.internal:8080
+      - KC_HTTP_ENABLED=true
+      - KC_DB_USERNAME=keycloak
+      - KC_DB_PASSWORD=keycloak
+      - CONTROLPANEL_API_URL=http://controlpanel-api:8050
+      - KEYCLOAK_API_KEY=a7K9Z2pQw8X1sV4Lr6T0bN3yJ5GmC8HqW2E7D1S9U6F0PzK4M5xQ2vN8tR6wB3r9bv
+      - APP_URL=http://localhost/*
+    depends_on:
+      keycloak-db:
+        condition: service_healthy
+
+  keycloak-db:
+    image: postgres:17.5
+    restart: always
+    container_name: keycloak-db
+    environment:
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+      POSTGRES_DB: keycloak
+    volumes:
+    - keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
-  configvolume: {}
-  postgres_data:
+  controlpanel_data:
+  keycloak_data:

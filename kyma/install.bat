@@ -31,25 +31,25 @@ setlocal enabledelayedexpansion
   exit /B
 
 :installServiceAccount
-  for /f "tokens=* delims=" %%i in ('kubectl get serviceaccount ^| findstr deployment-manager') do set serviceAccount_exists=%%i
+  for /f "tokens=* delims=" %%i in ('kubectl get serviceaccount ^| findstr remote-dm-sa') do set serviceAccount_exists=%%i
   if defined serviceAccount_exists (
-    kubectl delete serviceaccount deployment-manager >nul
+    kubectl delete serviceaccount remote-dm-sa >nul
   ) else (
     echo Creating service account 🔧
   )
-  kubectl create serviceaccount deployment-manager >nul
-  kubectl label serviceaccount deployment-manager app.kubernetes.io/managed-by=deployment-manager-install>nul
+  kubectl create serviceaccount remote-dm-sa >nul
+  kubectl label serviceaccount remote-dm-sa app.kubernetes.io/managed-by=deployment-manager-install>nul
   exit /B
 
 :installClusterRole
-  for /f "tokens=* delims=" %%i in ('kubectl get clusterrole ^| findstr deployment-manager') do set clusterRole_exists=%%i
+  for /f "tokens=* delims=" %%i in ('kubectl get clusterrole ^| findstr remote-dm-cr') do set clusterRole_exists=%%i
   if not defined clusterRole_exists (
     echo Creating cluster role 🔧
     (
     echo apiVersion: rbac.authorization.k8s.io/v1
     echo kind: ClusterRole
     echo metadata:
-    echo  name: deployment-manager
+    echo  name: remote-dm-cr
     echo rules:
     echo - verbs:
     echo    - create
@@ -100,21 +100,21 @@ setlocal enabledelayedexpansion
     echo    - kymas
     echo    - deployments
     ) | kubectl apply -f - >nul
-    kubectl label clusterrole deployment-manager app.kubernetes.io/managed-by=deployment-manager-install >nul
+    kubectl label clusterrole remote-dm-cr app.kubernetes.io/managed-by=deployment-manager-install >nul
   )
   exit /B
 
 :installClusterRoleBinding
-  for /f "tokens=* delims=" %%i in ('kubectl get clusterrolebinding ^| findstr deployment-manager-binding') do set clusterRoleBinding_exists=%%i
+  for /f "tokens=* delims=" %%i in ('kubectl get clusterrolebinding ^| findstr remote-dm-crb') do set clusterRoleBinding_exists=%%i
   if not defined clusterRoleBinding_exists (
     echo Creating cluster role binding 🔧
-    kubectl create clusterrolebinding deployment-manager-binding --clusterrole=deployment-manager --serviceaccount=default:deployment-manager >nul
-    kubectl label clusterrolebinding deployment-manager-binding app.kubernetes.io/managed-by=deployment-manager-install >nul
+    kubectl create clusterrolebinding remote-dm-crb --clusterrole=remote-dm-cr --serviceaccount=default:remote-dm-sa >nul
+    kubectl label clusterrolebinding remote-dm-crb app.kubernetes.io/managed-by=deployment-manager-install >nul
   )
   exit /B
 
 :requestToken
-  for /f "tokens=* delims=" %%i in ('kubectl create token deployment-manager --duration=8766h') do set token=%%i
+  for /f "tokens=* delims=" %%i in ('kubectl create token remote-dm-sa --duration=8766h') do set token=%%i
   if ERRORLEVEL 1 (
     echo Failed to create token, please check your service account and try again.
     exit 1

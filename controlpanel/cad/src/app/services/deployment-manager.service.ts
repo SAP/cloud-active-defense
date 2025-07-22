@@ -19,38 +19,29 @@ export class DeploymentManagerService {
 
   constructor(private deploymentManagerApi: DeploymentManagerApiService) { }
   
-  async getNamespaces(cu_id: string): Promise<ApiResponse> {
+  async getNamespaces(): Promise<ApiResponse> {
     try {
-      if (!cu_id) {
-        return { message: "No customer ID found", type: 'error' };
-      }
-      const apiResponse = await lastValueFrom(this.deploymentManagerApi.getNamespaces(cu_id));
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.getNamespaces());
       return apiResponse;
     } catch(e: any) {
       if (e.error) return e.error;
       else return { message: "Error when fetching config", type: 'error' };
     }
   }
-  async getDeployments(cu_id: string, namespace: string): Promise<ApiResponse> {
+  async getDeployments(namespace: string): Promise<ApiResponse> {
     try {
-      if (!cu_id) {
-        return { message: "No customer ID found", type: 'error' };
-      }
       this.cancelRequest$.next();
-      return lastValueFrom(this.deploymentManagerApi.getDeployments(namespace, cu_id).pipe(takeUntil(this.cancelRequest$)));
+      return lastValueFrom(this.deploymentManagerApi.getDeployments(namespace).pipe(takeUntil(this.cancelRequest$)));
     } catch(e: any) {
       if (e.error) return e.error;
       else return { message: "Error when fetching config", type: 'error' };
     }
   }
-  async uploadKubeconfig(cu_id: string, file: File): Promise<ApiResponse> {
+  async uploadKubeconfig(file: File): Promise<ApiResponse> {
     try {
-      if (!cu_id) {
-        return { message: "No customer ID found", type: 'error' };
-      }
       const formData = new FormData();
       formData.append('kubeconfig', file, file.name);
-      const apiResponse = await lastValueFrom(this.deploymentManagerApi.uploadKubeconfig(cu_id, formData));
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.uploadKubeconfig(formData));
       return apiResponse;
     } catch(e: any) {
       if (e.error) return e.error;
@@ -81,16 +72,22 @@ export class DeploymentManagerService {
       return { message: "Error when downloading setup script", type: 'error' };
     }
   }
-  async installCADForApp(cu_id: string, namespace: string, deploymentName: string): Promise<ApiResponse> {
+  async installCADForApp(namespace: string, deploymentName: string): Promise<ApiResponse> {
     try {
-      if (!cu_id) {
-        return { message: "No customer ID found", type: 'error' };
-      }
-      const apiResponse = await lastValueFrom(this.deploymentManagerApi.installCADForApp(cu_id, namespace, deploymentName));
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.installCADForApp(namespace, deploymentName));
       return apiResponse;
     } catch(e: any) {
       if (e.error) return e.error;
       else return { message: "Error when installing CAD for app", type: 'error' };
+    }
+  }
+  async cleanCluster(): Promise<ApiResponse> {
+    try {
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.cleanCluster());
+      return apiResponse;
+    } catch(e: any) {
+      if (e.error) return e.error;
+      else return { message: "Error when cleaning cluster for app", type: 'error' };
     }
   }
 }

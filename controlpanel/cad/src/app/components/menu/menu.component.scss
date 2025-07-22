@@ -153,7 +153,19 @@ $menu-icon-size: 2rem;
     .end-item {
         margin-top: auto;
         margin-bottom: 1rem;
-        margin-left: 1.5rem;
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        .logout-btn {
+            padding: 0.5rem 5rem;
+            .logout-icon {
+                margin-right: 0.3rem;
+                mask: url('../../../../public/logout.svg') no-repeat center; 
+                width: 24px; 
+                height: 24px; 
+                background-color: variables.$primaryColor;
+                }
+        }
         .profile {
             display: flex;
             .profile-icon {

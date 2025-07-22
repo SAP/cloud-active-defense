@@ -1,5 +1,6 @@
 const express = require('express');
 const decoyService = require('../services/decoy');
+const { authorizationFromDecoyId, authorizationFromPa_id } = require('../middleware/customer-authorization');
 
 const router = express.Router();
 
@@ -76,7 +77,7 @@ const router = express.Router();
  *                   type: string
  *                   example: Decoy not found
  */
-router.get('/:id', async (req, res) => {
+router.get('/:id', authorizationFromDecoyId, async (req, res) => {
     try {
         const result = await decoyService.findDecoyById(req.params.id);
         return res.status(result.code).send(result);
@@ -208,7 +209,7 @@ router.get('/:id', async (req, res) => {
  *                   type: string
  *                   example: Invalid protectedApp id provided
  */
-router.post('/', async (req, res) => {
+router.post('/', authorizationFromPa_id, async (req, res) => {
     try {
         const result = await decoyService.createDecoy(req.body);
         return res.status(result.code).send(result);
@@ -289,7 +290,7 @@ router.post('/', async (req, res) => {
  *                   type: string
  *                   example: Invalid decoy id supplied
  */
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authorizationFromDecoyId, async (req, res) => {
     try {
         const result = await decoyService.deleteDecoy(req.params.id);
         return res.status(result.code).send(result);
@@ -408,7 +409,7 @@ router.delete('/:id', async (req, res) => {
  *                   type: string
  *                   example: Decoy not found
  */
-router.put('/:id', async (req, res) => {
+router.put('/:id', authorizationFromDecoyId, async (req, res) => {
     try {
         const result = await decoyService.updateDecoy(req.params.id, req.body);
         return res.status(result.code).send(result);
@@ -539,7 +540,7 @@ router.put('/:id', async (req, res) => {
  *                  type: string
  *                  example: Decoy not found
  */
-router.patch('/state', async (req, res) => {
+router.patch('/state', authorizationFromDecoyId, async (req, res) => {
     try {
         const result = await decoyService.updateDecoyDeployState(req.body);
         return res.status(result.code).send(result);

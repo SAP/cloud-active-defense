@@ -3,6 +3,7 @@ const decoysService = require('../services/decoys');
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/decoys/',limits: {fileSize: 1_000_000} });
 const { fileLimiter } = require('../util/rate-limiting')
+const { authorizationFromPa_id } = require('../middleware/customer-authorization');
 
 const router = express.Router();
 
@@ -81,7 +82,7 @@ const router = express.Router();
  * 
  * 
  */
-router.get('/:pa_id', async (req, res) => {
+router.get('/:pa_id', authorizationFromPa_id, async (req, res) => {
     try {
         const result = await decoysService.getDecoysList(req.params.pa_id);
         return res.status(result.code).send(result);

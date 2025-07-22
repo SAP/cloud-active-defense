@@ -1,0 +1,19 @@
+apiVersion: gateway.kyma-project.io/v1beta1
+kind: APIRule
+metadata:
+  name: keycloak-apirule
+  namespace: {{ .Values.global.namespace }}
+  labels:
+    app: keycloak
+spec:
+  host: keycloak
+  service:
+    name: keycloak-service
+    port: 80
+  gateway: kyma-system/kyma-gateway
+  rules:
+    - path: /.*
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE"]
+      accessStrategies:
+        - handler: allow
+      mutators: []

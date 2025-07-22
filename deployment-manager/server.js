@@ -8,6 +8,8 @@ const { initializeDatabase } = require('./model')
 const envoy = require('./routes/envoy');
 const telemetry = require('./routes/telemetry');
 const resources = require('./routes/resources');
+const keycloak = require('./routes/keycloak');
+const customer = require('./routes/customer');
 
 const app = express();
 app.use(express.json());
@@ -15,6 +17,8 @@ app.use(express.json());
 app.use('/envoy', envoy);
 app.use('/telemetry', telemetry);
 app.use('/resources', resources);
+app.use('/keycloak', keycloak);
+app.use('/customer', customer);
 
 const swaggerDefinition = {
     openapi: '3.1.0',

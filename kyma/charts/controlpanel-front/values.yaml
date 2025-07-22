@@ -6,3 +6,4 @@ global:
 
 image: "ghcr.io/sap/controlpanel-frontend:latest"
 controlpanel_api_url: <CONTROLPANEL_API_URL> #https://controlpanel-api.<KYMA_DOMAIN>
+keycloak_url: "https://keycloak"

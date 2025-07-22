@@ -8,9 +8,9 @@ module.exports = {
      * Returns a list of protected apps
      * @returns {{type: 'success' | 'error' | 'warning', code: number, data: Model, message: string}}
      */
-    getProtectedApps: async () => {
+    getProtectedApps: async (cu_id) => {
         try {
-            const protectedApps = await ProtectedApp.findAll();
+            const protectedApps = await ProtectedApp.findAll({ where: { cu_id }});
             return { type: 'success', code: 200, message: 'successful operation', data: protectedApps }
         } catch (e) {
             throw e;

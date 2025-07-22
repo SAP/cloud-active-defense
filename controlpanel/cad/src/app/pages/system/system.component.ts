@@ -29,7 +29,7 @@ export class SystemComponent {
   async onNamespaceSelect() {
     this.deployments = [];
     this.deploymentsLoading = true;
-    const deploymentApiResponse = await this.deploymentManagerService.getDeployments(this.route.snapshot.queryParams['cu_id'], this.selectedNamespace)
+    const deploymentApiResponse = await this.deploymentManagerService.getDeployments(this.selectedNamespace)
       if (deploymentApiResponse.type == 'error') this.toastr.error(deploymentApiResponse.message, 'Error')
       else this.deployments = deploymentApiResponse.data as Deployment[];
       this.deploymentsLoading = false;
@@ -49,7 +49,7 @@ export class SystemComponent {
           this.toastr.error('Please select a valid YAML file.', 'Error');
           return;
         } 
-        const kubeconfigApiResponse = await this.deploymentManagerService.uploadKubeconfig(this.route.snapshot.queryParams['cu_id'], selectedFile)
+        const kubeconfigApiResponse = await this.deploymentManagerService.uploadKubeconfig(selectedFile)
         if (kubeconfigApiResponse.type == 'error') this.toastr.error(kubeconfigApiResponse.message, 'Error')
         else {
           this.deploymentManagerError = false;
@@ -77,7 +77,7 @@ export class SystemComponent {
       deployment.loadingInstall = true;
     }, 400);
 
-    const installApiResponse = await this.deploymentManagerService.installCADForApp(this.route.snapshot.queryParams['cu_id'], this.selectedNamespace, deployment.name)
+    const installApiResponse = await this.deploymentManagerService.installCADForApp(this.selectedNamespace, deployment.name)
     if (installApiResponse.type == 'error') {
       deployment.protected = false
       this.toastr.error(installApiResponse.message, 'Error')
@@ -92,7 +92,7 @@ export class SystemComponent {
 
   async fetchNamespaces() {
     this.namespacesLoading = true;
-    const namespaceApiResponse = await this.deploymentManagerService.getNamespaces(this.route.snapshot.queryParams['cu_id']); 
+    const namespaceApiResponse = await this.deploymentManagerService.getNamespaces(); 
     if (namespaceApiResponse.type == 'error') {
       this.deploymentManagerError = true;
       this.toastr.error(namespaceApiResponse.message, 'Error')
@@ -105,5 +105,18 @@ export class SystemComponent {
       }
     }
     this.namespacesLoading = false;
+  }
+
+  async cleanCluster() {
+    if (!confirm('Are you sure you want to clean the cluster? This will delete all necessary resources for Cloud Active Defense in your cluster and decoys in every namespaces')) return;
+    const cleanApiResponse = await this.deploymentManagerService.cleanCluster();
+    if (cleanApiResponse.type == 'error') {
+      this.toastr.error(cleanApiResponse.message, 'Error');
+    } else {
+      this.toastr.success(cleanApiResponse.message, 'Success');
+      this.fetchNamespaces();
+      const applistResponse = await this.applistService.getAppList();
+      if (applistResponse.type == 'error') this.toastr.error(applistResponse.message, 'Error');
+    }
   }
 }

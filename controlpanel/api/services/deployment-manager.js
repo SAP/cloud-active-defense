@@ -75,5 +75,19 @@ module.exports = {
         } catch (e) {
             throw e;
         }
+    },
+    /**
+     * Clean the cluster with everything deployment manager installed
+     * @param {UUID} cu_id customer id
+     * @returns {{type: 'success' | 'error', code: number, message: string}}
+     */
+    cleanCluster: async (cu_id) => {
+        try {            
+            const response = await axios.delete(`${process.env.DEPLOYMENT_MANAGER_URL}/customer/${cu_id}`, { validateStatus:_=>true } )
+            if (response.data.type !== 'success') return { ...response.data, message: `Something went wrong in deployment manager: ${response.data.message}` };
+            return { type: 'success', code: 200, message: 'Cluster cleaned successfully' };
+        } catch (e) {
+            throw e;
+        }
     }
 }

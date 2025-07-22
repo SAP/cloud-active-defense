@@ -39,7 +39,7 @@ module.exports = {
                 .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
             if (wasmData.error && wasmData.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create persistent volume claim' };
 
-            const initJob = await k8sBatch.createNamespacedJob({ namespace, body: { metadata: { name: 'init-job', annotations: { 'sidecar.istio.io/inject': 'false' }, labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { template: { metadata: { name: 'init-job', namespace, annotations: { 'sidecar.istio.io/inject': 'false' } }, spec: { restartPolicy: 'Never', containers: [{ name: 'init-container', image: 'ghcr.io/sap/init:latest', command: ['sh', '-c', 'cp /sundew.wasm /data/'], imagePullPolicy: 'Always', volumeMounts: [{ name: 'wasm', mountPath: '/data' }], }], volumes: [{ name: 'wasm', persistentVolumeClaim: { claimName: 'wasm-data' } }] } } } } })
+            const initJob = await k8sBatch.createNamespacedJob({ namespace, body: { metadata: { name: 'init-job', annotations: { 'sidecar.istio.io/inject': 'false' }, labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { template: { metadata: { name: 'init-job', namespace, annotations: { 'sidecar.istio.io/inject': 'false' }, labels: { 'protected-by': 'cloudactivedefense' } }, spec: { restartPolicy: 'Never', containers: [{ name: 'init-container', image: 'ghcr.io/sap/init:latest', command: ['sh', '-c', 'cp /sundew.wasm /data/'], imagePullPolicy: 'Always', volumeMounts: [{ name: 'wasm', mountPath: '/data' }], }], volumes: [{ name: 'wasm', persistentVolumeClaim: { claimName: 'wasm-data' } }] } } } } })
                 .then(initJob => initJob)
                 .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
             if (initJob.error && initJob.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create init job' };
@@ -132,6 +132,7 @@ module.exports = {
             }
             k8sApp.patchNamespacedDeployment({
                 namespace, name: deploymentName, body: [
+                    { op: 'add', path: '/metadata/labels/protected-by', value: 'cloudactivedefense' },
                     { op: 'add', path: '/spec/template/metadata/labels/protects', value: deploymentName },
                     { op: 'add', path: '/spec/template/metadata/annotations', value: {} },
                     { op: 'add', path: '/spec/template/metadata/annotations/sidecar.istio.io~1userVolume', value: '{"sundew":{"persistentVolumeClaim":{"claimName":"wasm-data"}}}' },

@@ -18,7 +18,6 @@ const ApiKey = sequelize.define("apiKey", {
     },
     pa_id: {
         type: DataTypes.UUID,
-        allowNull: false,
         references: {
             model: ProtectedApp,
             key: 'id'

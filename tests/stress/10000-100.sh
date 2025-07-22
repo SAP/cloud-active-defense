@@ -29,8 +29,8 @@ decoy_ids=()
 for ((i=1; i<=100; i++)); do
     modified_element=$(echo "$element" | sed "s/\/1/\/$i/")
     # Send the decoy configuration to the API
-    decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -d "$modified_element" http://localhost:8050/decoy | jq -r '.data.id')
-    curl -X PATCH -s -H "Content-Type: application/json" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
+    decoy_id=$(curl -X POST -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "$modified_element" http://localhost:8050/decoy | jq -r '.data.id')
+    curl -X PATCH -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "{\"id\": \"${decoy_id}\", \"deployed\": true}" http://localhost:8050/decoy/state > /dev/null
     decoy_ids+=($decoy_id)
 done
 
@@ -70,5 +70,5 @@ echo "Execution time: $execution_time seconds"
 # Cleanup
 rm $tempfile
 for id in "${decoy_ids[@]}"; do
-  curl -X DELETE -s http://localhost:8050/decoy/$id > /dev/null
+  curl -X DELETE -s -H "Authorization: Bearer $KEYCLOAK_TOKEN" http://localhost:8050/decoy/$id > /dev/null
 done
