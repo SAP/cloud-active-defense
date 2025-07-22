@@ -139,7 +139,7 @@ services:
       - KEYCLOAK_URL=http://host.docker.internal:8080
 
   controlpanel-db:
-    image: postgres
+    image: postgres:17.5-alpine
     restart: always
     container_name: controlpanel-db
     ports:
@@ -179,7 +179,7 @@ services:
         condition: service_healthy
 
   keycloak-db:
-    image: postgres
+    image: postgres:17.5
     restart: always
     container_name: keycloak-db
     environment:
