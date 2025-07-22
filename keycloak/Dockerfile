@@ -1,4 +1,4 @@
-FROM quay.io/keycloak/keycloak:latest
+FROM quay.io/keycloak/keycloak:26.3
 
 COPY ./realm-import.json /opt/keycloak/data/import/cad-realm.json
 COPY ./demo-event/target/cad-registration-event-listener.jar /opt/keycloak/providers/cad-registration-event-listener.jar
