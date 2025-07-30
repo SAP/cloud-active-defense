@@ -133,6 +133,7 @@ module.exports = {
             k8sApp.patchNamespacedDeployment({
                 namespace, name: deploymentName, body: [
                     { op: 'add', path: '/metadata/labels/protected-by', value: 'cloudactivedefense' },
+                    { op: 'add', path: '/spec/template/metadata/labels/protected-by', value: 'cloudactivedefense' },
                     { op: 'add', path: '/spec/template/metadata/labels/protects', value: deploymentName },
                     { op: 'add', path: '/spec/template/metadata/annotations', value: {} },
                     { op: 'add', path: '/spec/template/metadata/annotations/sidecar.istio.io~1userVolume', value: '{"sundew":{"persistentVolumeClaim":{"claimName":"wasm-data"}}}' },

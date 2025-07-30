@@ -117,6 +117,7 @@ rules:
    - envoyfilters
    - services
    - logpipelines
+   - secrets
 - verbs:
    - delete
   apiGroups:

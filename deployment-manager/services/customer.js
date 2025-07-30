@@ -42,6 +42,7 @@ module.exports = {
                         await k8sApp.patchNamespacedDeployment({                            
                             name: deployment.metadata.name, namespace, body: [
                                 { op: 'remove', path: '/metadata/labels/protected-by' },
+                                { op: 'remove', path: '/spec/template/metadata/labels/protected-by' },
                                 { op: 'remove', path: '/spec/template/metadata/labels/protects' },
                                 { op: 'remove', path: '/spec/template/metadata/annotations/sidecar.istio.io~1userVolume' },
                                 { op: 'remove', path: '/spec/template/metadata/annotations/sidecar.istio.io~1userVolumeMount' },
