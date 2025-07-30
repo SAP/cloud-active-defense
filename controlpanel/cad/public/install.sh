@@ -164,7 +164,7 @@ generate_kubeconfig() {
     exit 1
   fi
   
-  cat <<EOF > kubeconfig.yaml
+  cat <<EOF > deployment-manager-kubeconfig.yaml
 apiVersion: v1
 kind: Config
 current-context: deployment-manager-token

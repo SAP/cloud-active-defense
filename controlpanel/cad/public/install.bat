@@ -198,7 +198,7 @@ setlocal enabledelayedexpansion
   echo     user: deployment-manager-token
   echo     namespace: default
   echo   name: deployment-manager-token
-  ) > kubeconfig.yaml
+  ) > deployment-manager-kubeconfig.yaml
   
   echo Kubeconfig generated successfully! 🎉
   echo This kubeconfig is valid for 1 year, to renew it run the script again.
