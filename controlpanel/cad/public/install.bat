@@ -118,6 +118,7 @@ setlocal enabledelayedexpansion
     echo    - envoyfilters
     echo    - services
     echo    - logpipelines
+    echo    - secrets
     echo - verbs:
     echo    - delete
     echo   apiGroups:
