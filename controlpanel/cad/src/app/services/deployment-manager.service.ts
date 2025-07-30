@@ -50,22 +50,15 @@ export class DeploymentManagerService {
   }
   async downloadSetupScript(): Promise<ApiResponse> {
     try {
-      const blobSH = await lastValueFrom(this.deploymentManagerApi.downloadSetupScriptSH());
-      const blobBAT = await lastValueFrom(this.deploymentManagerApi.downloadSetupScriptBAT());
-      
-      const urlSH = window.URL.createObjectURL(blobSH);
       const aSH = document.createElement('a');
-      aSH.href = urlSH;
+      aSH.href = "/install.sh";
       aSH.download = 'install.sh';
       aSH.click();
-      window.URL.revokeObjectURL(urlSH);
 
-      const urlBAT = window.URL.createObjectURL(blobBAT);
       const aBAT = document.createElement('a');
-      aBAT.href = urlBAT;
+      aBAT.href = "/install.bat";
       aBAT.download = 'install.bat';
       aBAT.click();
-      window.URL.revokeObjectURL(urlBAT);
 
       return { message: 'Successful download', type: 'success' };
     } catch(e: any) {

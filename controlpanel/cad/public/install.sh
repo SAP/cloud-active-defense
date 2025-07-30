@@ -98,6 +98,32 @@ rules:
   resources:
    - kymas
    - deployments
+- verbs:
+   - list
+  apiGroups:
+   - batch
+  resources:
+   - jobs
+- verbs:
+   - deletecollection
+  apiGroups:
+   - batch
+   - ''
+   - networking.istio.io
+   - telemetry.kyma-project.io
+  resources:
+   - jobs
+   - pods
+   - envoyfilters
+   - services
+   - logpipelines
+- verbs:
+   - delete
+  apiGroups:
+   - ''
+  resources:
+   - persistentvolumeclaims
+   - services
 EOF
     kubectl label clusterrole remote-dm-cr app.kubernetes.io/managed-by=deployment-manager-install > /dev/null
   fi

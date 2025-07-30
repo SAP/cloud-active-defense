@@ -99,6 +99,32 @@ setlocal enabledelayedexpansion
     echo   resources:
     echo    - kymas
     echo    - deployments
+    echo - verbs:
+    echo    - list
+    echo   apiGroups:
+    echo    - batch
+    echo   resources:
+    echo    - jobs
+    echo - verbs:
+    echo    - deletecollection
+    echo   apiGroups:
+    echo    - batch
+    echo    - ''
+    echo    - networking.istio.io
+    echo    - telemetry.kyma-project.io
+    echo   resources:
+    echo    - jobs
+    echo    - pods
+    echo    - envoyfilters
+    echo    - services
+    echo    - logpipelines
+    echo - verbs:
+    echo    - delete
+    echo   apiGroups:
+    echo    - ''
+    echo   resources:
+    echo    - persistentvolumeclaims
+    echo    - services
     ) | kubectl apply -f - >nul
     kubectl label clusterrole remote-dm-cr app.kubernetes.io/managed-by=deployment-manager-install >nul
   )
