@@ -42,7 +42,7 @@
                     <div class="deployment-loading-install-icon" *ngIf="deployment.loadingInstall"></div>
                     <label class="switch" *ngIf="!deployment.loadingInstall">
                         <input type="checkbox" [checked]="deployment.protected" (click)="onSwitchChange($event, deployment)">
-                        <span class="slider round"></span>
+                        <span class="slider round" [ngClass]="{'disableSwitch': deployment.disableSwitch}"></span>
                     </label>
                 </td>
                 <td class="centered">

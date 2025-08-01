@@ -25,4 +25,7 @@ export class DeploymentManagerApiService {
   cleanCluster() {
     return this.http.delete<ApiResponse>(`${this.globalState.API_URL}/customer/clean`);
   }
+  uninstallCADForApp(namespace: string, deploymentName: string) {
+    return this.http.delete<ApiResponse>(`${this.globalState.API_URL}/deployment-manager/uninstall`, { body: { deploymentAppName: deploymentName, namespace }});
+  }
 }

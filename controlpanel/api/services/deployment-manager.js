@@ -89,5 +89,34 @@ module.exports = {
         } catch (e) {
             throw e;
         }
+    },
+    /**
+     * Uninstall Cloud Active Defense from a specific application
+     * @param {UUID} cu_id Customer ID
+     * @param {string} deploymentAppName Name of the application deployment
+     * @param {string} namespace Namespace of the application
+     * @returns {{code: number, type: string, message: string}}
+     */
+    uninstallCADToApp: async (cu_id, deploymentAppName, namespace) => {
+        try {
+            if (!cu_id) return { code: 400, type: 'error', message: 'Customer ID is required' };
+            if (!namespace) return { code: 400, type: 'error', message: 'Namespace is required' };
+            if (!deploymentAppName) return { code: 400, type: 'error', message: 'Deployment name is required' };
+            if (!isUUID(cu_id)) return { code: 400, type: 'error', message: 'Invalid customer ID, must be a valid UUID' };
+            
+            const customer = await Customer.findOne({ where: { id: cu_id } });
+            if (!customer) return { type: 'error', code: 404, message: 'Customer not found' };
+
+            const deletedProtectedAppNb = await ProtectedApp.destroy({ where: { namespace, application: deploymentAppName, cu_id }});
+            if (deletedProtectedAppNb == 0) return { type: 'error', code: 404, message: 'Protected app not found' };
+            
+            const responseEnvoy = await axios.delete(`${process.env.DEPLOYMENT_MANAGER_URL}/envoy`, { data: { namespace, cu_id, deploymentName: deploymentAppName }, validateStatus:_=>true } )
+            if (responseEnvoy.data.type !== 'success') return { ...responseEnvoy.data, message: `Something went wrong in deployment manager: ${responseEnvoy.data.message}` };
+            const responseTelemetry = await axios.delete(`${process.env.DEPLOYMENT_MANAGER_URL}/telemetry`, { data: { namespace, cu_id, deploymentName: deploymentAppName }, validateStatus:_=>true } )
+            if (responseTelemetry.data.type !== 'success') return { ...responseTelemetry.data, message: `Something went wrong in deployment manager: ${responseTelemetry.data.message}` };
+            return { type: 'success', code: 200, message: 'Application uninstalled successfully' };
+        } catch (e) {
+            throw e;
+        }
     }
 }

@@ -1,5 +1,5 @@
 const express = require('express');
-const { installEnvoyWasm, reconfigEnvoy, renewApiKey } = require('../services/envoy');
+const { installEnvoyWasm, reconfigEnvoy, renewApiKey, uninstallEnvoy } = require('../services/envoy');
 
 const router = express.Router();
 
@@ -678,6 +678,264 @@ router.put('/reconfig', async (req, res) => {
 router.post('/renew-apikey', async (req, res) => {
     try {
         const result = await renewApiKey(req.body.cu_id, req.body.namespace, req.body.deploymentName);
+        return res.status(result.code).send(result);
+    } catch (e) {
+        console.error(e);
+        return res.status(500).send({ code: 500, type: 'error', message: 'Server error' });
+    }
+});
+/**
+ * @swagger
+ * /envoy:
+ *   delete:
+ *     summary: Uninstall Envoy Wasm
+ *     tags: [Envoy]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               cu_id:
+ *                 type: string
+ *                 format: uuid
+ *                 example: 123e4567-e89b-12d3-a456-426614174001
+ *               namespace:
+ *                 type: string
+ *                 example: demo-ns
+ *               deploymentName:
+ *                 type: string
+ *                 example: myapp
+ *     responses:
+ *       200:
+ *         description: Envoy Wasm installed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   enum: [200]
+ *                   example: 200
+ *                 type:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 message:
+ *                   type: string
+ *                   example: Envoy Wasm installed successfully
+ *       404:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Customer does not exist
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: No kubeconfig provided for customer
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [404]
+ *                       example: 404
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Namespace not found
+ *       400:
+ *        description: Bad request
+ *        content:
+ *          application/json:
+ *            schema:
+ *              oneOf:
+ *                - type: object
+ *                  properties:
+ *                    code:
+ *                      type: integer
+ *                      enum: [404]
+ *                      example: 404
+ *                    type:
+ *                      type: string
+ *                      enum: [error]
+ *                      example: error
+ *                    message:
+ *                      type: string
+ *                      example: Customer ID is required
+ *                - type: object
+ *                  properties:
+ *                    code:
+ *                      type: integer
+ *                      enum: [404]
+ *                      example: 404
+ *                    type:
+ *                      type: string
+ *                      enum: [error]
+ *                      example: error
+ *                    message:
+ *                      type: string
+ *                      example: Namespace is required
+ *                - type: object
+ *                  properties:
+ *                    code:
+ *                      type: integer
+ *                      enum: [404]
+ *                      example: 404
+ *                    type:
+ *                      type: string
+ *                      enum: [error]
+ *                      example: error
+ *                    message:
+ *                      type: string
+ *                      example: Invalid customer ID, must be a valid UUID
+ *                - type: object
+ *                  properties:
+ *                    code:
+ *                      type: integer
+ *                      enum: [404]
+ *                      example: 404
+ *                    type:
+ *                      type: string
+ *                      enum: [error]
+ *                      example: error
+ *                    message:
+ *                      type: string
+ *                      example: Invalid namespace, must be a valid Kubernetes name format
+ *       500: 
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [500]
+ *                       example: 500
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: Could not connect to the cluster with provided kubeconfig
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [500]
+ *                       example: 500
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: |
+ *                         Failed to uninstall envoy: Could not delete persistent volume claim
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [500]
+ *                       example: 500
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: |
+ *                         Failed to uninstall envoy: Could not delete init job
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [500]
+ *                       example: 500
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: |
+ *                         Failed to uninstall envoy: Could not delete controlpanel service
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [500]
+ *                       example: 500
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: |
+ *                         Failed to uninstall envoy: Could not delete envoy filter
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [500]
+ *                       example: 500
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: |
+ *                         Failed to uninstall envoy: Could not patch deployment
+ *                 - type: object
+ *                   properties:
+ *                     code:
+ *                       type: integer
+ *                       enum: [500]
+ *                       example: 500
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     message:
+ *                       type: string
+ *                       example: |
+ *                         Failed to uninstall envoy: Could not delete pod
+ */
+router.delete('/', async (req, res) => {
+    try {
+        const result = await uninstallEnvoy(req.body.cu_id, req.body.namespace, req.body.deploymentName);
         return res.status(result.code).send(result);
     } catch (e) {
         console.error(e);
