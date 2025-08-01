@@ -187,7 +187,6 @@
                         input:checked + .slider {
                             background-color: #2196F3;
                             border: #2196F3 solid 1px;
-                            cursor: not-allowed;
                         }
                         input:checked + .slider:before {
                             transform: translateX(20px);
@@ -204,6 +203,9 @@
                         }
                         input:disabled + input:not(:checked) + .slider:before {
                             background-color: #bdbdbd;
+                        }
+                        .disableSwitch {
+                            cursor: not-allowed;
                         }
                     }
                     .loading-deployment {

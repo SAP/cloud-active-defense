@@ -64,30 +64,40 @@ export class SystemComponent {
   }
   async onSwitchChange(event: Event, deployment: Deployment) {
     event.preventDefault();
+    if (deployment.disableSwitch) return;
     if (deployment.loadingInstall) return;
-    if (deployment.protected) {
-      this.toastr.error('This deployment is protected and cannot be modified.', 'Error')
-      deployment.loadingInstall = false;
-      deployment.protected = true;
-      return;
-    }
-
-    deployment.protected = true;
+    deployment.disableSwitch = true
     setTimeout(() => {
       deployment.loadingInstall = true;
     }, 400);
 
-    const installApiResponse = await this.deploymentManagerService.installCADForApp(this.selectedNamespace, deployment.name)
-    if (installApiResponse.type == 'error') {
-      deployment.protected = false
-      this.toastr.error(installApiResponse.message, 'Error')
-    }
-    else {
-      this.toastr.success(installApiResponse.message, 'Success')
-      const applistResponse = await this.applistService.getAppList();
-      if (applistResponse.type == 'error') this.toastr.error(applistResponse.message, 'Error');
+    if (deployment.protected) {
+      deployment.protected = false;
+      const installApiResponse = await this.deploymentManagerService.uninstallCADForApp(this.selectedNamespace, deployment.name)
+      if (installApiResponse.type == 'error') {
+        deployment.protected = true
+        this.toastr.error(installApiResponse.message, 'Error')
+      }
+      else {
+        this.toastr.success(installApiResponse.message, 'Success')
+        const applistResponse = await this.applistService.getAppList();
+        if (applistResponse.type == 'error') this.toastr.error(applistResponse.message, 'Error');
+      }
+    } else {
+      deployment.protected = true;
+      const installApiResponse = await this.deploymentManagerService.installCADForApp(this.selectedNamespace, deployment.name)
+      if (installApiResponse.type == 'error') {
+        deployment.protected = false
+        this.toastr.error(installApiResponse.message, 'Error')
+      }
+      else {
+        this.toastr.success(installApiResponse.message, 'Success')
+        const applistResponse = await this.applistService.getAppList();
+        if (applistResponse.type == 'error') this.toastr.error(applistResponse.message, 'Error');
+      }
     }
     deployment.loadingInstall = false;
+    deployment.disableSwitch = false;
   }
 
   async fetchNamespaces() {

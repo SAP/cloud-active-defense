@@ -331,5 +331,197 @@ router.get('/deployments/:namespace', authorizationFromCu_id, async (req, res) =
         return res.status(500).send({ type: 'error', code: 500, message: 'Server error' });
     }
 });
+/**
+ * @swagger
+ * /deployment-manager/uninstall:
+ *   delete:
+ *     summary: Uninstall Cloud Active Defense from chosen application
+ *     tags: [Deployment Manager]
+ *     requestBody:
+ *       required: true
+ *       description: The name of the deployment app and the namespace
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               deploymentAppName:
+ *                 type: string
+ *                 pattern: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/
+ *                 maxLength: 63
+ *                 description: The name of the deployment app
+ *                 example: myapp
+ *               namespace:
+ *                 type: string
+ *                 pattern: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/
+ *                 maxLength: 63
+ *                 description: The namespace of the deployment app
+ *                 example: demo-ns
+ *     responses:
+ *       200:
+ *         description: Application uninstalled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 type:
+ *                   type: string
+ *                   enum: [success]
+ *                   example: success
+ *                 code:
+ *                   type: number
+ *                   enum: [200]
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Application uninstalled successfully
+ *       404:
+ *         description: Not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     code:
+ *                       type: number
+ *                       enum: [404]
+ *                       example: 404
+ *                     message:
+ *                       type: string
+ *                       example: Customer not found
+ *                 - type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     code:
+ *                       type: number
+ *                       enum: [404]
+ *                       example: 404
+ *                     message:
+ *                       type: string
+ *                       example: Protected app not found
+ *                 - type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     code:
+ *                       type: number
+ *                       enum: [404]
+ *                       example: 404
+ *                     message:
+ *                       type: string
+ *                       example: |
+ *                         Something went wrong in deployment manager: <message>
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     code:
+ *                       type: number
+ *                       enum: [400]
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: | 
+ *                         Something went wrong in deployment manager: <message>
+ *                 - type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     code:
+ *                       type: number
+ *                       enum: [400]
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: Customer ID is required
+ *                 - type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     code:
+ *                       type: number
+ *                       enum: [400]
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: Namespace is required
+ *                 - type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     code:
+ *                       type: number
+ *                       enum: [400]
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: Deployment name is required
+ *                 - type: object
+ *                   properties:
+ *                     type:
+ *                       type: string
+ *                       enum: [error]
+ *                       example: error
+ *                     code:
+ *                       type: number
+ *                       enum: [400]
+ *                       example: 400
+ *                     message:
+ *                       type: string
+ *                       example: Invalid customer ID, must be a valid UUID
+ *       500: 
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 code:
+ *                   type: integer
+ *                   enum: [500]
+ *                   example: 500
+ *                 type:
+ *                   type: string
+ *                   enum: [error]
+ *                   example: error
+ *                 message:
+ *                   type: string
+ *                   example: |
+ *                     Something went wrong in deployment manager: <message>
+ */
+router.delete('/uninstall', authorizationFromCu_id, async (req, res) => {
+    try {
+        const result = await deploymentManagerService.uninstallCADToApp(req.cu_id, req.body.deploymentAppName, req.body.namespace);
+        return res.status(result.code).send(result);
+    } catch(e) {
+        console.error(e);
+        return res.status(500).send({ type: 'error', code: 500, message: 'Server error' });
+    }
+});
 
 module.exports = router;

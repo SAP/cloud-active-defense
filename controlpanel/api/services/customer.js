@@ -76,7 +76,6 @@ module.exports = {
             if (!customer) return { type: 'error', code: 404, message: 'Customer not found' };
             if (!customer.kubeconfig) return { type: 'error', code: 400, message: 'No kubeconfig uploaded' };
 
-            console.trace(`Cleaning customer ${cu_id}...`);
             await ProtectedApp.destroy({ where: {
                 cu_id: cu_id,
                 [sequelize.Op.or]: [

@@ -9,6 +9,7 @@ export interface Deployment {
   currentReplicas: number;
   protected: boolean;
   loadingInstall: boolean;
+  disableSwitch: boolean;
 }
 
 @Injectable({
@@ -81,6 +82,15 @@ export class DeploymentManagerService {
     } catch(e: any) {
       if (e.error) return e.error;
       else return { message: "Error when cleaning cluster for app", type: 'error' };
+    }
+  }
+  async uninstallCADForApp(namespace: string, deploymentName: string): Promise<ApiResponse> {
+    try {
+      const apiResponse = await lastValueFrom(this.deploymentManagerApi.uninstallCADForApp(namespace, deploymentName));
+      return apiResponse;
+    } catch(e: any) {
+      if (e.error) return e.error;
+      else return { message: "Error when uninstalling CAD for app", type: 'error' };
     }
   }
 }

@@ -39,8 +39,17 @@ module.exports = {
                     await k8sCustom.deleteCollectionNamespacedCustomObject({ group: 'networking.istio.io', version: 'v1alpha3', namespace, plural: 'envoyfilters', labelSelector: 'app.kubernetes.io/managed-by=cloudactivedefense' });
                     const deployments = await k8sApp.listNamespacedDeployment({ namespace, labelSelector: 'protected-by=cloudactivedefense' })
                     for (const deployment of deployments.items) {
-                        await k8sApp.patchNamespacedDeployment({                            
+                        if (deployment.metadata.annotations['envoy-usedBefore'] == 'false'){
+                            await k8sApp.patchNamespacedDeployment({
+                                name: deployment.metadata.name, namespace, body: [
+                                    { op: 'replace', path: '/spec/template/metadata/labels/sidecar.istio.io~1inject', value: 'false' },
+                                ]
+                            });
+                        }
+
+                        await k8sApp.patchNamespacedDeployment({
                             name: deployment.metadata.name, namespace, body: [
+                                { op: 'remove', path: '/metadata/annotations/envoy-usedBefore' },
                                 { op: 'remove', path: '/metadata/labels/protected-by' },
                                 { op: 'remove', path: '/spec/template/metadata/labels/protected-by' },
                                 { op: 'remove', path: '/spec/template/metadata/labels/protects' },
