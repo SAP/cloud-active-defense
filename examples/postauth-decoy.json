@@ -1,0 +1,39 @@
+[
+    {
+        "decoy": {
+            "key": "role",
+            "separator": "=",
+            "value": "user"
+        },
+        "inject": {
+            "store": {
+                "inResponse": ".*",
+                "as": "cookie",
+                "whenTrue": [
+                    {
+                        "key": "SESSION",
+                        "value": ".*",
+                        "in": "cookie"
+                    }
+                ],
+                "whenFalse": [
+                    {
+                        "key": "role",
+                        "value": ".*",
+                        "in": "cookie"
+                    }
+                ]
+            }
+        },
+        "detect": {
+            "seek": {
+                "inRequest": ".*",
+                "in": "cookie"
+            },
+            "alert": {
+                "severity": "HIGH",
+                "whenModified": true
+            }
+        }
+    }
+]
