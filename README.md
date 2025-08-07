@@ -54,6 +54,16 @@ docker-compose up --build
 
 3. check that it works
 
+Access the controlpanel at `localhost`
+
+Keycloak will redirect you to its own login page, from here click register and created create a new account (or login if you already have an account)
+![Keycloak register](./assets/keycloak-register.png)
+
+Now that you are logged in keycloak should have redirected you to the controlpanel dashboard
+
+On the `Decoys`>`list` tab you have a "default" decoy to test if everything is working properly
+Check that decoy to deploy it
+
 Visit `http://localhost:8000` from a web browser. You should be granted by a 'welcome' page. Inpect the network traffic (In Firefox: `CTRL+SHIFT+I`, visit 'Network', then click on the / request), notice the presence of an HTTP Response Header saying `x-cloud-active-defense=ACTIVE`
 
 ![x-cloud-active-defense header](./assets/header.png)
@@ -62,49 +72,13 @@ Visit `http://localhost:8000` from a web browser. You should be granted by a 'we
 
 Let's add a first simple decoy. It won't be very useful but it is easy to understand.
 
-1. open file `cloud-active-defense/configmanager/cad-default.json`
+1. open controlpanel at `localhost` and go to `Decoys`>`List` tab
 
-2. replace the content with the following:
+2. import `examples/simple-decoy.json` and check deployed
 
-```
-{
-  "filters": [
-    {
-      "decoy": {
-        "key": "x-cloud-active-defense",
-        "separator": "=",
-        "value": "ACTIVE"
-      },
-      "inject": {
-        "store": {
-          "inResponse": ".*",
-          "as": "header"
-        }
-      }
-    },
-    {
-      "decoy": {
-        "key": "forbidden"
-      },
-      "detect": {
-        "seek": {
-          "inRequest": ".*",
-          "withVerb": "GET",
-          "in": "url"
-        },
-        "alert": {
-          "severity": "LOW",
-          "whenSeen": true
-        }
-      }
-    }
-  ]
-}
-```
+3. check the `Logs` tab for the following line: `read new config`
 
-3. check the console for the following line: `wasm log: read new config`
-
-4. visit `http://localhost:8000/forbidden`. This should give you an error message `Cannot GET /forbidden`. Check that an alert was sent to the console with LOW severity.
+4. visit `http://localhost:8000/forbidden`. This should give you an error message `Cannot GET /forbidden`. Check that an alert was sent to `Logs` tab with LOW severity.
 
 ![forbidden decoy alert](./assets/alert.png)
 
@@ -112,82 +86,9 @@ Let's add a first simple decoy. It won't be very useful but it is easy to unders
 
 The decoy we just added might trigger if your application is scanned by bots, but what's more interesting is to detect compromised user accounts. So let's create a decoy which will be visible only to authenticated users.
 
-1. open file `cloud-active-defense/configmanager/cad-default.json`
+1. open controlpanel at `localhost` and go to `Decoys`>`List` tab
 
-2. replace the content with the following:
-
-```
-{
-  "filters": [
-    {
-      "decoy": {
-        "key": "x-cloud-active-defense",
-        "separator": "=",
-        "value": "ACTIVE"
-      },
-      "inject": {
-        "store": {
-          "inResponse": ".*",
-          "as": "header"
-        }
-      }
-    },
-    {
-      "decoy": {
-        "key": "forbidden"
-      },
-      "detect": {
-        "seek": {
-          "inRequest": ".*",
-          "withVerb": "GET",
-          "in": "url"
-        },
-        "alert": {
-          "severity": "LOW",
-          "whenSeen": true
-        }
-      }
-    },
-    {
-      "decoy": {
-        "key": "role",
-        "separator": "=",
-        "value": "user"
-      },
-      "inject": {
-        "store": {
-          "inResponse": ".*",
-          "as": "cookie",
-          "whenTrue": [
-            {
-              "key": "SESSION",
-              "value": ".*",
-              "in": "cookie"
-            }
-          ],
-          "whenFalse": [
-            {
-              "key": "role",
-              "value": ".*",
-              "in": "cookie"
-            }
-          ]
-        }
-      },
-      "detect": {
-        "seek": {
-          "inRequest": ".*",
-          "in": "cookie"
-        },
-        "alert": {
-          "severity": "HIGH",
-          "whenModified": true
-        }
-      }
-    }     
-  ]
-}
-```
+2. import `examples/post-auth-decoy.json` and check deployed
 
 3. check the console for the following line: `wasm log: read new config`
 
@@ -196,8 +97,6 @@ The decoy we just added might trigger if your application is scanned by bots, bu
 ![injected role cookie](./assets/cookie.png)
 
 Modify manually the value of the role cookie by double-clicking its value in the developer view. Set it to 'admin', then refresh the page. Notice that an alert was sent to the console with HIGH severity. Seems that Bob is a hacker or that someone who guessed his not-so-strong password is trying to escalate privileges!
-
-(the alert shows twice as it is triggered once by the `GET /` request and once by the `GET /favicon.ico` request)
 
 ![role decoy alert](./assets/alert2.png)
 
@@ -213,7 +112,7 @@ Our approach was thus to let applications be protected by introducing a reverse-
 
 For the reverse-proxy, we chose [Envoy](https://www.envoyproxy.io/). At its heart, cloud active defense is simply a plugin for Envoy. We chose Envoy because it's open source, fast, extensible, and because it's a popular choice as a Service Mesh solution. What this means is that cloud active defense can easily be deployed as a side-car if you use a kubernetes platform such as [SAP Kyma](https://kyma-project.io/). We are doing our best to provide a working solution, but consider testing it heavily before using it productively (and please report any issues you discover!)
 
-Architecture-wise, cloud active defense is a WASM file deployed within Envoy in its own container. As WASM cannot read files from the filesystem, we instead expose the config file in its own **configmanager** service and retrieve it from Envoy via HTTP. The default config file is named **cad-default.json**, by default this is what Envoy will fetch. When deployed in Kubernetes, each service can have its own config file, this is described in its own section.
+Architecture-wise, cloud active defense is a WASM file deployed within Envoy in its own container. As WASM cannot read files from the filesystem, we instead expose the config in the **controlpanel API** service and retrieve it from Envoy via HTTP. In docker, only the default config can be used. When deployed in Kubernetes, each service can have its own config, this is described in its own section.
 
 ![Main architecture](./assets/arch.png)
 
@@ -229,11 +128,10 @@ Myapp is a demo application which can be used to test how decoys work. It is a s
 
 There is no logout mechanism. Delete the SESSION cookie to log out.
 
-## Configmanager
-A simple application which returns the decoy config upon query.
-  * `GET /:namespace/:application` : searches on disk for a file named /data/cad-\${namespace}-${application}.json, and returns its content. If not found, returns the content of cad-default.json
+## Controlpanel API
+This API will be the decoy manager for envoy, but also will store the decoys, logs in its database, manage "customer" when deployed on kubernetes and manage other configuration for differents application. It can be connected to the controlpanel frontend
 
-Envoy will send a GET request to configmanager a few times per minute and update its config accordingly. If running on docker-compose, 'namespace' and 'application' will both be empty strings, thus Envoy will always fetch the content of cad-default.json. If running on kubernetes, 'namespace' and 'application' will be properly set, allowing you to define one configuration per application per namespace.
+Envoy will send a GET request to the API a few times per minute and update its config accordingly. If running on docker-compose, 'namespace' and 'application' will both be empty strings, thus Envoy will always fetch the content of default config. If running on kubernetes, 'namespace' and 'application' will be properly set, allowing you to define one configuration per application per namespace.
 
 ## Envoy
 Envoy is an open-source reverse proxy. Upon start, it reads the envoy.yaml config file, which loads the cloud-active-defense.wasm plugin. This plugin reads the content of cad-default.json and applies it upon receiving HTTP requests from the browser and HTTP responses from myapp.
@@ -245,7 +143,7 @@ Envoy is an open-source reverse proxy. Upon start, it reads the envoy.yaml confi
 The full architecture comprises extra containers which achieve the following goals:
 
 ## Fluent-bit
-Alerts raised by Envoy are sent to its console log. By configuring 'fluentd' as a logging driver, these alerts are sent to a **fluent-bit** container. Fluent-bit can be seen as a pipe which can collect and forward data. By default, fluent-bit will display the collected data to its own console log. Now, fluent-bit can be configured to forward these logs to your favorite monitoring tool, such as Splunk, Loki or Elasticsearch. Please refer to [fluentbit.io](https://docs.fluentbit.io/manual/pipeline/outputs) for details.
+Alerts raised by Envoy are sent to its console log. By configuring 'fluentd' as a logging driver, these alerts are sent to a **fluent-bit** container. Fluent-bit can be seen as a pipe which can collect and forward data. By default, fluent-bit will display the collected data to its own console log and send it to the controlpanel API. Now, fluent-bit can be configured to forward these logs to your favorite monitoring tool, such as Splunk, Loki or Elasticsearch. Please refer to [fluentbit.io](https://docs.fluentbit.io/manual/pipeline/outputs) for details.
 
 ## Clone and Exhaust
 On top of alerting, cloud active defense can be configured to execute an automated response. One such response is to *divert* the adversary to, essentially, a honeypot.
@@ -264,12 +162,11 @@ If, upon detection of an attack, envoy detects that the request to divert is aut
 
 Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki/Detect#respond) for details.
 
-### Frontend Angular
-
+### Controlpanel Frontend
 The frontend is where you can control and manage the decoys you set and have a better view of the alerts sent by fluentbit. This controlpanel provides a way to add/modify, enable or disable a decoy and display the decoys in a list.
 
-### Api
-Server side of what you are able to see in the frontend. The api can interact with the configmanager to set the decoy config. The api is also connected to a database to store all of the decoys and logs
+### Keycloak
+Keycloak is an open-source software product to allow single sign-on with identity and access management aimed at modern applications and services. It will manage users for accessing both controlpanel frontend and API. API routes are all protected with an JWT provided and managed by keycloak avoiding broken access control and allowing anyone to read or change decoys for an application
 
 # Configuration and advanced topics
 Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki) page to learn about decoys in details, and about how to modify the source code.
@@ -295,7 +192,7 @@ If you find any bug that may be a security problem, please follow our instructio
 Features we plan to eventually release:
   * [DONE] adding a configuration specifying where to find information about the user's session. We want to use this to add session / logged in user information in the alert.
   * [DONE] show how to ingest alerts into fluentd for further processing (currently alerts are simply shown on the console)
-  * show how to deploy into SAP Kyma as an extension of the mesh service
+  * [DONE] show how to deploy into SAP Kyma as an extension of the mesh service
 
 # Code of Conduct
 
