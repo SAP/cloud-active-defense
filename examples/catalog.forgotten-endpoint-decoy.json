@@ -1,0 +1,28 @@
+{
+    "decoy": {
+        "key": "backup-2024-sdj",
+        "string": "function sendBackupRequest() {\n  const url = '/backup-2024-sdj';\n  const payload = {\n    start: 'now'\n  };\n\n  fetch(url, {\n    method: 'POST',\n    headers: {\n      'Content-Type':\n'application/json'\n    },\n    body: JSON.stringify(payload)\n  })\n  .then(response => {\n    if (!response.ok) {\n      throw new Error('Network response was not ok ' + response.statusText);\n    }\n    return response.json();\n  })\n  .then(data => {\n    console.log('Success:', data);\n  })\n  .catch(error => {\n    console.error('Error:', error);\n  });\n}"
+    },
+    "inject": {
+        "store": {
+            "inResponse": "/script.js$",
+            "withVerb": "GET",
+            "as": "body",
+            "at": {
+                "method": "line",
+                "property": "0"
+            }
+        }
+    },
+    "detect": {
+        "seek": {
+            "inRequest": ".*",
+            "withVerb": "POST",
+            "in": "url"
+        },
+        "alert": {
+            "severity": "MEDIUM",
+            "whenSeen": true
+        }
+    }
+}

@@ -1,0 +1,60 @@
+[
+    {
+        "decoy": {
+            "key": "/administrator/login",
+            "string": "User-agent: *\nDisallow: /administrator/login"
+        },
+        "inject": {
+            "store": {
+                "inResponse": "/robots.txt$",
+                "withVerb": "GET",
+                "as": "body",
+                "at": {
+                    "method": "replace",
+                    "property": "((.|\n)*)"
+                }
+            }
+        },
+        "detect": {
+            "seek": {
+                "inRequest": ".*",
+                "withVerb": "GET",
+                "in": "url"
+            },
+            "alert": {
+                "severity": "MEDIUM",
+                "whenSeen": true
+            }
+        }
+    },
+    {
+        "decoy": {
+            "key": "200"
+        },
+        "inject": {
+            "store": {
+                "inResponse": "/robots.txt$",
+                "withVerb": "GET",
+                "as": "status"
+            }
+        }
+    },
+    {
+        "decoy": {
+            "key": "content-type",
+            "separator": "=",
+            "value": "text/plain"
+        },
+        "inject": {
+            "store": {
+                "inResponse": "/robots.txt$",
+                "withVerb": "GET",
+                "as": "header",
+                "at": {
+                    "method": "replace",
+                    "property": ".*"
+                }
+            }
+        }
+    }
+]

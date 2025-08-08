@@ -1,0 +1,16 @@
+{
+    "decoy": {
+        "key": "/.git"
+    },
+    "detect": {
+        "seek": {
+            "inRequest": ".*",
+            "withVerb": "GET",
+            "in": "url"
+        },
+        "alert": {
+            "severity": "MEDIUM",
+            "whenSeen": true
+        }
+    }
+}

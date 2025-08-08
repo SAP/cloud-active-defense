@@ -1,0 +1,23 @@
+{
+    "decoy": {
+        "key": "theme",
+        "separator": "=",
+        "value": "light"
+    },
+    "inject": {
+        "store": {
+            "inResponse": ".*",
+            "as": "cookie"
+        }
+    },
+    "detect": {
+        "seek": {
+            "inRequest": ".*",
+            "in": "cookie"
+        },
+        "alert": {
+            "severity": "MEDIUM",
+            "whenModified": true
+        }
+    }
+}

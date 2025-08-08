@@ -1,0 +1,42 @@
+[
+    {
+        "decoy": {
+            "key": "x-analytics",
+            "string": "Missing header: x-analytics - denying"
+        },
+        "inject": {
+            "store": {
+                "inResponse": "^\/api(\/.*)?$",
+                "withVerb": "POST",
+                "as": "body",
+                "at": {
+                    "method": "replace",
+                    "property": "((.|\n)*)"
+                }
+            }
+        },
+        "detect": {
+            "seek": {
+                "inRequest": ".*",
+                "withVerb": "POST",
+                "in": "header"
+            },
+            "alert": {
+                "severity": "MEDIUM",
+                "whenSeen": true
+            }
+        }
+    },
+    {
+        "decoy": {
+            "key": "401"
+        },
+        "inject": {
+            "store": {
+                "inResponse": "^\/api(\/.*)?$",
+                "withVerb": "POST",
+                "as": "status"
+            }
+        }
+    }
+]
