@@ -8,6 +8,9 @@
 # cloud-active-defense
 
 Add a layer of active defense to your cloud applications.
+
+[!](https://github.com/SAP/cloud-active-defense/assets/20401195/472015658-0a4baf61-17a1-48c2-970b-75a78ed73a63)
+
 ## Table of Contents
 1. [About this project](#About-this-project)
 2. [Requirements](#requirements)
