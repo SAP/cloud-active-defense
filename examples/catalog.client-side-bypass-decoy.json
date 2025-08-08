@@ -1,0 +1,18 @@
+{
+    "decoy": {
+        "key": "username",
+        "separator": "=",
+        "dynamicValue": "[^\\%40\\s]+\\%40[^\\%40\\s]+\\.[^\\%40\\s]+"
+    },
+    "detect": {
+        "seek": {
+            "inRequest": "/login",
+            "withVerb": "POST",
+            "in": "postParam"
+        },
+        "alert": {
+            "severity": "MEDIUM",
+            "whenModified": true
+        }
+    }
+}

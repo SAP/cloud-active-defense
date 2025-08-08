@@ -1,0 +1,24 @@
+[
+  {
+  "decoy": {
+    "key": "/forbidden"
+  },
+  "detect": {
+    "seek": {
+      "inRequest": ".*",
+      "withVerb": "GET",
+      "in": "url"
+    },
+      "alert": {
+        "severity": "LOW",
+        "whenSeen": true
+      },
+        "respond": [{
+        "source": "ip",
+        "behavior": "divert",
+        "delay": "now",
+        "duration": "1m"
+      }]
+    }
+  }
+]

@@ -1,0 +1,30 @@
+{
+    "decoy": {
+        "key": "server",
+        "separator": "=",
+        "value": "PROD02",
+        "string": "<input type=\"hidden\" name=\"server\" value=\"PROD02\">\n      "
+    },
+    "inject": {
+        "store": {
+            "inResponse": "/login$",
+            "withVerb": "GET",
+            "as": "body",
+            "at": {
+                "method": "line",
+                "property": "5"
+            }
+        }
+    },
+    "detect": {
+        "seek": {
+            "inRequest": "/login$",
+            "withVerb": "POST",
+            "in": "postParam"
+        },
+        "alert": {
+            "severity": "MEDIUM",
+            "whenModified": true
+        }
+    }
+}
