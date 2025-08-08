@@ -9,6 +9,8 @@
 
 Add a layer of active defense to your cloud applications.
 
+# 5' usage demo (turn on the sound!)
+
 [!](https://github.com/SAP/cloud-active-defense/assets/20401195/472015658-0a4baf61-17a1-48c2-970b-75a78ed73a63)
 
 ## Table of Contents
