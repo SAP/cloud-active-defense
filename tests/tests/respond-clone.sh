@@ -41,7 +41,8 @@ globalconfig=$(cat <<EOF
         "key": "SESSION"
       }
     },
-    "blocklistReload": 1
+    "blocklistReload": 1,
+    "configReload": 1
   }
 }
 EOF

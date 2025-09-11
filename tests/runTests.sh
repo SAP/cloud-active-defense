@@ -34,6 +34,21 @@ export KEYCLOAK_TOKEN="$keycloak_token"
 protected_app_id=$(curl -s -H "Authorization: Bearer $KEYCLOAK_TOKEN" http://localhost:8050/protected-app | jq --raw-output '.data[0].id')
 export PROTECTEDAPP_ID="$protected_app_id"
 
+# Configure global config
+globalconfig=$(cat <<EOF
+{
+  "pa_id": "$PROTECTEDAPP_ID",
+  "config": {
+    "configReload": 1
+  }
+}
+EOF
+)
+# Send the global configuration to the API
+curl -X PUT -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "$globalconfig" http://localhost:8050/config > /dev/null
+
+sleep 5
+
 # Run all tests
 for test_script in $(find ./tests -type f -name "*.sh")
 do
