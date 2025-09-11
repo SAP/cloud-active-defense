@@ -63,6 +63,12 @@
                         (mouseleave)="onLeaveInfo()"/>
                         <p class="debug">(Debug)</p>
                     </div>
+                    <div class="form-label">
+                        <label for="inputConfigReload">How often to reload the config ?</label>
+                        <img class="info-icon" src="info.svg"
+                        (mouseenter)="onHoverInfo('configReload', 'Determine each time the proxy will reload the config from the API', 'https://github.com/SAP/cloud-active-defense/wiki/ConfigReload', $event)"
+                        (mouseleave)="onLeaveInfo()"/>
+                    </div>
                 </div>
                 <div class="form-label">
                     <label>Global actions</label>
@@ -106,6 +112,9 @@
                     </div>
                     <div class="form-input-container">
                         <input class="form-input" type="text" name="blocklistReload" id="inputBlocklistReload" formControlName="blocklistReload" appOnlyNumbers>
+                    </div>
+                    <div class="form-input-container">
+                        <input class="form-input" type="text" name="configReload" id="inputConfigReload" formControlName="configReload" appOnlyNumbers>
                     </div>
                 </div>
 
