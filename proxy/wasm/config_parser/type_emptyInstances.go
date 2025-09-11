@@ -25,7 +25,7 @@ func EmptyDecoy() DecoyType {
 }
 
 func EmptyConfigType() ConfigType {
-  return ConfigType{ EmptyAlertConfig(), "", []RespondType{}, -1 }
+  return ConfigType{ EmptyAlertConfig(), "", []RespondType{}, -1, -1 }
 }
 
 func EmptyAlertConfig() AlertConfig {

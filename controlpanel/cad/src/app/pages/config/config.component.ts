@@ -68,7 +68,8 @@ onLeaveInfo() {
       usernameKey: new FormControl(''),
       usernameValue: new FormControl(''),
       server: new FormControl(''),
-      blocklistReload: new FormControl('')
+      blocklistReload: new FormControl(''),
+      configReload: new FormControl('')
     })
   }
 
@@ -113,6 +114,9 @@ onLeaveInfo() {
     })
     this.configForm.get('blocklistReload')?.valueChanges.subscribe(newBlocklistReload => {
       if (newBlocklistReload) this.config.blocklistReload = newBlocklistReload;
+    })
+    this.configForm.get('configReload')?.valueChanges.subscribe(newConfigReload => {
+      if (newConfigReload) this.config.configReload = newConfigReload;
     })
   }
 
@@ -239,7 +243,8 @@ onLeaveInfo() {
       usernameKey: configData.alert?.username?.key ? configData.alert?.username?.key : '',
       usernameValue: configData.alert?.username?.value ? configData.alert?.username?.value : '',
       server: configData.server ? configData.server : '',
-      blocklistReload: configData.blocklistReload ? configData.blocklistReload : ''
+      blocklistReload: configData.blocklistReload ? configData.blocklistReload : '',
+      configReload: configData.configReload ? configData.configReload : ''
     });
 
     if (this.config.respond) {

@@ -4,7 +4,8 @@ export interface Config {
     alert?: AlertType,
     server?: string,
     respond?: RespondType[],
-    blocklistReload?: number
+    blocklistReload?: number,
+    configReload?: number
 }
 
 export type AlertType = {

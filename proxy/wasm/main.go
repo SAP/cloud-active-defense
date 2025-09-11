@@ -31,6 +31,8 @@ var throttlelist []config_parser.BlocklistType
 var blocked bool = false
 var blocklistTick int = 60 // 1 minute
 var blocklistLoop = 60
+var configTick int = 60 // 1 minute
+var configLoop int = 60
 
 func main() {
   proxywasm.SetVMContext(&vmContext{})
@@ -118,6 +120,9 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
     if ctx.config.Config.BlocklistReload != 0 {
       blocklistTick = ctx.config.Config.BlocklistReload
     }
+    if ctx.config.Config.ConfigReload != 0 {
+      configTick = ctx.config.Config.ConfigReload
+    }
     if (ctx.config == nil) {
       ctx.config = &emptyConf
       return
@@ -131,12 +136,17 @@ func (ctx *pluginContext) OnPluginStart(pluginConfigurationSize int) types.OnPlu
 
 func (ctx *pluginContext) OnTick() {
   //proxywasm.LogInfof("--- plugin tick, rereading config ---")
-  requestHeaders := [][2]string{
-    {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/" + ctx.conf.Namespace + "/" + ctx.conf.Deployment}, {"accept", "*/*"},
-    {"Content-Type", "application/json"}, {"Authorization", ctx.conf.EnvoyAPIKey},
-  }
-  if _, err := proxywasm.DispatchHttpCall("controlpanel-api", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
-    proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
+  if configLoop < configTick && configTick != 0 {
+    configLoop++
+  } else {
+    configLoop = 0
+    requestHeaders := [][2]string{
+      {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/" + ctx.conf.Namespace + "/" + ctx.conf.Deployment}, {"accept", "*/*"},
+      {"Content-Type", "application/json"}, {"Authorization", ctx.conf.EnvoyAPIKey},
+    }
+    if _, err := proxywasm.DispatchHttpCall("controlpanel-api", requestHeaders, nil, nil, 5000, ctx.callBackConfRequested); err != nil {
+      proxywasm.LogCriticalf("{\"type\": \"system\", \"content\": \"dispatch httpcall failed: %v\"}", err)
+    }
   }
   // Update blocklist via configmanager
   if len(updateBlocklist) != 0 || len(updateThrottleList) != 0 {
