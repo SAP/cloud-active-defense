@@ -35,7 +35,8 @@ globalconfig=$(cat <<EOF
       "delay": "now",
       "duration": "5s"
     }],
-    "blocklistReload": 1
+    "blocklistReload": 1,
+    "configReload": 1
   }
 }
 EOF
