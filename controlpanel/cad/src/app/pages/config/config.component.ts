@@ -110,7 +110,8 @@ onLeaveInfo() {
     })
 
     this.configForm.get('server')?.valueChanges.subscribe(newServer => {
-      if (newServer) this.config.server = newServer;
+      if (newServer) delete this.config.server;
+      else this.config.server = newServer;
     })
     this.configForm.get('blocklistReload')?.valueChanges.subscribe(newBlocklistReload => {
       if (!newBlocklistReload) delete this.config.blocklistReload;
@@ -164,7 +165,12 @@ onLeaveInfo() {
     }
   }
   updateSessionKey(newSessionKey: string) {
-    if (!newSessionKey) return;
+    if (!newSessionKey) {
+      if (this.config.alert?.session?.key !== undefined) {
+        delete this.config.alert.session.key;
+      }
+      return;
+    }
     if (!this.config.alert) this.config.alert = {};
     if (!this.config.alert.session) {
       this.config.alert.session = { key: newSessionKey, in: 'header'};
@@ -192,7 +198,12 @@ onLeaveInfo() {
     }
   }
   updateUsernameKey(newUsernameKey: string) {
-    if (!newUsernameKey) return;
+    if (!newUsernameKey) {
+      if (this.config.alert?.username?.key !== undefined) {
+        delete this.config.alert.username.key;
+      }
+      return;
+    }
     if (!this.config.alert) this.config.alert = {};
     if (!this.config.alert.username) {
       this.config.alert.username = { key: newUsernameKey, in: 'header', value: '' };
@@ -203,7 +214,12 @@ onLeaveInfo() {
     }
   }
   updateUsernameValue(newUsernameValue: string) {
-    if (!newUsernameValue) return;
+    if (!newUsernameValue) {
+      if (this.config.alert?.username?.value !== undefined) {
+        delete this.config.alert.username.value;
+      }
+      return;
+    }
     if (!this.config.alert) this.config.alert = {};
     if (!this.config.alert.username) {
       this.config.alert.username = { value: newUsernameValue, in: 'header' };

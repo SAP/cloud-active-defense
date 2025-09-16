@@ -14,14 +14,14 @@ export type AlertType = {
 }
 
 export type SessionType = {
-    in: InSessionType,
-    key: string
+    in?: InSessionType,
+    key?: string
 }
 
 export type UsernameType = {
     in: InUsernameType,
     key?: string,
-    value: string
+    value?: string
 }
 
 export type InSessionType = 'cookie' | 'header';
