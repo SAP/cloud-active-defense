@@ -15,7 +15,7 @@
     <div class="app-selector" (click)="showSubAppSelector = !showSubAppSelector">
         <p class="selected-app">{{ selectedApp.namespace == 'default' && selectedApp.application == 'default' ? 'Default' : 
             (selectedApp.application && selectedApp.namespace ? selectedApp.namespace + '/' + selectedApp.application : '') }}
-        <i *ngIf="!isProtectedAppEmpty(selectedApp)" class="heartbeat-light" appHeartbeatLight [protectedApp]="selectedApp"
+        <i *ngIf="!isProtectedAppEmpty(selectedApp)" class="heartbeat-light" [ngClass]="selectedApp.lightColor"
                     (mouseenter)="onHoverInfo('Last received config', 'Red: >60min\n Yellow: >15min \nGreen: <15min', '', $event)"
                     (mouseleave)="onLeaveInfo()">
         </i>
@@ -24,7 +24,7 @@
         <div class="sub-selection" *ngIf="showSubAppSelector">
             <p (click)="updateSelectedApp(defaultApp)">
                 Default
-                <i *ngIf="!applist.length && !isProtectedAppEmpty(defaultApp)" style="margin-right: 2rem;" class="heartbeat-light" appHeartbeatLight [protectedApp]="defaultApp"
+                <i *ngIf="!applist.length && !isProtectedAppEmpty(defaultApp)" style="margin-right: 2rem;" class="heartbeat-light" [ngClass]="defaultApp.lightColor"
                     (mouseenter)="onHoverInfo('Last received config', 'Red: >60min\n Yellow: >15min \nGreen: <15min', '', $event)"
                     (mouseleave)="onLeaveInfo()">
                 </i>
@@ -32,7 +32,7 @@
             <hr class="app-separator"/>
             <p *ngFor="let app of applist" (click)="updateSelectedApp(app)">
                 {{ app.namespace }}/{{ app.application }}
-                <i class="heartbeat-light" style="margin-right: 2rem;" appHeartbeatLight [protectedApp]="app"
+                <i class="heartbeat-light" style="margin-right: 2rem;" [ngClass]="app.lightColor"
                     (mouseenter)="onHoverInfo('Last received config', 'Red: >60min\n Yellow: >15min \nGreen: <15min', '', $event)"
                     (mouseleave)="onLeaveInfo()">
                 </i>

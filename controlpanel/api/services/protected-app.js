@@ -11,7 +11,12 @@ module.exports = {
     getProtectedApps: async (cu_id) => {
         try {
             const protectedApps = await ProtectedApp.findAll({ where: { cu_id }});
-            return { type: 'success', code: 200, message: 'successful operation', data: protectedApps }
+            const fifteenMinutesAgo = Date.now() - 15 * 60 * 1000; // 15 minutes ago as timestamp
+            const sixtyMinutesAgo = Date.now() - 60 * 60 * 1000; // 60 minutes ago as timestamp
+            
+            return { type: 'success', code: 200, message: 'successful operation', data: protectedApps.map(pa => {
+                return { ...pa.dataValues, lightColor: pa.dataValues.lastConfigTime < sixtyMinutesAgo ? 'red-light' : pa.dataValues.lastConfigTime < fifteenMinutesAgo ? 'yellow-light' : 'green-light' };
+            })};
         } catch (e) {
             throw e;
         }
