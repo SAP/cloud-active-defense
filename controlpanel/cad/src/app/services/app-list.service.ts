@@ -27,10 +27,11 @@ export class AppListService {
       const apiResponse = await lastValueFrom(this.applistApi.getAppList());
       if (apiResponse.type == 'success') {
         this.applist = apiResponse.data as ProtectedApp[];
-        if (!this.applist.find(app => app.id == this.globalState.selectedApp.id)) {
+        const alreadySelectedApp = this.applist.find(app => app.id == this.globalState.selectedApp.id)
+        if (!alreadySelectedApp) {
           const defaultApp = this.applist.find(app => app.namespace == 'default' && app.application == 'default');
           this.globalState.selectedApp = defaultApp || this.applist[0];
-        }
+        } else this.globalState.selectedApp = alreadySelectedApp; // Update last selectedApp with the latest data
       }
       return apiResponse;
     } catch (error) {

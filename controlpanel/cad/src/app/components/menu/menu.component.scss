@@ -37,6 +37,7 @@ $menu-icon-size: 2rem;
             height: 100%;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             padding: 0 0.5rem;
         }
         .drop-down-icon {
@@ -62,6 +63,8 @@ $menu-icon-size: 2rem;
                 overflow: hidden;
                 white-space: nowrap;
                 text-overflow: ellipsis;
+                display: flex;
+                justify-content: space-between;
                 &:hover {
                     background-color: variables.$backgroundPrimaryColor;
                 }
@@ -71,6 +74,20 @@ $menu-icon-size: 2rem;
                 border: none;
                 border-bottom: 1px solid variables.$inputBorder;
             }
+        }
+        .heartbeat-light {
+            height: 1rem;
+            width: 1rem;
+            border-radius: 999px;
+        }
+        .green-light {
+            background-color: #28a745; // Green
+        }
+        .yellow-light {
+            background-color: #ffc107; // Yellow
+        }
+        .red-light {
+            background-color: #dc3545; // Red
         }
     }
     .menu-list {

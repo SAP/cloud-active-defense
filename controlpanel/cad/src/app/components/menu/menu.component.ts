@@ -8,12 +8,13 @@ import { isProtectedAppEmpty, ProtectedApp } from '../../models/protected-app';
 import { DecoyService } from '../../services/decoy.service';
 import { isEmptyObject } from '../../utils';
 import { KeycloakService } from '../../services/keycloak.service';
+import { HeartbeatLightDirective } from '../../directives/heartbeat-light.directive';
 
 
 
 @Component({
     selector: 'app-menu',
-    imports: [CommonModule, RouterLink],
+    imports: [CommonModule, RouterLink, HeartbeatLightDirective],
     templateUrl: './menu.component.html',
     styleUrl: './menu.component.scss'
 })
@@ -23,8 +24,10 @@ export class MenuComponent implements OnInit{
 
   showSubAppSelector = false;
   applist: ProtectedApp[] = [];
-  defaultApp: ProtectedApp = { id: '', namespace: '', application: '' };
-  selectedApp: ProtectedApp = { id: '', namespace: '', application: '' };
+  defaultApp: ProtectedApp = { id: '', namespace: '', application: '', lastConfigTime: null };
+  selectedApp: ProtectedApp = { id: '', namespace: '', application: '', lastConfigTime: null };
+
+  isProtectedAppEmpty = isProtectedAppEmpty;
 
   constructor(private applistService: AppListService, private toastr: ToastrService, private globalState: GlobalStateService, private decoyService: DecoyService, private keycloakService: KeycloakService) { }
 

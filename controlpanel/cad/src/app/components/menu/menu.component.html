@@ -5,12 +5,20 @@
     </div>
     <div class="app-selector" (click)="showSubAppSelector = !showSubAppSelector">
         <p class="selected-app">{{ selectedApp.namespace == 'default' && selectedApp.application == 'default' ? 'Default' : 
-            (selectedApp.application && selectedApp.namespace ? selectedApp.namespace + '/' + selectedApp.application : '') }}</p>
+            (selectedApp.application && selectedApp.namespace ? selectedApp.namespace + '/' + selectedApp.application : '') }}
+        <i *ngIf="!isProtectedAppEmpty(selectedApp)" class="heartbeat-light" appHeartbeatLight [protectedApp]="selectedApp"></i>
+        </p>
         <img class="drop-down-icon" src="arrow_drop_down.svg" alt="">
         <div class="sub-selection" *ngIf="showSubAppSelector">
-            <p (click)="updateSelectedApp(defaultApp)">Default</p>
+            <p (click)="updateSelectedApp(defaultApp)">
+                Default
+                <i *ngIf="!applist.length && !isProtectedAppEmpty(defaultApp)" style="margin-right: 2rem;" class="heartbeat-light" appHeartbeatLight [protectedApp]="defaultApp"></i>
+            </p>
             <hr class="app-separator"/>
-            <p *ngFor="let app of applist" (click)="updateSelectedApp(app)">{{ app.namespace }}/{{ app.application }}</p>
+            <p *ngFor="let app of applist" (click)="updateSelectedApp(app)">
+                {{ app.namespace }}/{{ app.application }}
+                <i class="heartbeat-light" style="margin-right: 2rem;" appHeartbeatLight [protectedApp]="app"></i>
+            </p>
         </div>
     </div>
     <ul class="menu-list">
