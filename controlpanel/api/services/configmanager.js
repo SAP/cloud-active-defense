@@ -20,6 +20,9 @@ module.exports = {
             if (!protectedApp) return { type: 'error', code: 404, message: 'Protected app with this namespace and/or application does not exist' };
             const decoys = await Decoy.findAll({ where: { pa_id: protectedApp.id, deployed: true } });
             const config = await Config.findOne({ where: { pa_id: protectedApp.id, deployed: true } });
+
+            await ProtectedApp.update({ lastConfigTime: Date.now() }, { where: { id: protectedApp.id } });
+
             return { type: 'success', code: 200, data: { decoys: decoys.map(decoy => decoy.decoy), config: config ? config.config : {} }, message: 'Successful operation' };
         } catch(e) {
             throw e;

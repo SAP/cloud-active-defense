@@ -24,5 +24,10 @@ const ProtectedApp = sequelize.define("protectedApp", {
             key: 'id'
         },
     },
+    lastConfigTime: {
+        type: DataTypes.BIGINT,
+        allowNull: true,
+        defaultValue: Date.now()
+    }
 });
 module.exports = ProtectedApp;

@@ -113,10 +113,12 @@ onLeaveInfo() {
       if (newServer) this.config.server = newServer;
     })
     this.configForm.get('blocklistReload')?.valueChanges.subscribe(newBlocklistReload => {
-      if (newBlocklistReload) this.config.blocklistReload = newBlocklistReload;
+      if (!newBlocklistReload) delete this.config.blocklistReload;
+      else this.config.blocklistReload = parseInt(newBlocklistReload);
     })
     this.configForm.get('configReload')?.valueChanges.subscribe(newConfigReload => {
-      if (newConfigReload) this.config.configReload = newConfigReload;
+      if (!newConfigReload) delete this.config.configReload;
+      else this.config.configReload = parseInt(newConfigReload);
     })
   }
 
