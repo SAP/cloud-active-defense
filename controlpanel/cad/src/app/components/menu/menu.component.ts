@@ -9,12 +9,13 @@ import { DecoyService } from '../../services/decoy.service';
 import { isEmptyObject } from '../../utils';
 import { KeycloakService } from '../../services/keycloak.service';
 import { HeartbeatLightDirective } from '../../directives/heartbeat-light.directive';
+import { TooltipComponent } from '../tooltip/tooltip.component';
 
 
 
 @Component({
     selector: 'app-menu',
-    imports: [CommonModule, RouterLink, HeartbeatLightDirective],
+    imports: [CommonModule, RouterLink, HeartbeatLightDirective, TooltipComponent],
     templateUrl: './menu.component.html',
     styleUrl: './menu.component.scss'
 })
@@ -30,6 +31,38 @@ export class MenuComponent implements OnInit{
   isProtectedAppEmpty = isProtectedAppEmpty;
 
   constructor(private applistService: AppListService, private toastr: ToastrService, private globalState: GlobalStateService, private decoyService: DecoyService, private keycloakService: KeycloakService) { }
+
+//#region Tooltip
+  tooltipTitle = '';
+  showTooltip = false;
+  tooltipText = '';
+  tooltipLink = '';
+  topPosition: any;
+  leftPosition: any;
+  tooltipTimeout:any;
+
+  onHoverInfo(tooltipTitle?: string, tooltipText?: string, tooltipLink?: string, e?: MouseEvent) {
+    clearTimeout(this.tooltipTimeout);
+    this.showTooltip = true;
+    if (tooltipTitle) this.tooltipTitle = tooltipTitle;
+    if (tooltipText) this.tooltipText = tooltipText;
+    if (tooltipLink) this.tooltipLink = tooltipLink;
+    else this.tooltipLink = '';
+    if (e) {
+      this.topPosition = e.clientY ?? this.topPosition;
+      this.leftPosition = e.clientX ?? this.leftPosition;
+    }
+  }
+  onLeaveInfo() {
+    this.tooltipTimeout = setTimeout(() => {
+      this.showTooltip = false;
+      this.tooltipText = '';
+      this.topPosition = null;
+      this.leftPosition = null;
+    }, 100)
+  }
+//#endregion
+
 
   async ngOnInit() {
     const response = await this.applistService.getAppList();
