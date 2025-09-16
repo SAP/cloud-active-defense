@@ -1,3 +1,12 @@
+<app-tooltip [showTooltip]="showTooltip"
+[title]="tooltipTitle"
+[text]="tooltipText"
+[link]="tooltipLink"
+[topPosition]="topPosition"
+[leftPosition]="leftPosition"
+(tooltipHover)="onHoverInfo()"
+(tooltipLeave)="onLeaveInfo()">
+</app-tooltip>
 <div class="menu">
     <div class="logo-container">
         <img class="logo" src="cloud.svg" alt="cloud">
@@ -6,18 +15,27 @@
     <div class="app-selector" (click)="showSubAppSelector = !showSubAppSelector">
         <p class="selected-app">{{ selectedApp.namespace == 'default' && selectedApp.application == 'default' ? 'Default' : 
             (selectedApp.application && selectedApp.namespace ? selectedApp.namespace + '/' + selectedApp.application : '') }}
-        <i *ngIf="!isProtectedAppEmpty(selectedApp)" class="heartbeat-light" appHeartbeatLight [protectedApp]="selectedApp"></i>
+        <i *ngIf="!isProtectedAppEmpty(selectedApp)" class="heartbeat-light" appHeartbeatLight [protectedApp]="selectedApp"
+                    (mouseenter)="onHoverInfo('Last received config', 'Red: >60min\n Yellow: >15min \nGreen: <15min', '', $event)"
+                    (mouseleave)="onLeaveInfo()">
+        </i>
         </p>
         <img class="drop-down-icon" src="arrow_drop_down.svg" alt="">
         <div class="sub-selection" *ngIf="showSubAppSelector">
             <p (click)="updateSelectedApp(defaultApp)">
                 Default
-                <i *ngIf="!applist.length && !isProtectedAppEmpty(defaultApp)" style="margin-right: 2rem;" class="heartbeat-light" appHeartbeatLight [protectedApp]="defaultApp"></i>
+                <i *ngIf="!applist.length && !isProtectedAppEmpty(defaultApp)" style="margin-right: 2rem;" class="heartbeat-light" appHeartbeatLight [protectedApp]="defaultApp"
+                    (mouseenter)="onHoverInfo('Last received config', 'Red: >60min\n Yellow: >15min \nGreen: <15min', '', $event)"
+                    (mouseleave)="onLeaveInfo()">
+                </i>
             </p>
             <hr class="app-separator"/>
             <p *ngFor="let app of applist" (click)="updateSelectedApp(app)">
                 {{ app.namespace }}/{{ app.application }}
-                <i class="heartbeat-light" style="margin-right: 2rem;" appHeartbeatLight [protectedApp]="app"></i>
+                <i class="heartbeat-light" style="margin-right: 2rem;" appHeartbeatLight [protectedApp]="app"
+                    (mouseenter)="onHoverInfo('Last received config', 'Red: >60min\n Yellow: >15min \nGreen: <15min', '', $event)"
+                    (mouseleave)="onLeaveInfo()">
+                </i>
             </p>
         </div>
     </div>
