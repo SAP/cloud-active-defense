@@ -1,0 +1,25 @@
+RewriteEngine On
+
+# Remove trailing slashes for files
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} (.+)/$
+RewriteRule ^ %1 [L,R=301]
+
+# Avoid infinite loops for POST requests
+RewriteCond %{REQUEST_URI} !/post.html$
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}/post.html -f
+RewriteRule ^(.*)/?$ $1/post.html [L]
+
+# Avoid infinite loops for existing files
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Avoid infinite loops for existing directories
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Redirect to index.html if no file or directory matches
+RewriteCond %{REQUEST_URI} !/index.html$
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)/?$ $1/index.html [L]
