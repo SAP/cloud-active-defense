@@ -160,6 +160,9 @@ Think of this endpoint as a *fake facade*. From the outside it looks like your a
 
 If, upon detection of an attack, envoy detects that the request to be diverted is not authenticated, then it will forward it to the **exhaust** endpoint instead of **myapp**. The exhaust honeypot can be simply a copy of myapp's publicly reachable pages, with no business logic behind. For the demo, the exhaust app is a copy of myapp without any business logic, meaning that trying to login with valid credentials will be denied. All requests sent to **exhaust** should be considered malicious and are thus logged.
 
+#### (experimental)
+You can find in the `exhaust` directory an experimental script to clone your own website to make an exhaust. Since this is experimental it may not be perfect. A readme is provided with more explanation is the same directory
+
 ### Clone
 Think of this endpoint as a regular *honeypot*. It looks like what is inside your application, but all the content is fake and worthless. The goal of this trap is to further blur the line between what is real and what is not.
 
