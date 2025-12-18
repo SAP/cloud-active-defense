@@ -25,7 +25,7 @@ static_resources:
                   "@type": type.googleapis.com/google.protobuf.StringValue
                   value: |
                     {
-                      ***REMOVED***
+                      "ENVOY_API_KEY": "<ENVOY_API_KEY>"
                     }
           - name: envoy.filters.http.router
             typed_config:
