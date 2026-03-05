@@ -1,13 +1,17 @@
 <div class="multi-select">
-    <select class="form-input when-select" #whenSelect name="when-select" id="when-select" (change)="updateSelectedItems($event)" (blur)="touched = true" [ngClass]="{ 'invalid-input': touched && !selectedWhen.length }" [disabled]="!isEdit">
-        <option *ngFor="let item of whenItems; let i = index" [value]="i">{{ item }}</option>
-    </select>
-    <div class="when-container" #whenContainer (wheel)="onScroll($event)">
-        <div class="when-item" *ngFor="let item of selectedWhen; let i = index" [ngClass]="{ 'disable-when-item': !isEdit }">
-            <span>{{ item }}</span>
-            <button (click)="deleteWhenItem(i)" [disabled]="!isEdit">
-                <img src="close_small.svg" alt="">
-            </button>
-        </div>
-    </div>
+  <select class="form-input when-select" #whenSelect name="when-select" id="when-select" (change)="updateSelectedItems($event)" (blur)="touched = true" [ngClass]="{ 'invalid-input': touched && !selectedWhen.length }" [disabled]="!isEdit">
+    @for (item of whenItems; track item; let i = $index) {
+      <option [value]="i">{{ item }}</option>
+    }
+  </select>
+  <div class="when-container" #whenContainer (wheel)="onScroll($event)">
+    @for (item of selectedWhen; track item; let i = $index) {
+      <div class="when-item" [ngClass]="{ 'disable-when-item': !isEdit }">
+        <span>{{ item }}</span>
+        <button (click)="deleteWhenItem(i)" [disabled]="!isEdit">
+          <img src="close_small.svg" alt="">
+        </button>
+      </div>
+    }
+  </div>
 </div>

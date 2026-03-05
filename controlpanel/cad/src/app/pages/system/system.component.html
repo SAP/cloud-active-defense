@@ -1,77 +1,97 @@
 <h1>System 🛠️</h1>
 <div class="wrapper">
-    <div class="top-bar">
-        <div class="namespaces-container">
-            <label for="namespaces" class="namespace-label">Namespace</label>
-            <select name="namespaces" class="namespaces" [(ngModel)]="selectedNamespace" (change)="onNamespaceSelect()" [disabled]="namespaces.length == 0">
-                <option value="" disabled *ngIf="namespacesLoading" selected>Loading...</option>
-                <option *ngFor="let ns of namespaces" [value]="ns">{{ns}}</option>
-            </select>
-        </div>
-        <div class="buttons-container">
-            <input type="file" accept=".yaml, .yml" style="display: none;" name="kubeconfig" #fileInput>
-            <button class="outlined-btn" (click)="onKubeconfigUpload(fileInput)">
-                <div class="upload-icon"></div>
-                <p>Upload kubeconfig</p>
-            </button>
-            <button class="outlined-btn" (click)="downloadSetupScript()">
-                <div class="download-icon"></div>
-                <p>Download setup script</p>
-            </button>
-            <button class="outlined-btn clean-cluster" (click)="cleanCluster()">
-                <div class="clean-icon"></div>
-                <p>Clean cluster</p>
-            </button>
-        </div>
+  <div class="top-bar">
+    <div class="namespaces-container">
+      <label for="namespaces" class="namespace-label">Namespace</label>
+      <select name="namespaces" class="namespaces" [(ngModel)]="selectedNamespace" (change)="onNamespaceSelect()" [disabled]="namespaces.length == 0">
+        @if (namespacesLoading) {
+          <option value="" disabled selected>Loading...</option>
+        }
+        @for (ns of namespaces; track ns) {
+          <option [value]="ns">{{ns}}</option>
+        }
+      </select>
     </div>
-    <table class="list-container">
-        <thead>
-            <tr>
-                <th class="deployment-name-space">Deployment Name</th>
-                <th class="centered">Protected</th>
-                <th class="centered">Deployment Status</th>
-            </tr>
-            <tr class="tr-separator"><td class="row-separator" colspan="4"><hr class="head-separator"/></td></tr>
-        </thead>
-        <tbody>
-            <tr *ngFor="let deployment of deployments" class="deployment-row">
-                <td class="deployment-name-space">
-                    {{ deployment.name }}
-                </td>
-                <td class="centered">
-                    <div class="deployment-loading-install-icon" *ngIf="deployment.loadingInstall"></div>
-                    <label class="switch" *ngIf="!deployment.loadingInstall">
-                        <input type="checkbox" [checked]="deployment.protected" (click)="onSwitchChange($event, deployment)">
-                        <span class="slider round" [ngClass]="{'disableSwitch': deployment.disableSwitch}"></span>
-                    </label>
-                </td>
-                <td class="centered">
-                    <div class="available-status" *ngIf="deployment.maxReplicas == deployment.currentReplicas">
-                        available
-                    </div>
-                    <div class="error-status" *ngIf="deployment.maxReplicas != deployment.currentReplicas">
-                        error
-                    </div>
-                </td>
-            </tr>
-            <tr class="loading" *ngIf="deploymentsLoading && !deploymentManagerError">
-                <td colspan="3">
-                    <img class="loading-deployment" src="loading.svg" alt="loading">
-                </td>
-            </tr>
-            <tr class="empty" *ngIf="!deploymentsLoading && !deploymentManagerError && deployments.length == 0">
-                <td colspan="3">
-                    No deployments
-                </td>
-            </tr>
-            <tr *ngIf="deploymentManagerError" class="deploymentmanager-error">
-                <td colspan="3">
-                    Cannot fetch deployments/namespaces. Provided kubeconfig may be wrong.
-                </td>
-            </tr>
-            <tr class="end">
-                <td colspan="3"></td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="buttons-container">
+      <input type="file" accept=".yaml, .yml" style="display: none;" name="kubeconfig" #fileInput>
+      <button class="outlined-btn" (click)="onKubeconfigUpload(fileInput)">
+        <div class="upload-icon"></div>
+        <p>Upload kubeconfig</p>
+      </button>
+      <button class="outlined-btn" (click)="downloadSetupScript()">
+        <div class="download-icon"></div>
+        <p>Download setup script</p>
+      </button>
+      <button class="outlined-btn clean-cluster" (click)="cleanCluster()">
+        <div class="clean-icon"></div>
+        <p>Clean cluster</p>
+      </button>
+    </div>
+  </div>
+  <table class="list-container">
+    <thead>
+      <tr>
+        <th class="deployment-name-space">Deployment Name</th>
+        <th class="centered">Protected</th>
+        <th class="centered">Deployment Status</th>
+      </tr>
+      <tr class="tr-separator"><td class="row-separator" colspan="4"><hr class="head-separator"/></td></tr>
+    </thead>
+    <tbody>
+      @for (deployment of deployments; track deployment) {
+        <tr class="deployment-row">
+          <td class="deployment-name-space">
+            {{ deployment.name }}
+          </td>
+          <td class="centered">
+            @if (deployment.loadingInstall) {
+              <div class="deployment-loading-install-icon"></div>
+            }
+            @if (!deployment.loadingInstall) {
+              <label class="switch">
+                <input type="checkbox" [checked]="deployment.protected" (click)="onSwitchChange($event, deployment)">
+                <span class="slider round" [ngClass]="{'disableSwitch': deployment.disableSwitch}"></span>
+              </label>
+            }
+          </td>
+          <td class="centered">
+            @if (deployment.maxReplicas == deployment.currentReplicas) {
+              <div class="available-status">
+                available
+              </div>
+            }
+            @if (deployment.maxReplicas != deployment.currentReplicas) {
+              <div class="error-status">
+                error
+              </div>
+            }
+          </td>
+        </tr>
+      }
+      @if (deploymentsLoading && !deploymentManagerError) {
+        <tr class="loading">
+          <td colspan="3">
+            <img class="loading-deployment" src="loading.svg" alt="loading">
+          </td>
+        </tr>
+      }
+      @if (!deploymentsLoading && !deploymentManagerError && deployments.length == 0) {
+        <tr class="empty">
+          <td colspan="3">
+            No deployments
+          </td>
+        </tr>
+      }
+      @if (deploymentManagerError) {
+        <tr class="deploymentmanager-error">
+          <td colspan="3">
+            Cannot fetch deployments/namespaces. Provided kubeconfig may be wrong.
+          </td>
+        </tr>
+      }
+      <tr class="end">
+        <td colspan="3"></td>
+      </tr>
+    </tbody>
+  </table>
 </div>

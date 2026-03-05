@@ -1,41 +1,44 @@
 <div>
-    <h1>Add new decoy 🪤</h1>
-    <div class="top-bar">
-        <div class="progressbar">
-            <ng-container *ngFor="let tab of tabs; index as i">
-                <a class="step"
-                   [routerLink]="tab.path"
+  <h1>Add new decoy 🪤</h1>
+  <div class="top-bar">
+    <div class="progressbar">
+      @for (tab of tabs; track tab; let i = $index) {
+        <a class="step"
+          [routerLink]="tab.path"
                    [ngClass]="{
                      'active-step': (i <= activeIndex && isEdit) || (!isEdit && i == activeIndex) ,
                      'disabled-step': (tab.name == 'Injection' && !decoy.inject && !isEdit) ||
                                       (['Detection', 'Alert & Action'].includes(tab.name) && !decoy.detect && !isEdit)
                    }">
-                    <div class="circle">
-                        {{ i + 1 }}
-                    </div>
-                    <p>{{ tab.name }}</p>
-                </a>
-                <div class="step-separator" 
-                     *ngIf="i < tabs.length - 1" 
+          <div class="circle">
+            {{ i + 1 }}
+          </div>
+          <p>{{ tab.name }}</p>
+        </a>
+        @if (i < tabs.length - 1) {
+          <div class="step-separator"
                      [ngClass]="{ 
                         'active-separator': (i < activeIndex && isEdit) ||
                         (!isEdit && tab.name == 'Alert & Action') ||
                         (!isEdit && (tab.name == 'Alert & Action' || tab.name == 'Detection') && decoy.detect ) ||
                         (!isEdit && tab.name == 'Injection' && decoy.detect && decoy.inject)
                         }">
-                    <hr/>
-                </div>
-            </ng-container>
-        </div>
-        <div class="edit" *ngIf="decoyId">
-            <label class="switch">
-                <input type="checkbox" (change)="updateEditStatus()" [ngModel]="isEdit">
-                <span class="slider round"></span>
-            </label>
-            <p>Edit</p>
-        </div>
+            <hr/>
+          </div>
+        }
+      }
     </div>
-    <hr class="form-separator"/>
+    @if (decoyId) {
+      <div class="edit">
+        <label class="switch">
+          <input type="checkbox" (change)="updateEditStatus()" [ngModel]="isEdit">
+          <span class="slider round"></span>
+        </label>
+        <p>Edit</p>
+      </div>
+    }
+  </div>
+  <hr class="form-separator"/>
 </div>
 
 <router-outlet></router-outlet>

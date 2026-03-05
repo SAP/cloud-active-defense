@@ -9,7 +9,7 @@ export class OnlyValidRespondPropertyDirective {
 
   constructor(private el: ElementRef, private control: NgControl) {}
 
-  @HostListener('input', ['$event']) onInputChange(event: InputEvent) {
+  @HostListener('input', ['$event']) onInputChange(event: Event) {
     const input = this.el.nativeElement;
     const initialValue = input.value;
     let value: string = initialValue.replace(/[^0-9-]/g, '');

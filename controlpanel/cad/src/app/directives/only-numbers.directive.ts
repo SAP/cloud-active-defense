@@ -9,7 +9,7 @@ export class OnlyNumbersDirective {
 
   constructor(private el: ElementRef, private control: NgControl) {}
 
-  @HostListener('input', ['$event']) onInputChange(event: KeyboardEvent) {
+  @HostListener('input', ['$event']) onInputChange(event: Event) {
     const input = this.el.nativeElement;
     const initialValue = input.value;
     input.value = initialValue.replace(/[^0-9]*/g, '');
