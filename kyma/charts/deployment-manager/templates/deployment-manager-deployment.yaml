@@ -16,6 +16,15 @@ spec:
     spec:
       initContainers:
       - name: wait-for-db
+        image: postgres:16-alpine
+        command: ['sh', '-c', 'until pg_isready -h controlpanel-db-service -p 5432 -U $(POSTGRES_USER); do echo waiting for db; sleep 2; done']
+        env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                name: controlpanel-db-secrets
+                key: POSTGRES_USER
+      - name: wait-for-api
         image: busybox
         command: ['sh', '-c', 'until nc -z -v controlpanel-api-service 80; do echo waiting for db; sleep 2; done']
       containers:
