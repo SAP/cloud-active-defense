@@ -14,6 +14,7 @@ spec:
     metadata:
       labels:
         app: myapp
+        sidecar.istio.io/inject: 'true'
     spec:
       containers:
         - name: myapp

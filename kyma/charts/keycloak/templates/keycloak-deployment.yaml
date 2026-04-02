@@ -13,6 +13,9 @@ spec:
     metadata:
       labels:
         app: keycloak
+        sidecar.istio.io/inject: 'true'
+      annotations:
+        traffic.sidecar.istio.io/excludeInboundPorts: "9000"
     spec:
       initContainers:
       - name: wait-for-db

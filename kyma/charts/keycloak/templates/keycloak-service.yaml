@@ -16,7 +16,7 @@ spec:
       port: 80
       protocol: TCP
       targetPort: 8080
-    - name: health
+    - name: tcp-health
       port: 9000
       protocol: TCP
       targetPort: 9000

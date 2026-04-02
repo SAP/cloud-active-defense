@@ -618,32 +618,48 @@ app.listen(8050, async () => {
             }
         }
 
-        setInterval(async () => {
-            ApiKey.update({ key: generateRandomString(65), expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { permissions: ["keycloak"], expirationDate: { [Sequelize.Op.lte]: new Date() }}});
-            const customersWithExpiredKeys = await Customer.getCustomersWithExpiredApiKeys();
-            for (const customer of customersWithExpiredKeys)
-                for (const app of customer.protectedApps)
-                    for (const apiKey of app.apiKeys) {
-                        if (process.env.DEPLOYMENT_MANAGER_URL) {
-                            if (apiKey.permissions.includes("configmanager")) {
-                                try {
-                                    const envoyApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/envoy/renew-apikey`, { cu_id: customer.id, namespace: app.namespace, deploymentName: app.application });
-                                    if (envoyApiKeyResponse.status === 200) ApiKey.update({ key: envoyApiKeyResponse.data.data, expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }});
-                                } catch (e) {
-                                    console.error("Error when renewing envoy API key:\n", e);
+        const MAX_TIMEOUT_MS = 2147483647;
+        const safeTimeout = (callback, delay) => {
+            if (delay > MAX_TIMEOUT_MS) {
+                setTimeout(() => safeTimeout(callback, delay - MAX_TIMEOUT_MS), MAX_TIMEOUT_MS);
+            } else {
+                setTimeout(callback, delay);
+            }
+        };
+        const scheduleMonthlyRotation = () => {
+            const now = new Date();
+            const next = new Date(now);
+            next.setMonth(next.getMonth() + 1);
+            const delay = next.getTime() - now.getTime();
+            safeTimeout(async () => {
+                ApiKey.update({ key: generateRandomString(65), expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { permissions: ["keycloak"], expirationDate: { [Sequelize.Op.lte]: new Date() }}});
+                const customersWithExpiredKeys = await Customer.getCustomersWithExpiredApiKeys();
+                for (const customer of customersWithExpiredKeys)
+                    for (const app of customer.protectedApps)
+                        for (const apiKey of app.apiKeys) {
+                            if (process.env.DEPLOYMENT_MANAGER_URL) {
+                                if (apiKey.permissions.includes("configmanager")) {
+                                    try {
+                                        const envoyApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/envoy/renew-apikey`, { cu_id: customer.id, namespace: app.namespace, deploymentName: app.application });
+                                        if (envoyApiKeyResponse.status === 200) ApiKey.update({ key: envoyApiKeyResponse.data.data, expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }});
+                                    } catch (e) {
+                                        console.error("Error when renewing envoy API key:\n", e);
+                                    }
                                 }
-                            }
-                            if (apiKey.permissions.includes("fluentbit")) {
-                                try {
-                                    const telemetryApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/telemetry/renew-apikey`, { cu_id: customer.id, namespace: app.namespace, deploymentName: app.application });
-                                    if (telemetryApiKeyResponse.status === 200) ApiKey.update({ key: telemetryApiKeyResponse.data.data, expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }});
-                                } catch (e) {
-                                    console.error("Error when renewing telemetry API key:\n", e);
+                                if (apiKey.permissions.includes("fluentbit")) {
+                                    try {
+                                        const telemetryApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/telemetry/renew-apikey`, { cu_id: customer.id, namespace: app.namespace, deploymentName: app.application });
+                                        if (telemetryApiKeyResponse.status === 200) ApiKey.update({ key: telemetryApiKeyResponse.data.data, expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }});
+                                    } catch (e) {
+                                        console.error("Error when renewing telemetry API key:\n", e);
+                                    }
                                 }
-                            }
-                        } else ApiKey.update({ key: generateRandomString(65), expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }, returning: true });
-                    }
-        }, 30 * 24 * 60 * 60 * 1000); // 1 month
+                            } else ApiKey.update({ key: generateRandomString(65), expirationDate: new Date(new Date().setFullYear(new Date().getFullYear() + 1)) }, { where: { id: apiKey.id }, returning: true });
+                        }
+                scheduleMonthlyRotation();
+            }, delay);
+        };
+        scheduleMonthlyRotation();
     } catch(e) {
         console.error("Error when starting server:\n", e);
     }

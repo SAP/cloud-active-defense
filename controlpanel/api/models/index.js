@@ -9,11 +9,29 @@ const Customer = require("./Customer");
 
 let dbInitialized = false;
 
+async function waitForDatabase(maxAttempts = 10, delayMs = 5000) {
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await sequelize.authenticate();
+      return;
+    } catch (error) {
+      if (attempt === maxAttempts) {
+        console.error(`[startup][db] Could not reach database after ${maxAttempts} attempts`, { message: error.message });
+        throw error;
+      }
+      console.warn(`[startup][db] Database not ready (attempt ${attempt}/${maxAttempts}), retrying in ${delayMs}ms... (${error.message})`);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+}
+
 async function initializeDatabase() {
-  await sequelize.sync();
 
   try {
-    await sequelize.authenticate();
+    await waitForDatabase();
+
+    await sequelize.sync();
+
     const userResult = await sequelize.query(`
       SELECT rolname
       FROM pg_catalog.pg_roles

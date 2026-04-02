@@ -13,6 +13,7 @@ spec:
     metadata:
       labels:
         app: controlpanel-api
+        sidecar.istio.io/inject: 'true'
     spec:
       initContainers:
       - name: wait-for-db
