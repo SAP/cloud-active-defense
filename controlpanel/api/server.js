@@ -599,14 +599,16 @@ app.listen(8050, async () => {
         await initializeDatabase();
 
         if (process.env.KEYCLOAK_API_KEY && !process.env.DEPLOYMENT_MANAGER_URL) {
-            ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: process.env.KEYCLOAK_API_KEY, }});
+            const dbApiKeyReturn = await ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: process.env.KEYCLOAK_API_KEY, }});
+            if (dbApiKeyReturn[1]) console.log("Keycloak API key created successfully.");
         } else {
             for (let i = 0; i < 5; i++) {
                 await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for 3 second before retrying
                 try {
                     const keycloakApiKeyResponse = await axios.post(`${process.env.DEPLOYMENT_MANAGER_URL}/keycloak/apikey`);
                     if (keycloakApiKeyResponse.status === 200) {
-                        ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: keycloakApiKeyResponse.data.data }});
+                        const dbApiKeyReturn = await ApiKey.findOrCreate({ where: { permissions: ["keycloak"] }, defaults: { key: keycloakApiKeyResponse.data.data }});
+                        if (dbApiKeyReturn[1]) console.log("Keycloak API key created successfully.");
                         break;
                     } else {
                         console.error("Failed to create Keycloak API key, please check your deployment manager URL and ensure it is running.");

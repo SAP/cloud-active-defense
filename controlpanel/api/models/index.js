@@ -45,6 +45,7 @@ async function initializeDatabase() {
         GRANT CONNECT ON DATABASE cad TO deployment_manager;
         GRANT SELECT ON TABLE customers TO deployment_manager;
       `, { replacements: { password }});
+      console.log("Database user 'deployment_manager' created successfully.");
     }
     dbInitialized = true;
     console.log("Database connected successfully.");
