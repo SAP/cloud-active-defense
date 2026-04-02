@@ -1,4 +1,4 @@
-apiVersion: gateway.kyma-project.io/v1beta1
+apiVersion: gateway.kyma-project.io/v2
 kind: APIRule
 metadata:
   name: myapp-apirule
@@ -6,14 +6,13 @@ metadata:
   labels:
     app: myapp
 spec:
-  host: myapp
+  hosts: 
+    - myapp
   service:
     name: myapp-service
     port: 80
-  gateway: kyma-gateway.kyma-system.svc.cluster.local
+  gateway: kyma-system/kyma-gateway
   rules:
-    - path: /.*
+    - path: /*
       methods: ["GET","POST"]
-      accessStrategies:
-        - handler: allow
-      mutators: []
+      noAuth: true

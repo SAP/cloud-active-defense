@@ -1,4 +1,4 @@
-apiVersion: gateway.kyma-project.io/v1beta1
+apiVersion: gateway.kyma-project.io/v2
 kind: APIRule
 metadata:
   name: controlpanel-front-apirule
@@ -6,14 +6,13 @@ metadata:
   labels:
     app: controlpanel-front
 spec:
-  host: controlpanel-front
+  hosts: 
+    - controlpanel-front
   service:
     name: controlpanel-front-service
     port: 80
   gateway: kyma-system/kyma-gateway
   rules:
-    - path: /.*
+    - path: /*
       methods: ["GET"]
-      accessStrategies:
-        - handler: allow
-      mutators: []
+      noAuth: true

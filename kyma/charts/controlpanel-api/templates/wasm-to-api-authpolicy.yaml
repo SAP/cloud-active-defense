@@ -1,0 +1,18 @@
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: wasm-to-controlpanel-api
+  namespace: {{ .Values.global.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: controlpanel-api
+  rules:
+    - from:
+        - source:
+            principals:
+              - "*"
+      to:
+        - operation:
+            methods: ["GET", "POST"]
+            paths: ["/configmanager/*"]

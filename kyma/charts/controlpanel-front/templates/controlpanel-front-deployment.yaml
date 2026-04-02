@@ -13,11 +13,14 @@ spec:
     metadata:
       labels:
         app: controlpanel-front
+        sidecar.istio.io/inject: 'true'
+      annotations:
+        traffic.sidecar.istio.io/excludeOutboundPorts: "9000"
     spec:
       initContainers:
       - name: wait-for-keycloak
         image: busybox
-        command: ['sh', '-c', 'until wget keycloak-service:9000; do echo waiting for keycloak; sleep 8; done']
+        command: ['sh', '-c', 'until wget -q -O /dev/null keycloak-service:9000/health/ready 2>/dev/null; do echo waiting for keycloak; sleep 8; done']
       containers:
         - name: controlpanel-front
           image: {{ .Values.image }}
