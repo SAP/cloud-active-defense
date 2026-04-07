@@ -19,7 +19,7 @@ module.exports = {
             }
             
             const apiKey = generateRandomString(65);
-            const patchError = await k8sCore.patchNamespacedSecret({name: "keycloak-secrets", namespace: 'controlpanel', body: [{ op: 'add', path: '/data/KEYCLOAK_API_KEY', value: encodeBase64(apiKey)}]})
+            const patchError = await k8sCore.patchNamespacedSecret({name: "keycloak-secrets", namespace: process.env.POD_NAMESPACE, body: [{ op: 'add', path: '/data/KEYCLOAK_API_KEY', value: encodeBase64(apiKey)}]})
             .catch(()=>({ code: 500, type: 'error', message: 'Failed to create API key for keycloak: Could not patch keycloak secrets'}));
             if (patchError.type == 'error') return patchError;
             return { code: 200, type: 'success', message: 'Keylcoak API key created successfully', data: apiKey };

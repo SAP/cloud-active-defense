@@ -34,6 +34,10 @@ spec:
           ports:
           - containerPort: 3000
           env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: DB_PORT
               value: {{ .Values.global.db_port | quote }}
             - name: DB_HOST
