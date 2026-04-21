@@ -44,7 +44,7 @@ module.exports = {
                 .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
             if (initJob.error && initJob.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create init job' };
 
-            const controlpanelService = await k8sCore.createNamespacedService({ namespace, body: { metadata: { name: 'controlpanel-api-service', labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { type: 'ExternalName', externalName: 'controlpanel-api-service.controlpanel.svc.cluster.local', ports: [{ port: 80 }] } } })
+            const controlpanelService = await k8sCore.createNamespacedService({ namespace, body: { metadata: { name: 'controlpanel-api-service', labels: { 'app.kubernetes.io/managed-by': 'cloudactivedefense' } }, spec: { type: 'ExternalName', externalName: `controlpanel-api-service.${process.env.POD_NAMESPACE}.svc.cluster.local`, ports: [{ port: 80 }] } } })
                 .then(controlpanelService => controlpanelService)
                 .catch(e => ({ error: true, reason: JSON.parse(e.body).reason }));
             if (controlpanelService.error && controlpanelService.reason != 'AlreadyExists') return { code: 500, type: 'error', message: 'Failed to install wasm: Could not create controlpanel service' };
