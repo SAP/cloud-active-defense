@@ -67,7 +67,7 @@ tempfile=$(bash ./uuidgen.sh)
 curl -v -H "x-cloud-active-defense: ACTIVE" --cookie SESSION=c32272b9-99d8-4687-b57e-a606952ae870 -s http://localhost:8000/ &>/dev/null
 
 # Wait a little for the delay option
-sleep 7
+sleep 6
 # Do relevant action(s)
 curl -v http://localhost:8000/ >$tempfile 2>&1
 
