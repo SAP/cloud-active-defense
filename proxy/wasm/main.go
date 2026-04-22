@@ -32,7 +32,7 @@ var blocked bool = false
 var blocklistTick int = 60 // 1 minute
 var blocklistLoop = 60
 var configTick int = 60 // 1 minute
-var configLoop int = 60
+var configLoop int = 50
 
 func main() {
   proxywasm.SetVMContext(&vmContext{})
