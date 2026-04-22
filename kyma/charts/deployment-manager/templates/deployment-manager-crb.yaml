@@ -5,7 +5,7 @@ metadata:
 subjects:
   - kind: ServiceAccount
     name: deployment-manager-sa
-    namespace: controlpanel
+    namespace: {{ .Values.global.namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
