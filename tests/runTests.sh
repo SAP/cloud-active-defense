@@ -47,7 +47,7 @@ EOF
 # Send the global configuration to the API
 curl -X PUT -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "$globalconfig" http://localhost:8050/config > /dev/null
 
-sleep 5
+sleep 10
 
 # Run all tests
 for test_script in $(find ./tests -type f -name "*.sh")
