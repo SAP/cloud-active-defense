@@ -45,7 +45,7 @@ globalconfig=$(cat <<EOF
     "respond": [{
       "source": "ip, userAgent",
       "behavior": "divert",
-      "duration": "forever",
+      "duration": "5s",
       "delay": "now"
     }],
     "blocklistReload": 1,
@@ -95,5 +95,5 @@ echo "Execution time: $execution_time seconds"
 # Cleanup
 rm $tempfile
 curl -X DELETE -s -H "Authorization: Bearer $KEYCLOAK_TOKEN" http://localhost:8050/decoy/$decoy_id > /dev/null
-curl -X PUT -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "{\"pa_id\": \"$PROTECTEDAPP_ID\", \"config\": {}" http://localhost:8050/config > /dev/null
+curl -X PUT -s -H "Content-Type: application/json" -H "Authorization: Bearer $KEYCLOAK_TOKEN" -d "{\"pa_id\": \"$PROTECTEDAPP_ID\", \"config\": {}}" http://localhost:8050/config > /dev/null
 
