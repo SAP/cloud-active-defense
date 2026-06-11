@@ -10,6 +10,9 @@ static_resources:
         typed_config:
           "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
           stat_prefix: ingress_http
+          use_remote_address: true
+          xff_num_trusted_hops: 0
+          skip_xff_append: false
           http_filters:
           - name: envoy.filters.http.wasm
             typed_config:
@@ -69,7 +72,7 @@ static_resources:
             address:
               socket_address:
                 address: myapp
-                port_value: 3000
+                port_value: 80
   - name: controlpanel-api
     type: strict_dns
     lb_policy: round_robin
