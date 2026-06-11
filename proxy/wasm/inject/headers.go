@@ -163,6 +163,10 @@ func getCookies(cookieStr string) map[string]string {
       cookieSubStr = strings.TrimSpace(cookieSubStr)
 			cookie := strings.Split(cookieSubStr, "=")
       //cookie[0] = strings.TrimSpace(cookie[0])
+      
+			if len(cookie) < 2 {
+				continue
+			}
 
 			cookies[cookie[0]] = cookie[1]
 		}
