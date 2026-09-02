@@ -156,9 +156,16 @@ func (d *detectBody) detectDecoyInRequest() (error, *alert.AlertParam) {
       alertInfos["injected"] = injected
       // FindInjectedValue only matches when the body satisfies the *expected* pattern.
       // For WhenModified the submitted value by definition does not match, so injected
-      // is always empty. Fall back to extracting whatever actually follows key+separator.
+      // is always empty. Fall back to extracting whatever actually follows the key in the
+      // body. The regex is built from the bare key name (stripping surrounding quotes if
+      // present) and handles both compact JSON ("key":"val") and pretty-printed JSON
+      // ("key": "val") so it works regardless of how the HTTP client serialises JSON.
       if injected == "" && keyMatches {
-        rEActual, compileErr := regexp.Compile(regexp.QuoteMeta(key+separator) + `([^"&]*)`)
+        rawKey := key
+        if len(rawKey) >= 2 && rawKey[0] == '"' && rawKey[len(rawKey)-1] == '"' {
+          rawKey = rawKey[1 : len(rawKey)-1]
+        }
+        rEActual, compileErr := regexp.Compile(`"` + regexp.QuoteMeta(rawKey) + `"\s*:\s*"([^"]*)`)
         if compileErr == nil {
           if m := rEActual.FindStringSubmatch(d.body); len(m) > 1 {
             alertInfos["injected"] = m[1]
