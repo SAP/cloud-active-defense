@@ -154,6 +154,17 @@ func (d *detectBody) detectDecoyInRequest() (error, *alert.AlertParam) {
         fmt.Errorf("%v", err)
       }
       alertInfos["injected"] = injected
+      // FindInjectedValue only matches when the body satisfies the *expected* pattern.
+      // For WhenModified the submitted value by definition does not match, so injected
+      // is always empty. Fall back to extracting whatever actually follows key+separator.
+      if injected == "" && keyMatches {
+        rEActual, compileErr := regexp.Compile(regexp.QuoteMeta(key+separator) + `([^"&]*)`)
+        if compileErr == nil {
+          if m := rEActual.FindStringSubmatch(d.body); len(m) > 1 {
+            alertInfos["injected"] = m[1]
+          }
+        }
+      }
     }
 
     sendAlert := false
