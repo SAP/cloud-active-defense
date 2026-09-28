@@ -1,0 +1,43 @@
+# ── Planning / scratch work ────────────────────────────────────────────────────
+temp/
+
+# ── Test runtime state ─────────────────────────────────────────────────────────
+# Written by each test script before running; not source-controlled
+tests/test-decoys.json
+# Cloned by tests/setup-neowriter.sh
+tests/neowriter/
+
+# ── Secrets / environment files ────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Node.js ────────────────────────────────────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ── Angular build output ───────────────────────────────────────────────────────
+controlpanel/cad/dist/
+
+# ── Go / TinyGo build artifacts ───────────────────────────────────────────────
+# The compiled WASM is committed so users don't need TinyGo locally.
+# Uncomment the next line if you want to force a local rebuild instead:
+# proxy/wasm/cloud-active-defense.wasm
+
+# ── Java / Maven (Keycloak event listener) ─────────────────────────────────────
+keycloak/demo-event/target/
+
+# ── Python ─────────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ── OS / editor noise ─────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/

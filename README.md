@@ -14,16 +14,19 @@ Add a layer of active defense to your cloud applications.
 [!](https://github.com/SAP/cloud-active-defense/assets/20401195/472015658-0a4baf61-17a1-48c2-970b-75a78ed73a63)
 
 ## Table of Contents
-1. [About this project](#About-this-project)
+1. [About this project](#about-this-project)
 2. [Requirements](#requirements)
-3. [Quickstart](#quickstart)
-4. [Architecture and Philosophy](#Architecture-and-Philosophy)
-5. [Configuration and advanced topics](#Configuration-and-advanced-topics)
-6. [Support, Feedback, Contributing](#support-feedback-contributing)
-7. [Security / Disclosure](#security--disclosure)
-8. [On the TODO list](#on-the-todo-list)
-9. [Code of Conduct](#Code-of-Conduct)
-10. [Licensing](#Licensing)
+3. [Deployment](#deployment)
+   - [Option 1 — Kyma (production / SAP BTP)](#option-1--kyma-production--sap-btp)
+   - [Option 2 — Full local (all features)](#option-2--full-local-all-features)
+   - [Option 3 — Minimal local (decoys + console alerts)](#option-3--minimal-local-decoys--console-alerts)
+4. [Developer Guide](#developer-guide)
+5. [Architecture and Philosophy](#architecture-and-philosophy)
+6. [Configuration and advanced topics](#configuration-and-advanced-topics)
+7. [Support, Feedback, Contributing](#support-feedback-contributing)
+8. [Security / Disclosure](#security--disclosure)
+9. [Code of Conduct](#code-of-conduct)
+10. [Licensing](#licensing)
 
 # About this project
 Cloud active defense lets you deploy decoys right into your cloud applications, putting adversaries into a dilemma: to hack or not to hack?
@@ -34,173 +37,243 @@ You win in either case.
 
 # Requirements
 
-- [Docker 🐳](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/) (you can do without, but this will make your life easier)
+- [Docker](https://docs.docker.com/get-docker/)
+- [Docker Compose v2](https://docs.docker.com/compose/install/) (`docker compose`, not `docker-compose`)
 
+# Deployment
 
-## Optional requirements
-If you want to rebuild the plugin, you'll need these:
-- [Go 1.19+](https://go.dev/doc/install)
-- [TinyGo](https://tinygo.org/getting-started/install/)
+Cloud active defense can be deployed in three ways. Choose the one that fits your context:
 
+| | Kyma | Full local | Minimal local |
+|---|---|---|---|
+| **Use case** | Production / SAP BTP | Full feature testing | Quick decoy testing |
+| **Keycloak / UI** | yes | yes | no |
+| **Alert storage** | Kyma Telemetry | FluentBit → DB | `docker compose logs` |
+| **Active response** | yes (clone/exhaust) | yes | no |
+| **Requirements** | Kyma cluster + Helm | Docker only | Docker only |
 
-# Quickstart
+---
 
-1. clone the repo
+## Option 1 — Kyma (production / SAP BTP)
 
-`git clone https://github.com/SAP/cloud-active-defense.git`
+The production deployment uses Helm to install cloud-active-defense as a sidecar service mesh on a SAP Kyma cluster. The Deployment Manager auto-generates API keys, attaches Envoy to each protected workload, and wires up the Kyma Telemetry module for log shipping.
 
-2. start in demo mode
+See **[kyma/README.md](kyma/README.md)** for step-by-step instructions.
 
-```
+---
+
+## Option 2 — Full local (all features)
+
+Runs all components locally: Envoy/WASM plugin, Controlpanel API + frontend, Keycloak, Postgres, FluentBit, clone and exhaust honeypots. Use this to explore the full feature set including the management UI and active-response diversion.
+
+### Start
+
+```sh
+git clone https://github.com/SAP/cloud-active-defense.git
 cd cloud-active-defense
-docker-compose up --build
+docker compose up --build
 ```
 
-3. check that it works
+First startup takes a few minutes while Keycloak initialises.
 
-Access the controlpanel at `localhost`
+### Verify it works
 
-Keycloak will redirect you to its own login page, from here click register and created create a new account (or login if you already have an account)
-![Keycloak register](./assets/keycloak-register.png)
+1. Open the controlpanel at `http://localhost`
 
-Now that you are logged in keycloak should have redirected you to the controlpanel dashboard
+   Keycloak will redirect you to its login page — click **Register** and create an account.
 
-On the `Decoys`>`list` tab you have a "default" decoy to test if everything is working properly
-Check that decoy to deploy it
+   ![Keycloak register](./assets/keycloak-register.png)
 
-Visit `http://localhost:8000` from a web browser. You should be granted by a 'welcome' page. Inpect the network traffic (In Firefox: `CTRL+SHIFT+I`, visit 'Network', then click on the / request), notice the presence of an HTTP Response Header saying `x-cloud-active-defense=ACTIVE`
+2. On the **Decoys › List** tab, check the "default" decoy to deploy it.
 
-![x-cloud-active-defense header](./assets/header.png)
+3. Visit `http://localhost:8000`. Inspect the response headers (Firefox: `Ctrl+Shift+I` → Network → click the `/` request) and confirm the presence of:
 
-## Add a decoy
+   ```
+   x-cloud-active-defense: ACTIVE
+   ```
 
-Let's add a first simple decoy. It won't be very useful but it is easy to understand.
+   ![x-cloud-active-defense header](./assets/header.png)
 
-1. open controlpanel at `localhost` and go to `Decoys`>`List` tab
+### Add a simple decoy
 
-2. import `examples/simple-decoy.json` and check deployed
+1. In the controlpanel go to **Decoys › List**.
+2. Import `examples/simple-decoy.json` and enable it.
+3. Check the **Logs** tab for `read new config`.
+4. Visit `http://localhost:8000/forbidden`. A LOW-severity alert should appear in the **Logs** tab.
 
-3. check the `Logs` tab for the following line: `read new config`
+   ![forbidden decoy alert](./assets/alert.png)
 
-4. visit `http://localhost:8000/forbidden`. This should give you an error message `Cannot GET /forbidden`. Check that an alert was sent to `Logs` tab with LOW severity.
+### Add a post-authentication decoy
 
-![forbidden decoy alert](./assets/alert.png)
+Post-authentication decoys detect compromised user accounts — they are visible only after login.
 
-## Add a post-authentication decoy
+1. Import `examples/post-auth-decoy.json` and enable it.
+2. Visit `http://localhost:8000/login` and log in as **bob@myapp.com / bob**.
+3. Open browser DevTools → Storage → Cookies. Notice that a `role=user` cookie has been injected.
 
-The decoy we just added might trigger if your application is scanned by bots, but what's more interesting is to detect compromised user accounts. So let's create a decoy which will be visible only to authenticated users.
+   ![injected role cookie](./assets/cookie.png)
 
-1. open controlpanel at `localhost` and go to `Decoys`>`List` tab
+4. Double-click the cookie value and change it to `admin`, then refresh the page. A HIGH-severity alert fires — someone is trying to escalate privileges.
 
-2. import `examples/post-auth-decoy.json` and check deployed
+   ![role decoy alert](./assets/alert2.png)
 
-3. check the console for the following line: `wasm log: read new config`
+---
 
-4. visit `http://localhost:8000/login`. Login as **bob@myapp.com/bob**. Press `CTRL-SHIFT-I` to open the developer tools and navigate to the 'storage' tab. Notice how, upon login, a 'role=user' cookie was injected into your cookie jar.
+## Option 3 — Minimal local (decoys + console alerts)
 
-![injected role cookie](./assets/cookie.png)
+Runs only three containers: your application, the Envoy/WASM proxy, and a lightweight Python stub that serves the decoy config. No Keycloak, no database, no frontend. Alerts appear in the Envoy container log.
 
-Modify manually the value of the role cookie by double-clicking its value in the developer view. Set it to 'admin', then refresh the page. Notice that an alert was sent to the console with HIGH severity. Seems that Bob is a hacker or that someone who guessed his not-so-strong password is trying to escalate privileges!
+This is the fastest way to try decoys against any Docker-based app, or to run the automated test suite.
 
-![role decoy alert](./assets/alert2.png)
+### Start
+
+```sh
+docker compose -f docker-compose.minimal.yaml up --build
+```
+
+Your app is proxied at `http://localhost:8000`.
+
+### Editing decoys
+
+Edit `decoys.json` at the project root. The WASM plugin polls for changes every 60 seconds (`configReload: 60` in the config block). Set it to `1` during development for instant reloads.
+
+```json
+{
+  "config": { "configReload": 1 },
+  "decoys": [ ... ]
+}
+```
+
+### Viewing alerts
+
+```sh
+docker compose -f docker-compose.minimal.yaml logs -f proxy | grep '"type": "alert"'
+```
+
+### Protecting your own app
+
+See **[docs/protect-any-app.md](docs/protect-any-app.md)** for a step-by-step guide to adding cloud-active-defense to any Docker-based application, with neowriter as a worked example.
+
+---
+
+# Developer Guide
+
+For full component documentation and architecture details, see **[docs/technical-doc.md](docs/technical-doc.md)**.
+
+## Running the test suite
+
+### Minimal test suite (20 tests, no external dependencies)
+
+Tests cover every inject method (header, cookie, body, status) and every detect pattern (URL, header, cookie, payload, GET/POST params — whenSeen / whenModified / whenAbsent / whenComplete).
+
+```sh
+# Start the minimal stack if not already running
+docker compose -f docker-compose.minimal.yaml up -d --build
+
+# Run all tests (starts its own isolated stack automatically)
+cd tests
+bash runMinimalTests.sh
+```
+
+Each test writes a one-decoy config to `tests/test-decoys.json`, waits for the WASM plugin to reload, fires a curl request, then checks the proxy logs for the expected alert.
+
+### Full test suite (requires Keycloak + full stack)
+
+```sh
+# Start the full stack first
+docker compose up -d --build
+
+cd tests
+bash runTests.sh
+```
+
+### Neowriter integration tests
+
+Tests cloud-active-defense against a real Node.js application with 30+ attack scenario decoys (SSRF, mass assignment, path traversal, Log4Shell, etc.).
+
+```sh
+cd tests
+bash setup-neowriter.sh          # clones github.com/valvolt/neowriter
+bash runNeowriterTests.sh
+```
+
+## Rebuilding the WASM plugin
+
+The WASM plugin is pre-built at `proxy/wasm/cloud-active-defense.wasm`. After modifying the Go source in `proxy/wasm/`, rebuild it using Docker (no local TinyGo install needed):
+
+```sh
+docker run --rm \
+  -v "$(pwd)/proxy/wasm:/src" \
+  -w /src \
+  tinygo/tinygo:0.31.2 \
+  tinygo build -o cloud-active-defense.wasm -scheduler=none -target=wasi ./main.go
+```
+
+Then rebuild the proxy image:
+
+```sh
+docker compose build proxy
+# or for the minimal stack:
+docker compose -f docker-compose.minimal.yaml build proxy
+```
+
+> **Note:** TinyGo has a limited standard library and no goroutines. See [docs/technical-doc.md](docs/technical-doc.md) for known constraints and the full assessment of the WASM plugin.
+
+---
 
 # Architecture and Philosophy
 
-Cloud active defense is about making hacking *painful*. Today, attackers rely on the information provided by the application to successfully exploit it. This information is under our control - and there is no reason not to lie to attackers.
-We're not the first one to think about deploying deceptive element into applications. The [OWASP AppSensor](https://owasp.org/www-project-appsensor/) project came there first. But adding deceptive traps is an effort that's best kept separate from your application code:
+Cloud active defense is about making hacking *painful*. Attackers rely on information provided by the application to exploit it — and there is no reason not to lie to them.
 
-  * developers might not have the time or security skills for that
-  * adding code always bears the risk to introduce new (security!) bugs
+Our approach introduces a reverse proxy that reads a decoy configuration file, injects deceptive elements into responses, and alerts when those elements are tampered with. No changes to your application code are needed.
 
-Our approach was thus to let applications be protected by introducing a reverse-proxy, reading instructions from a versatile configuration file. No risk to introduce bugs to the application, and easy maintenance.
-
-For the reverse-proxy, we chose [Envoy](https://www.envoyproxy.io/). At its heart, cloud active defense is simply a plugin for Envoy. We chose Envoy because it's open source, fast, extensible, and because it's a popular choice as a Service Mesh solution. What this means is that cloud active defense can easily be deployed as a side-car if you use a kubernetes platform such as [SAP Kyma](https://kyma-project.io/). We are doing our best to provide a working solution, but consider testing it heavily before using it productively (and please report any issues you discover!)
-
-Architecture-wise, cloud active defense is a WASM file deployed within Envoy in its own container. As WASM cannot read files from the filesystem, we instead expose the config in the **controlpanel API** service and retrieve it from Envoy via HTTP. In docker, only the default config can be used. When deployed in Kubernetes, each service can have its own config, this is described in its own section.
+For the reverse proxy we chose [Envoy](https://www.envoyproxy.io/): open source, fast, extensible, and a popular choice in service meshes. Cloud active defense is fundamentally an Envoy WASM plugin, which means it deploys as a sidecar on [SAP Kyma](https://kyma-project.io/) or any Kubernetes platform.
 
 ![Main architecture](./assets/arch.png)
 
-Envoy receives a request from the **browser** and forwards it to the **application**. Upon receiving the response from the application, Envoy checks if there is something to inject and behaves accordingly. On a subsequent request, Envoy checks if injected elements were interacted with and alerts accordingly.
+Envoy receives a request from the browser, forwards it to the application, and on the way back checks for anything to inject. On the next request, it checks whether any injected element was tampered with and alerts accordingly.
 
-Cloud active defense complements existing solutions such as Intrusion Detection Systems and honeypot-based deception by instrumenting the target web application itself. By adding decoys based on the application's business logic, you can raise high value, true positive alerts that warn your SOC team in real time before any harm is done. If you deploy decoys visible only to authenticated users, you can further detect account impersonation. This approach makes our solution unique.
-
-## Myapp
-Myapp is a demo application which can be used to test how decoys work. It is a simplistic web application with the following features:
-  * `GET /` : the front page, displays 'welcome' if you're not authenticated. Displays a static 'dashboard' page otherwise.
-  * `GET /login` : a form displaying a login field, a password field, and a submit button.
-  * `POST /login` : checks if username is 'bob@myapp.com' and password is 'bob'. It not, sends an error message. If yes, authenticates by setting a (hardcoded) 'SESSION' cookie
-
-There is no logout mechanism. Delete the SESSION cookie to log out.
-
-## Controlpanel API
-This API will be the decoy manager for envoy, but also will store the decoys, logs in its database, manage "customer" when deployed on kubernetes and manage other configuration for differents application. It can be connected to the controlpanel frontend
-
-Envoy will send a GET request to the API a few times per minute and update its config accordingly. If running on docker-compose, 'namespace' and 'application' will both be empty strings, thus Envoy will always fetch the content of default config. If running on kubernetes, 'namespace' and 'application' will be properly set, allowing you to define one configuration per application per namespace.
-
-## Envoy
-Envoy is an open-source reverse proxy. Upon start, it reads the envoy.yaml config file, which loads the cloud-active-defense.wasm plugin. This plugin reads the content of cad-default.json and applies it upon receiving HTTP requests from the browser and HTTP responses from myapp.
-
-# Full architecture
+### Full architecture (Option 2 / Kyma)
 
 ![Full architecture](./assets/arch1.png)
 
-The full architecture comprises extra containers which achieve the following goals:
+- **FluentBit** collects Envoy alert logs and ships them to the Controlpanel API and your monitoring tool (Splunk, Loki, Elasticsearch — see [fluentbit.io](https://docs.fluentbit.io/manual/pipeline/outputs)).
+- **Clone / Exhaust** are pre-built honeypot endpoints. When a decoy is triggered, Envoy can divert the attacker to the exhaust (for unauthenticated requests) or the clone (for authenticated requests) rather than the real app. See the [wiki](https://github.com/SAP/cloud-active-defense/wiki/Detect#respond) for details.
+- **Keycloak** manages authentication for the Controlpanel frontend and API.
+- **Controlpanel API + Dashboard** let you create, enable, and monitor decoys through a web UI.
 
-## Fluent-bit
-Alerts raised by Envoy are sent to its console log. By configuring 'fluentd' as a logging driver, these alerts are sent to a **fluent-bit** container. Fluent-bit can be seen as a pipe which can collect and forward data. By default, fluent-bit will display the collected data to its own console log and send it to the controlpanel API. Now, fluent-bit can be configured to forward these logs to your favorite monitoring tool, such as Splunk, Loki or Elasticsearch. Please refer to [fluentbit.io](https://docs.fluentbit.io/manual/pipeline/outputs) for details.
+For component-level documentation see **[docs/technical-doc.md](docs/technical-doc.md)**.
 
-## Clone and Exhaust
-On top of alerting, cloud active defense can be configured to execute an automated response. One such response is to *divert* the adversary to, essentially, a honeypot.
+## Myapp
 
-We pre-defined two such diversion endpoints: **clone** and **exhaust**. As with how **myapp** should be replaced with your own application, these two endpoints should be replaced too if you chose to use diversion as a response mechanism.
+Myapp is a minimal demo application bundled with the repository:
 
-### Exhaust
-Think of this endpoint as a *fake facade*. From the outside it looks like your application, but there is nothing behind. The goal of this facade is to exhaust attackers resources against what is basically a wall.
+- `GET /` — displays "welcome" (unauthenticated) or a static dashboard (authenticated)
+- `GET /login` — login form
+- `POST /login` — authenticates bob@myapp.com / bob by setting a SESSION cookie
 
-If, upon detection of an attack, envoy detects that the request to be diverted is not authenticated, then it will forward it to the **exhaust** endpoint instead of **myapp**. The exhaust honeypot can be simply a copy of myapp's publicly reachable pages, with no business logic behind. For the demo, the exhaust app is a copy of myapp without any business logic, meaning that trying to login with valid credentials will be denied. All requests sent to **exhaust** should be considered malicious and are thus logged.
-
-#### (experimental)
-You can find in the `exhaust` directory an experimental script to clone your own website to make an exhaust. Since this is experimental it may not be perfect. A readme is provided with more explanation is the same directory
-
-### Clone
-Think of this endpoint as a regular *honeypot*. It looks like what is inside your application, but all the content is fake and worthless. The goal of this trap is to further blur the line between what is real and what is not.
-
-If, upon detection of an attack, envoy detects that the request to divert is authenticated, then it will forward it to the **clone** endpoint instead of **myapp**. The clone honeypot should keep the illusion that the user is logged into the real application, so the clone should be a copy of myapp, except for its data, which should be faked. Creating a believable, fake copy of an application is a complex task that we might visit someday. In the meantime, you may want to deploy a second copy of your **exhaust** application as your **clone**. All requests sent to **clone** should be considered malicious and are thus logged.
-
-Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki/Detect#respond) for details.
-
-### Controlpanel Frontend
-The frontend is where you can control and manage the decoys you set and have a better view of the alerts sent by fluentbit. This controlpanel provides a way to add/modify, enable or disable a decoy and display the decoys in a list.
-
-### Keycloak
-Keycloak is an open-source software product to allow single sign-on with identity and access management aimed at modern applications and services. It will manage users for accessing both controlpanel frontend and API. API routes are all protected with an JWT provided and managed by keycloak avoiding broken access control and allowing anyone to read or change decoys for an application
+Delete the SESSION cookie to log out.
 
 # Configuration and advanced topics
-Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki) page to learn about decoys in details, and about how to modify the source code.
+
+Please refer to our [wiki](https://github.com/SAP/cloud-active-defense/wiki) for the full decoy configuration reference.
 
 # Support, Feedback, Contributing
 
-The code is provided "as-is" and will be maintained with a best effort approach.
-Let's make defense a fun topic ! We hope that you'll fall in love with the concept as much as we are and help us break the attack / defense assymmetry.
+The code is provided "as-is" and will be maintained with a best-effort approach.
 
-This project is open to feature requests/suggestions, bug reports etc. via [GitHub issues](https://github.com/SAP/cloud-active-defense/issues). Contribution and feedback are encouraged and always welcome. 
+This project is open to feature requests, bug reports, and contributions via [GitHub issues](https://github.com/SAP/cloud-active-defense/issues).
 
-We are welcoming contributions such as:
+We welcome:
   * bug reports
   * security improvements
   * decoy ideas (mimicking existing vulnerabilities such as [CVE-2023-32725](https://nvd.nist.gov/vuln/detail/CVE-2023-32725))
 
-For more information about how to contribute, the project structure, as well as additional contribution information, see our [Contribution Guidelines](CONTRIBUTING.md).
+For contribution guidelines see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 # Security / Disclosure
-If you find any bug that may be a security problem, please follow our instructions at [in our security policy](https://github.com/SAP/cloud-active-defense/security/policy) on how to report it. Please do not create GitHub issues for security-related doubts or problems.
 
-# On the TODO list
-Features we plan to eventually release:
-  * [DONE] adding a configuration specifying where to find information about the user's session. We want to use this to add session / logged in user information in the alert.
-  * [DONE] show how to ingest alerts into fluentd for further processing (currently alerts are simply shown on the console)
-  * [DONE] show how to deploy into SAP Kyma as an extension of the mesh service
+If you find a security bug, follow the instructions in our [security policy](https://github.com/SAP/cloud-active-defense/security/policy). Do not open a GitHub issue for security-related problems.
 
 # Code of Conduct
 

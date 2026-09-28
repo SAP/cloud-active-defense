@@ -1,0 +1,31 @@
+services:
+  myapp:
+    build:
+      context: ./neowriter
+    environment:
+      - LOCAL_MODE=true
+      - PORT=3000
+    networks: [backend]
+
+  proxy:
+    build: ../proxy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../proxy/envoy.minimal.yaml:/etc/envoy.yaml:ro
+    command: /usr/local/bin/envoy -c /etc/envoy.yaml --service-cluster proxy --log-level warn
+    depends_on:
+      - myapp
+      - controlpanel-stub
+    networks: [frontend, backend]
+
+  controlpanel-stub:
+    build: ../controlpanel-stub
+    volumes:
+      - ./neowriter-decoys.json:/app/decoys.json
+    networks: [backend]
+
+networks:
+  frontend:
+  backend:
+    internal: true
