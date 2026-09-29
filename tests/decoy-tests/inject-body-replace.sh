@@ -17,7 +17,7 @@ cat > ./test-decoys.json << 'EOF'
           "inResponse": ".*",
           "withVerb": "GET",
           "as": "body",
-          "at": { "method": "replace", "property": "WELCOME" }
+          "at": { "method": "replace", "property": "Login" }
         }
       },
       "detect": {}

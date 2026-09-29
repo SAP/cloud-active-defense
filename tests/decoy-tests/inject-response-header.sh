@@ -21,7 +21,7 @@ EOF
 
 sleep 3
 
-response=$(curl -sI "$PROXY/")
+response=$(curl -s -D - -o /dev/null "$PROXY/")
 if echo "$response" | grep -qi "x-canary: injected"; then
   pass "inject-response-header: x-canary header present"
 else

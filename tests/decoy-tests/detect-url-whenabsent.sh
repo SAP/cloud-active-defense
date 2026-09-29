@@ -15,7 +15,7 @@ cat > ./test-decoys.json << 'EOF'
       "inject": {},
       "detect": {
         "seek": { "inRequest": ".*", "withVerb": "GET", "in": "url" },
-        "alert": { "severity": "MEDIUM", "whenAbsent": "x-api-token-absent-test" }
+        "alert": { "severity": "MEDIUM", "whenAbsent": true }
       }
     }
   ]
@@ -27,7 +27,8 @@ sleep 3
 curl -s "$PROXY/" > /dev/null
 sleep 1
 
-if docker compose -f "$COMPOSE_FILE" logs proxy --since 10s 2>&1 | grep -q '"DecoyKey":"x-api-token-absent-test"'; then
+proxy_logs=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
+if echo "$proxy_logs" | grep -qF '"DecoyKey":"x-api-token-absent-test"'; then
   pass "detect-url-whenabsent: alert fired when expected token was absent from URL"
 else
   fail "detect-url-whenabsent: no alert found in proxy logs"

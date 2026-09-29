@@ -33,7 +33,8 @@ sleep 3
 curl -s -H "Cookie: role_canary=admin" "$PROXY/" > /dev/null
 sleep 1
 
-if docker compose -f "$COMPOSE_FILE" logs proxy --since 10s 2>&1 | grep -q '"DecoyKey":"role_canary"'; then
+proxy_logs=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
+if echo "$proxy_logs" | grep -qF '"DecoyKey":"role_canary"'; then
   pass "detect-cookie-whenmodified: alert fired when honeytoken cookie was modified"
 else
   fail "detect-cookie-whenmodified: no alert found in proxy logs"

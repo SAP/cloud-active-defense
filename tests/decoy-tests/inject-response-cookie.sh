@@ -21,7 +21,7 @@ EOF
 
 sleep 3
 
-response=$(curl -sI "$PROXY/")
+response=$(curl -s -D - -o /dev/null "$PROXY/")
 if echo "$response" | grep -qi "set-cookie: canary=1"; then
   pass "inject-response-cookie: Set-Cookie canary=1 present"
 else
