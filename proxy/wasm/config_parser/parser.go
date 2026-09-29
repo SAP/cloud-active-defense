@@ -23,6 +23,10 @@ func ParseString(confString []byte) (error, *Config) {
 	}
 	// p.Config.Print()
 
+	for i := range p.Config.Decoys.Filters {
+		compileFilter(&p.Config.Decoys.Filters[i])
+	}
+
 	return nil, p.Config
 }
 
@@ -76,7 +80,6 @@ func (p *Parser) jsonToStruct(content []byte) error {
 	filtersJs := json.GetArray("decoys")
 	for _, filterJs := range filtersJs {
 		filter := p.filterJsonToStruct(filterJs)
-		compileFilter(filter)
 		p.Config.Decoys.Filters = append(p.Config.Decoys.Filters, *filter)
 	}
 	return nil
