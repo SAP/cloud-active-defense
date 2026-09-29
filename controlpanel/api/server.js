@@ -281,7 +281,7 @@ const swaggerDefinition = {
                                 properties: {
                                     severity: {
                                         type: 'string',
-                                        enum: ['HIGH', 'MEDIUM', 'LOW'],
+                                        pattern: '^[A-Za-z]+$',
                                         example: 'HIGH',
                                     },
                                     whenSeen: {

@@ -238,7 +238,7 @@ func (v *validator) validateAlert(obj AlertType) {
     return
   }
 	if !validSeverity(obj.Severity) {
-		v.addError(v.currentPlace+".severity", "needs to be HIGH, MEDIUM or LOW")
+		v.addError(v.currentPlace+".severity", "must not be empty")
 	}
 }
 
@@ -282,12 +282,15 @@ func (v *validator) validateRespondItem(obj RespondType) {
 /*** 						***/
 
 func validSeverity(s string) bool {
-	e := Severity(s)
-	switch e {
-	case HIGH, MEDIUM, LOW:
-		return true
+	if s == "" {
+		return false
 	}
-	return false
+	for _, c := range s {
+		if !((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+			return false
+		}
+	}
+	return true
 }
 
 func propertyMatchesInjectionMethod(property string, injectionMethod string) bool {

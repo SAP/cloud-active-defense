@@ -41,7 +41,7 @@ type Alert struct {
 	DecoyKey string // decoy name
   DecoyExpectedValue string // decoy value
 	DecoyInjectedValue string // received payload for decoy
-	Severity string // CRITICAL - HIGH - MEDIUM
+	Severity string // any non-empty alphabetic string; conventional values: HIGH, MEDIUM, LOW
 }
 
 func SendAlert(filter *config_parser.FilterType, logParameters map[string]string, headers map[string]string) error {
