@@ -27,7 +27,8 @@ sleep 3
 curl -s "$PROXY/secret-url-test" > /dev/null
 sleep 1
 
-if docker compose -f "$COMPOSE_FILE" logs proxy --since 10s 2>&1 | grep -q '"DecoyKey":"/secret-url-test"'; then
+proxy_logs=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
+if echo "$proxy_logs" | grep -qF '"DecoyKey":"/secret-url-test"'; then
   pass "detect-url-whenseen: alert fired for /secret-url-test in URL"
 else
   fail "detect-url-whenseen: no alert found in proxy logs for /secret-url-test"

@@ -27,14 +27,14 @@ sleep 3
 # Partial cookie (only key, no value) — should NOT fire
 curl -s -H "Cookie: theme_canary=" "$PROXY/" > /dev/null
 sleep 1
-logs_before=$(docker compose -f "$COMPOSE_FILE" logs proxy --since 5s 2>&1)
+logs_before=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
 
 # Full cookie (key=value) — SHOULD fire
 curl -s -H "Cookie: theme_canary=dark" "$PROXY/" > /dev/null
 sleep 1
-logs_after=$(docker compose -f "$COMPOSE_FILE" logs proxy --since 5s 2>&1)
+logs_after=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
 
-if echo "$logs_after" | grep -q '"DecoyKey":"theme_canary"'; then
+if echo "$logs_after" | grep -qF '"DecoyKey":"theme_canary"'; then
   pass "detect-whencomplete: alert fired when full key=value cookie was present"
 else
   fail "detect-whencomplete: no alert found when full cookie was sent"

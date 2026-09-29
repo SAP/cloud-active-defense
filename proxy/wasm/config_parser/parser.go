@@ -3,6 +3,7 @@ package config_parser
 import (
 	"strconv"
 	"strings"
+	"regexp"
 
 	"github.com/valyala/fastjson"
 )
@@ -75,6 +76,7 @@ func (p *Parser) jsonToStruct(content []byte) error {
 	filtersJs := json.GetArray("decoys")
 	for _, filterJs := range filtersJs {
 		filter := p.filterJsonToStruct(filterJs)
+		compileFilter(filter)
 		p.Config.Decoys.Filters = append(p.Config.Decoys.Filters, *filter)
 	}
 	return nil
@@ -202,4 +204,25 @@ func respondJsonToStruct(respondJs []*fastjson.Value) *[]RespondType {
 		}
 	}
 	return &respond
+}
+
+func tryCompile(pattern string) *regexp.Regexp {
+	if pattern == "" {
+		return nil
+	}
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil
+	}
+	return re
+}
+
+func compileFilter(f *FilterType) {
+	f.Compiled.InjectInRequest  = tryCompile(f.Inject.Store.InRequest)
+	f.Compiled.InjectInResponse = tryCompile(f.Inject.Store.InResponse)
+	f.Compiled.InjectAtProperty = tryCompile(f.Inject.Store.At.Property)
+	f.Compiled.DetectInRequest  = tryCompile(f.Detect.Seek.InRequest)
+	f.Compiled.DetectInResponse = tryCompile(f.Detect.Seek.InResponse)
+	f.Compiled.DecoyDynKey      = tryCompile(f.Decoy.DynamicKey)
+	f.Compiled.DecoyDynValue    = tryCompile(f.Decoy.DynamicValue)
 }

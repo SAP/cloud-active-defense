@@ -27,7 +27,8 @@ sleep 3
 curl -s -X POST -d "debug_token_canary=xyzSecret&other=value" "$PROXY/" > /dev/null
 sleep 1
 
-if docker compose -f "$COMPOSE_FILE" logs proxy --since 10s 2>&1 | grep -q '"DecoyKey":"debug_token_canary"'; then
+proxy_logs=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
+if echo "$proxy_logs" | grep -qF '"DecoyKey":"debug_token_canary"'; then
   pass "detect-payload-whenseen: alert fired when honeytoken found in POST body"
 else
   fail "detect-payload-whenseen: no alert found in proxy logs"

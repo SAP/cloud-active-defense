@@ -27,7 +27,8 @@ sleep 3
 curl -s -X POST -d "admin_override_canary=true&user=test" "$PROXY/" > /dev/null
 sleep 1
 
-if docker compose -f "$COMPOSE_FILE" logs proxy --since 10s 2>&1 | grep -q '"DecoyKey":"admin_override_canary"'; then
+proxy_logs=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
+if echo "$proxy_logs" | grep -qF '"DecoyKey":"admin_override_canary"'; then
   pass "detect-postparam-whenseen: alert fired when decoy key found in POST form param"
 else
   fail "detect-postparam-whenseen: no alert found in proxy logs"

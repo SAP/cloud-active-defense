@@ -27,7 +27,8 @@ sleep 3
 curl -s -H "x-debug-mode-canary: 1" "$PROXY/" > /dev/null
 sleep 1
 
-if docker compose -f "$COMPOSE_FILE" logs proxy --since 10s 2>&1 | grep -q '"DecoyKey":"x-debug-mode-canary"'; then
+proxy_logs=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
+if echo "$proxy_logs" | grep -qF '"DecoyKey":"x-debug-mode-canary"'; then
   pass "detect-header-whenseen: alert fired when honeytoken header was sent"
 else
   fail "detect-header-whenseen: no alert found in proxy logs"

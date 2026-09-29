@@ -34,7 +34,8 @@ sleep 3
 curl -s -X POST -d "system_canary=99&username=test" "$PROXY/login" > /dev/null
 sleep 1
 
-if docker compose -f "$COMPOSE_FILE" logs proxy --since 10s 2>&1 | grep -q '"DecoyKey":"system_canary"'; then
+proxy_logs=$(docker compose -f "$COMPOSE_FILE" logs proxy 2>&1)
+if echo "$proxy_logs" | grep -qF '"DecoyKey":"system_canary"'; then
   pass "detect-payload-whenmodified: alert fired when hidden field was submitted with modified value"
 else
   fail "detect-payload-whenmodified: no alert found in proxy logs"

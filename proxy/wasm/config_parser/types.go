@@ -3,7 +3,7 @@ package config_parser
 import (
 	"fmt"
   "crypto/sha1"
-	//"strings"
+  "regexp"
 )
 
 type Config struct {
@@ -41,9 +41,20 @@ type DecoyConfig struct {
 }
 
 type FilterType struct {
-	Decoy  DecoyType  `json:"decoy"`
-	Inject InjectType `json:"inject"`
-	Detect DetectType `json:"detect"`
+	Decoy    DecoyType       `json:"decoy"`
+	Inject   InjectType      `json:"inject"`
+	Detect   DetectType      `json:"detect"`
+	Compiled FilterCompiled
+}
+
+type FilterCompiled struct {
+	InjectInRequest  *regexp.Regexp
+	InjectInResponse *regexp.Regexp
+	InjectAtProperty *regexp.Regexp
+	DetectInRequest  *regexp.Regexp
+	DetectInResponse *regexp.Regexp
+	DecoyDynKey      *regexp.Regexp
+	DecoyDynValue    *regexp.Regexp
 }
 
 type DecoyType struct {
