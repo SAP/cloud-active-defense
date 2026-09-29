@@ -19,6 +19,7 @@
 
         <!-- https://mvnrepository.com/artifact/org.keycloak/keycloak-parent -->
         <keycloak.version>26.6.4</keycloak.version>
+        <keycloak.version>26.7.0</keycloak.version>
         <!-- https://mvnrepository.com/artifact/org.apache.maven.plugins/maven-compiler-plugin -->
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
     </properties>
