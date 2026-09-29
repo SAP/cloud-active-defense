@@ -184,12 +184,7 @@ func (p *Parser) getString(v *fastjson.Value, keys ...string) string {
 }
 
 func unescapeNewlines(str string) string {
-  newline := strings.Index(str, "\n") 
-  for newline != -1 {
-    str = str[:newline] + "\n" + str[newline:]
-    newline = strings.Index(str, "\n") 
-  }
-  return str
+  return strings.ReplaceAll(str, `\n`, "\n")
 }
 
 func respondJsonToStruct(respondJs []*fastjson.Value) *[]RespondType {
