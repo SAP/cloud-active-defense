@@ -273,7 +273,7 @@ func (d *detectBody) detectDecoyInResponse() (error, *alert.AlertParam) {
       }
   }
   if d.curFilter.Detect.Alert.WhenAbsent {
-    if keyMatches { // key+separator not found -> absent
+    if !keyMatches { // key not found -> absent
       alertInfos["alert"] += "KeyAbsent "
       sendAlert=true
     }

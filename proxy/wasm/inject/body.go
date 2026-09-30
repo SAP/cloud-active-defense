@@ -173,15 +173,14 @@ func (i *injecterBody) relevantRequest_request(httpReqUrl string) (bool, error) 
   if regexVal == "" {
     return false, nil
   }
+  if i.curFilter.Compiled.InjectInRequest != nil {
+    return i.curFilter.Compiled.InjectInRequest.MatchString(httpReqUrl), nil
+  }
 	regEx, err := regexp.Compile(regexVal)
 	if err != nil {
 		return false, err
 	}
-	res := regEx.MatchString(httpReqUrl)
-	if !res {
-		//fmt.Printf("Path does not match: %s != %s", httpReqUrl, i.curFilter.Inject.Store.ForRequest) //debug
-	}
-	return res, nil
+	return regEx.MatchString(httpReqUrl), nil
 }
 
 func (i *injecterBody) relevantRequest_response(httpReqUrl string) (bool, error) {
@@ -189,15 +188,14 @@ func (i *injecterBody) relevantRequest_response(httpReqUrl string) (bool, error)
   if regexVal == "" {
     return false, nil
   }
+  if i.curFilter.Compiled.InjectInResponse != nil {
+    return i.curFilter.Compiled.InjectInResponse.MatchString(httpReqUrl), nil
+  }
 	regEx, err := regexp.Compile(regexVal)
 	if err != nil {
 		return false, err
 	}
-	res := regEx.MatchString(httpReqUrl)
-	if !res {
-		//fmt.Printf("Path does not match: %s != %s", httpReqUrl, i.curFilter.Inject.Store.ForRequest) //debug
-	}
-	return res, nil
+	return regEx.MatchString(httpReqUrl), nil
 }
 
 func (i *injecterBody) injectDecoyInResponse() error {
@@ -351,10 +349,15 @@ func (i *injecterBody) storeMethodBefore() error {
   if regexVal == "" {
     return fmt.Errorf("Inject.store.at.property can not be empty")
   }
-	regExp, err := regexp.Compile(regexVal)
-	if err != nil {
-		return fmt.Errorf("store.at.method: before, property \"%s\" is not a valid regex: %s", i.curFilter.Inject.Store.At.Property, err.Error())
-	}
+  var regExp *regexp.Regexp
+  if i.curFilter.Compiled.InjectAtProperty != nil {
+    regExp = i.curFilter.Compiled.InjectAtProperty
+  } else {
+	  regExp, err = regexp.Compile(regexVal)
+	  if err != nil {
+		  return fmt.Errorf("store.at.method: before, property \"%s\" is not a valid regex: %s", i.curFilter.Inject.Store.At.Property, err.Error())
+	  }
+  }
 
 	matchPosition := regExp.FindStringIndex(i.responseBody)
 	if len(matchPosition) == 2 { // found match
@@ -371,10 +374,15 @@ func (i *injecterBody) storeMethodAfter() error {
   if regexVal == "" {
     return fmt.Errorf("Inject.store.at.property can not be empty")
   }
-	regExp, err := regexp.Compile(regexVal)
-	if err != nil {
-		return fmt.Errorf("store.at.method: before, property \"%s\" is not a valid regex: %s", i.curFilter.Inject.Store.At.Property, err.Error())
-	}
+  var regExp *regexp.Regexp
+  if i.curFilter.Compiled.InjectAtProperty != nil {
+    regExp = i.curFilter.Compiled.InjectAtProperty
+  } else {
+	  regExp, err = regexp.Compile(regexVal)
+	  if err != nil {
+		  return fmt.Errorf("store.at.method: before, property \"%s\" is not a valid regex: %s", i.curFilter.Inject.Store.At.Property, err.Error())
+	  }
+  }
 
   //proxywasm.LogWarnf("insert is: %v", i.injectString) //debug
 	matchPosition := regExp.FindStringIndex(i.responseBody)
@@ -392,10 +400,15 @@ func (i *injecterBody) storeMethodReplace() error {
   if regexVal == "" {
     return fmt.Errorf("Inject.store.at.property can not be empty")
   }
-	regExp, err := regexp.Compile(regexVal)
-	if err != nil {
-		return fmt.Errorf("store.at.method: before, property \"%s\" is not a valid regex: %s", i.curFilter.Inject.Store.At.Property, err.Error())
-	}
+  var regExp *regexp.Regexp
+  if i.curFilter.Compiled.InjectAtProperty != nil {
+    regExp = i.curFilter.Compiled.InjectAtProperty
+  } else {
+	  regExp, err = regexp.Compile(regexVal)
+	  if err != nil {
+		  return fmt.Errorf("store.at.method: before, property \"%s\" is not a valid regex: %s", i.curFilter.Inject.Store.At.Property, err.Error())
+	  }
+  }
 
 	matchPosition := regExp.FindStringIndex(i.responseBody)
 	if len(matchPosition) == 2 { // found match
@@ -412,18 +425,17 @@ func (i *injecterBody) storeMethodAlways() error {
   if regexVal == "" {
     return fmt.Errorf("Inject.store.at.property can not be empty")
   }
-	regExp, err := regexp.Compile(regexVal)
-	if err != nil {
-		return fmt.Errorf("store.at.method: before, property \"%s\" is not a valid regex: %s", i.curFilter.Inject.Store.At.Property, err.Error())
-	}
+  var regExp *regexp.Regexp
+  if i.curFilter.Compiled.InjectAtProperty != nil {
+    regExp = i.curFilter.Compiled.InjectAtProperty
+  } else {
+	  regExp, err = regexp.Compile(regexVal)
+	  if err != nil {
+		  return fmt.Errorf("store.at.method: before, property \"%s\" is not a valid regex: %s", i.curFilter.Inject.Store.At.Property, err.Error())
+	  }
+  }
 
-	for {
-		matchPosition := regExp.FindStringIndex(i.responseBody)
-		if len(matchPosition) != 2 { // did not find match
-			break
-		}
-		i.responseBody = i.responseBody[0:matchPosition[0]] + i.injectString + i.responseBody[matchPosition[1]:]
-	}
+	i.responseBody = regExp.ReplaceAllString(i.responseBody, i.injectString)
 
 	return err
 }

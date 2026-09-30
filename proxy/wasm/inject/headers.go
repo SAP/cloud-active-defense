@@ -465,9 +465,11 @@ func (i *injectHeader) isRelevantVerb() bool {
 }
 
 func (i *injectHeader) isRelevantPathResponse() (bool, error) {
-  request := i.curFilter.Inject.Store.InResponse
-  if request == "" {
+  if i.curFilter.Inject.Store.InResponse == "" {
     return false, nil
+  }
+  if i.curFilter.Compiled.InjectInResponse != nil {
+    return i.curFilter.Compiled.InjectInResponse.MatchString(i.request.Headers[":path"]), nil
   }
 	regEx, err := regexp.Compile(i.curFilter.Inject.Store.InResponse)
 	if err != nil {
@@ -477,11 +479,13 @@ func (i *injectHeader) isRelevantPathResponse() (bool, error) {
 }
 
 func (i *injectHeader) isRelevantPathRequest() (bool, error) {
-  request := i.curFilter.Inject.Store.InRequest
-  if request == "" {
+  if i.curFilter.Inject.Store.InRequest == "" {
     return false, nil
   }
-	regEx, err := regexp.Compile(i.curFilter.Inject.Store.InResponse)
+  if i.curFilter.Compiled.InjectInRequest != nil {
+    return i.curFilter.Compiled.InjectInRequest.MatchString(i.headers[":path"]), nil
+  }
+	regEx, err := regexp.Compile(i.curFilter.Inject.Store.InRequest)
 	if err != nil {
 		return false, err
 	}

@@ -23,6 +23,7 @@ import (
 
 // plugin tick period, config is reread every tick
 const tickMilliseconds uint32 = 1000
+const maxBodyBytes = 1 * 1024 * 1024 // 1 MB body size cap
 var throttleTickMilliseconds int = 0
 var throttleLoop int = 0
 var updateBlocklist, updateThrottleList []map[string]string
@@ -226,7 +227,7 @@ func (ctx *pluginContext) OnTick() {
             blocklistCount++
           }
           if (string(blocklist.GetStringBytes("type")) == "throttle") {
-            if throttleCount > 1 {
+  if throttleCount >= 1 {
               throttleData.WriteByte(',')
             }
             throttleData.Write(blocklist.Get("content").MarshalTo(nil))
@@ -236,8 +237,8 @@ func (ctx *pluginContext) OnTick() {
       }
       blocklistData.WriteString("]}")
       throttleData.WriteString("]}")
-      proxywasm.SetSharedData("blocklist", blocklistData.Bytes(), 0)
-      proxywasm.SetSharedData("throttlelist", throttleData.Bytes(), 0)
+      setSharedDataWithCAS("blocklist", blocklistData.Bytes())
+      setSharedDataWithCAS("throttlelist", throttleData.Bytes())
     }
     reqHeadBlocklist := [][2]string{
       {":method", "GET"}, {":authority", "controlpanel-api"}, {":path", "/configmanager/blocklist/" + ctx.conf.Namespace + "/" + ctx.conf.Deployment}, {"accept", "*/*"},
@@ -268,6 +269,7 @@ type httpContext struct {
   types.DefaultHttpContext
   contextID             uint32
   config                *config_parser.Config
+  totalRequestBodySize  int
   totalResponseBodySize int
   cookies               map[string]string
   headers               map[string]string
@@ -340,10 +342,11 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
   if err != nil {
     proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not remove request header (%s): %s\"}", "Cookie", err.Error())
   }
-  strCookie := ""
+  var sb strings.Builder
   for key, value := range ctx.request.Cookies {
-    strCookie += key + "=" + value + ";"
+    sb.WriteString(key); sb.WriteByte('='); sb.WriteString(value); sb.WriteByte(';')
     }
+  strCookie := sb.String()
   err = proxywasm.AddHttpRequestHeader("Cookie", strCookie)
   if err != nil {
     proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not add request header (%s= %s): %s\"}", "Cookie", strCookie, err.Error())
@@ -354,15 +357,19 @@ func (ctx *httpContext) OnHttpRequestHeaders(numHeaders int, endOfStream bool) t
 }
 
 func (ctx *httpContext) OnHttpRequestBody(bodySize int, endOfStream bool) types.Action {
-  ctx.totalResponseBodySize += bodySize
+  ctx.totalRequestBodySize += bodySize
   if !endOfStream {
     if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"waiting for body...\"}") } //debug
     // wait for entire body
     return types.ActionPause
   }
+  if ctx.totalRequestBodySize > maxBodyBytes {
+    proxywasm.LogWarnf("{\"type\": \"system\", \"content\": \"request body exceeds %d bytes, skipping body processing\"}", maxBodyBytes)
+    return types.ActionContinue
+  }
   if config_proxy.Debug { proxywasm.LogWarnf("{\"type\": \"debug\", \"content\": \"--- onhttprequestbody ---\"}") } //debug
 
-  requestBody, err := proxywasm.GetHttpRequestBody(0, ctx.totalResponseBodySize)
+  requestBody, err := proxywasm.GetHttpRequestBody(0, ctx.totalRequestBodySize)
   if err != nil {
     proxywasm.LogErrorf("{\"type\": \"system\", \"content\": \"could not get httprequestbody: %v\"}", err.Error())
     return types.ActionContinue
@@ -393,6 +400,16 @@ func (ctx *httpContext) OnHttpRequestBody(bodySize int, endOfStream bool) types.
   if config_proxy.Debug { proxywasm.LogWarn("{\"type\": \"debug\", \"content\": \"detection in reqbody done\"}") } //debug
 
   return types.ActionContinue
+}
+
+func setSharedDataWithCAS(key string, data []byte) {
+  for {
+    _, cas, _ := proxywasm.GetSharedData(key)
+    err := proxywasm.SetSharedData(key, data, cas)
+    if err == nil {
+      break
+    }
+  }
 }
 
 func removeContentLengthHeader(httpType string) {
@@ -496,6 +513,10 @@ func (ctx *httpContext) OnHttpResponseBody(bodySize int, endOfStream bool) types
     // wait for entire body
     return types.ActionPause
   }
+  if ctx.totalResponseBodySize > maxBodyBytes {
+    proxywasm.LogWarnf("{\"type\": \"system\", \"content\": \"response body exceeds %d bytes, skipping body processing\"}", maxBodyBytes)
+    return types.ActionContinue
+  }
 
   originalBody, err := proxywasm.GetHttpResponseBody(0, ctx.totalResponseBodySize)
   ctx.body = string(originalBody)
@@ -542,22 +563,20 @@ func (ctx *httpContext) OnHttpStreamDone() {
     ctx.alerts[i].LogParameters["username"] = username
     ctx.alerts[i].LogParameters["server"] = ctx.config.Config.Server
     alert.SendAlert(&ctx.alerts[i].Filter, ctx.alerts[i].LogParameters, ctx.request.Headers)
-
+  }
+  if len(ctx.alerts) > 0 {
     updateThrottleList, updateBlocklist = alert.SetAlertAction(ctx.alerts, ctx.config.Config, ctx.request.Headers, blocklist, throttlelist)
-    beautifyBlocklist, _ := json.MarshalIndent(updateBlocklist, "", " ")
-    beautifyThrottlelist, _ := json.MarshalIndent(updateThrottleList, "", " ")
-    proxywasm.LogWarnf("\n{\"action\": %s},\n{\"throttle\": %s}", beautifyBlocklist, beautifyThrottlelist)
 
     updateBlocklistJson, _ := json.Marshal(updateBlocklist)
     updateThrottlelistJson, _ := json.Marshal(updateThrottleList)
     proxywasm.LogWarnf("{\"type\": \"event\", \"content\": {\"action\": %s,\"throttle\": %s}}", updateBlocklistJson, updateThrottlelistJson)
 
-    blocklist = block.AppendBlocklist(blocklist, updateBlocklist)
+    blocklist = block.EvictAndCap(block.AppendBlocklist(blocklist, updateBlocklist), "blocklist")
     blocklistjson, _ := json.Marshal(blocklist)
-    proxywasm.SetSharedData("blocklist", []byte("{\"list\":" + string(blocklistjson) + "}"), 0)
+    setSharedDataWithCAS("blocklist", []byte("{\"list\":" + string(blocklistjson) + "}"))
 
-    throttlelist = block.AppendBlocklist(throttlelist, updateThrottleList)
+    throttlelist = block.EvictAndCap(block.AppendBlocklist(throttlelist, updateThrottleList), "throttlelist")
     throttlelistjson, _ := json.Marshal(throttlelist)
-    proxywasm.SetSharedData("throttlelist", []byte("{\"list\":" + string(throttlelistjson) + "}"), 0)
+    setSharedDataWithCAS("throttlelist", []byte("{\"list\":" + string(throttlelistjson) + "}"))
   }
 }

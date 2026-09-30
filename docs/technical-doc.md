@@ -13,11 +13,28 @@ All **Controlpanel API** endpoints related to Envoy are located at `localhost:80
 
 ### Build
 
-After changes in the Go code, the WASM file must be rebuilt by running these commands in the `proxy/wasm/` directory:
+After changes in the Go source in `proxy/wasm/`, rebuild the WASM file using Docker (no local TinyGo install required):
+
 ```sh
-go mod tidy
-tinygo build -o ./cloud-active-defense.wasm -scheduler=none -target=wasi ./main.go
+docker run --rm \
+  -v "$(pwd)/proxy/wasm:/src" \
+  -w /src \
+  tinygo/tinygo:0.31.2 \
+  tinygo build -o cloud-active-defense.wasm -scheduler=none -target=wasi ./main.go
 ```
+
+Then rebuild the proxy container:
+
+```sh
+docker compose build proxy
+```
+
+**TinyGo constraints to be aware of:**
+- No goroutines (use callbacks instead)
+- Limited standard library (no `net/http`, no `encoding/xml`, etc.)
+- Stop-the-world GC: avoid allocating inside hot request paths
+- Regex is compiled per-request unless cached explicitly
+- Body buffering is unbounded by default — cap it in production configs
 
 For more information, take a look at the wiki: [Build - Wiki](https://github.com/SAP/cloud-active-defense/wiki/Build)
 
@@ -199,6 +216,100 @@ In order to make the **Deployment Manager** work with the database, the **Contro
 
 ### Controlpanel DB
 For security reasons, the **Deployment Manager** is restricted in its access to the database. It only has access to the 'customer' table since that's the only one it uses.
+
+## Minimal mode (controlpanel-stub)
+
+The minimal deployment runs three services: the protected app, the Envoy proxy, and the **controlpanel-stub** — a ~50-line Python Flask service that replaces the full Controlpanel API + database. It serves decoy configs from a plain JSON file on disk and accepts (but ignores) blocklist writes from the WASM plugin.
+
+**Files:**
+
+| File | Purpose |
+|------|---------|
+| `docker-compose.minimal.yaml` | 3-service stack (app + proxy + stub) |
+| `proxy/envoy.minimal.yaml` | Envoy config without clone/exhaust clusters |
+| `controlpanel-stub/app.py` | Flask stub — reads `decoys.json` on every poll (live reload) |
+| `controlpanel-stub/Dockerfile` | python:3.12-slim + flask==3.0.3 |
+| `decoys.json` | Decoy definitions mounted into the stub |
+
+**Key design decisions:**
+- The stub reads `decoys.json` fresh on every request, so editing the file is reflected within one `configReload` cycle (set to `1` for tests, `60` for normal use).
+- Alerts are written to Envoy's stdout via `proxywasm.LogWarnf`. Run Envoy with `--log-level warn` (set in the compose command) to ensure they are visible. No separate alert ingestion is needed.
+- The `backend` network is marked `internal: true`, so the app is not directly reachable from the host — only through Envoy on port 8000.
+- The `ENVOY_API_KEY` in `envoy.minimal.yaml` is hardcoded to `changeme`; the stub does not validate it.
+
+**API endpoints the stub exposes:**
+
+```
+GET  /health                                       → {"status": "ok"}
+GET  /configmanager/<namespace>/<application>      → contents of decoys.json
+GET  /configmanager/blocklist/<namespace>/<app>    → {"data": []}
+POST /configmanager/blocklist/<namespace>/<app>    → 200 OK (silently ignored)
+```
+
+## Test suite
+
+Tests live in `tests/` and cover three levels:
+
+### Minimal tests (20 scripts)
+
+Located in `tests/decoy-tests/`. Each script writes a single-decoy config to `tests/test-decoys.json`, waits 3 seconds for the WASM plugin to reload, fires one or more curl requests, then inspects `docker compose logs proxy` for the expected alert JSON.
+
+**Coverage:**
+
+| Script | What it tests |
+|--------|--------------|
+| `inject-response-header.sh` | Inject custom response header |
+| `inject-response-cookie.sh` | Inject Set-Cookie |
+| `inject-body-character.sh` | Body injection at absolute character index |
+| `inject-body-line.sh` | Body injection before line N |
+| `inject-body-before.sh` | Body injection before regex match |
+| `inject-body-after.sh` | Body injection after regex match |
+| `inject-body-replace.sh` | Replace first regex match in body |
+| `inject-body-always.sh` | Replace all occurrences of regex match |
+| `inject-status.sh` | Override HTTP response status code |
+| `detect-url-whenseen.sh` | Alert when URL contains decoy key |
+| `detect-url-whenabsent.sh` | Alert when expected token absent from URL |
+| `detect-header-whenseen.sh` | Alert when honeytoken appears in request header |
+| `detect-header-whenmodified.sh` | Alert when injected header value is modified |
+| `detect-cookie-whenseen.sh` | Alert when honeytoken cookie is sent |
+| `detect-cookie-whenmodified.sh` | Alert when injected cookie value is modified |
+| `detect-payload-whenseen.sh` | Alert when honeytoken appears in POST body |
+| `detect-payload-whenmodified.sh` | Alert when injected hidden field is modified |
+| `detect-getparam-whenseen.sh` | Alert when decoy key appears in GET query string |
+| `detect-postparam-whenseen.sh` | Alert when decoy key appears in POST form param |
+| `detect-whencomplete.sh` | Alert when full key=separator=value token is present |
+
+Run all 20:
+
+```sh
+cd tests
+bash runMinimalTests.sh
+```
+
+The runner starts its own isolated stack (`tests/docker-compose.minimal-test.yaml`) with `configReload: 1`, runs all scripts, and tears down.
+
+### Full stack tests
+
+```sh
+# Requires the full stack to be running first
+docker compose up -d --build
+cd tests
+bash runTests.sh
+```
+
+Covers active-response scenarios (clone, exhaust, throttle, drop) that require the Controlpanel API and Keycloak.
+
+### Neowriter integration tests
+
+Tests cloud-active-defense against a real Express/Node.js application with 30+ attack-scenario decoys:
+
+```sh
+cd tests
+bash setup-neowriter.sh     # clones github.com/valvolt/neowriter into tests/neowriter/
+bash runNeowriterTests.sh   # starts stack, runs scenarios, tears down
+```
+
+The decoy catalog (`tests/neowriter-decoys.json`) covers: mass assignment, cookie tampering, SSRF lures, proxy header abuse, path traversal, SSTI, magic-bytes upload probes, info-disclosure, recon fingerprinting, Log4Shell, and Shellshock.
 
 ## Troubleshooting
 

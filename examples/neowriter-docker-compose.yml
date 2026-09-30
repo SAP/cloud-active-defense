@@ -1,0 +1,45 @@
+# neowriter + Cloud Active Defense — standalone compose
+#
+# Prerequisites:
+#   1. Clone neowriter: git clone https://github.com/valvolt/neowriter.git ./neowriter
+#   2. Copy the controlpanel-stub/ directory from cloud-active-defense into this directory
+#   3. Copy proxy/envoy.minimal.yaml here as envoy.yaml (adjust web_service address below if needed)
+#   4. Copy proxy/wasm/cloud-active-defense.wasm here as wasm/cloud-active-defense.wasm
+#   5. Create decoys.json (see docs/protect-any-app.md for a starter template)
+#
+# Usage:
+#   docker compose up --build
+#   # Access neowriter at http://localhost:8000
+#   docker compose logs -f envoy | grep '"type": "alert"'
+
+services:
+  neowriter:
+    build: ./neowriter
+    environment:
+      - LOCAL_MODE=true   # bypasses Auth0 for local testing; remove in production
+      - PORT=3000
+    networks: [backend]
+
+  envoy:
+    image: envoyproxy/envoy:v1.29.2
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./envoy.yaml:/etc/envoy.yaml:ro
+      - ./wasm/cloud-active-defense.wasm:/var/local/lib/wasm/cloud-active-defense.wasm:ro
+    command: /usr/local/bin/envoy -c /etc/envoy.yaml --service-cluster proxy --log-level warn
+    depends_on:
+      - neowriter
+      - controlpanel-stub
+    networks: [frontend, backend]
+
+  controlpanel-stub:
+    build: ./controlpanel-stub
+    volumes:
+      - ./decoys.json:/app/decoys.json
+    networks: [backend]
+
+networks:
+  frontend:
+  backend:
+    internal: true

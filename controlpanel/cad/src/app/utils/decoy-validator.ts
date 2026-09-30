@@ -63,7 +63,7 @@ export function validateSeek(seek: SeekType): string[] {
     return errors;
 }
 export function validateAlert(alert: AlertType): string[] {
-    if (isSeverityType(alert.severity)) return ["severity needs to be HIGH, MEDIUM or LOW"];
+    if (!isSeverityType(alert.severity)) return ["severity must be a non-empty alphabetic string (e.g. HIGH, MEDIUM, LOW, CRITICAL)"];
     return [];
 }
 export function validateRespond(respond: RespondType): string[] {

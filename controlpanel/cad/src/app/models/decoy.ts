@@ -64,7 +64,7 @@ export type AsType = 'header' | 'body' | 'cookie';
 export type RequestType = 'inRequest' | 'inResponse';
 export type VerbType = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'HEAD' | 'OPTIONS';
 export type InType = 'cookie' | 'header' | 'url' | 'getParam' | 'postParam' | 'payload';
-export type SeverityType = 'LOW' | 'MEDIUM' | 'HIGH';
+export type SeverityType = string;
 export type BehaviorType = 'divert' | 'error' | 'drop' | 'throttle';
 export type DelayType = 'now' | `${number}${'s' | 'm' | 'h'}`;
 export type DurationType = 'forever' | `${number}${'s' | 'm' | 'h'}`;
@@ -85,7 +85,7 @@ export const isValidAtProperty = (property: string, method: AtMethodType) => {
   return true;
 }
 export const isInType = (x: any): x is InType => ['cookie', 'header', 'url', 'getParam', 'postParam', 'payload'].includes(x);
-export const isSeverityType = (x: any): x is SeverityType => ['LOW', 'MEDIUM', 'HIGH'].includes(x);
+export const isSeverityType = (x: any): x is SeverityType => typeof x === 'string' && /^[A-Za-z]+$/.test(x);
 export const isSourceType = (x: string) => ['ip', 'userAgent', 'session'].some(source => x.split(',').includes(source));
 export const isBehaviorType = (x: any): x is BehaviorType => ['divert', 'error', 'drop', 'throttle'].includes(x);
 export const isDelayType = (x: any): x is DelayType => {
