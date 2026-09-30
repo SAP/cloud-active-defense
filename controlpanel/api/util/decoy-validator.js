@@ -88,7 +88,7 @@ function validateSeek(seek) {
     return errors;
 }
 function validateAlert(alert) {
-    if (!isSeverityType(alert.severity)) return ["severity needs to be HIGH, MEDIUM or LOW"];
+    if (!isSeverityType(alert.severity)) return ["severity must be a non-empty alphabetic string (e.g. HIGH, MEDIUM, LOW, CRITICAL)"];
     return [];
 }
 function validateRespond(respond) {
@@ -129,7 +129,7 @@ function isInType(inType) {
     return ['cookie', 'header', 'url', 'getParam', 'postParam', 'payload'].includes(inType);
 }
 function isSeverityType(severity) {
-    return ['LOW', 'MEDIUM', 'HIGH'].includes(severity);
+    return typeof severity === 'string' && /^[A-Za-z]+$/.test(severity);
 }
 function isSourceType(source) {
     return ['ip', 'userAgent', 'session'].some(s => source.split(',').includes(s));

@@ -10,9 +10,11 @@
   },
   "private": true,
   "dependencies": {
+    "@angular/animations": "^22.1.0",
+    "@angular/common": "^22.1.0",
     "@angular/animations": "^21.2.4",
-    "@angular/common": "^21.2.4",
-    "@angular/compiler": "^21.2.4",
+    "@angular/common": "^21.2.20",
+    "@angular/compiler": "^21.2.20",
     "@angular/core": "^21.2.4",
     "@angular/forms": "^21.2.4",
     "@angular/platform-browser": "^21.2.4",
@@ -25,7 +27,7 @@
     "zone.js": "~0.15.0"
   },
   "devDependencies": {
-    "@angular/build": "^21.2.4",
+    "@angular/build": "^22.1.2",
     "@angular/cli": "^21.2.4",
     "@angular/compiler-cli": "^21.2.4",
     "@types/jasmine": "~5.1.0",

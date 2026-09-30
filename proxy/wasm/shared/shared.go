@@ -17,21 +17,28 @@ type HttpRequest struct {
   Cookies map[string]string
 }
 
+var regenCache = map[string]regen.Generator{}
+
 func RegexGen(regex *string) (*string, error) {
-  regstr, err := regen.Generate(*regex)
-  if err != nil {
+  gen, ok := regenCache[*regex]
+  if !ok {
+    var err error
+    gen, err = regen.NewGenerator(*regex, &regen.GeneratorArgs{})
+    if err != nil {
       return nil, err
-  } else {
-      return &regstr, nil
+    }
+    regenCache[*regex] = gen
   }
+  s := gen.Generate()
+  return &s, nil
 }
 
 func RegexMatches(regex, match *string) (bool, error) {
-  if *regex == "" || *match == "" {
-    return false, nil
-  }
   if regex == nil || match == nil {
     return false, fmt.Errorf("regex, match: cant be nil")
+  }
+  if *regex == "" || *match == "" {
+    return false, nil
   }
 	regexCompiled, err := regexp.Compile(*regex)
 	if err != nil {

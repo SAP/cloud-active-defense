@@ -92,6 +92,63 @@ func isTimeout(bl config_parser.BlocklistType) bool {
 	return false
 }
 
+const maxListSize = 1000
+
+func EvictAndCap(list []config_parser.BlocklistType, listName string) []config_parser.BlocklistType {
+	now := time.Now()
+	alive := list[:0]
+	evicted := 0
+	for _, entry := range list {
+		if isEntryExpired(entry, now) {
+			evicted++
+			continue
+		}
+		alive = append(alive, entry)
+	}
+	if evicted > 0 {
+		proxywasm.LogWarnf("{\"type\": \"system\", \"content\": \"%s: evicted %d expired entries\"}", listName, evicted)
+	}
+	if len(alive) > maxListSize {
+		dropped := len(alive) - maxListSize
+		proxywasm.LogWarnf("{\"type\": \"system\", \"content\": \"%s: size cap %d reached, dropping %d oldest entries\"}", listName, maxListSize, dropped)
+		alive = alive[dropped:]
+	}
+	return alive
+}
+
+func isEntryExpired(entry config_parser.BlocklistType, now time.Time) bool {
+	if entry.Duration == "forever" || entry.Duration == "" {
+		return false
+	}
+	if entry.Time == "" {
+		return false
+	}
+	date, err := strconv.ParseInt(entry.Time, 10, 64)
+	if err != nil {
+		return false
+	}
+	entryTime := time.Unix(date, 0)
+	if len(entry.Duration) < 2 {
+		return false
+	}
+	intDur, err := strconv.Atoi(entry.Duration[:len(entry.Duration)-1])
+	if err != nil {
+		return false
+	}
+	var expiry time.Time
+	switch string(entry.Duration[len(entry.Duration)-1]) {
+	case "s":
+		expiry = entryTime.Add(time.Second * time.Duration(intDur))
+	case "m":
+		expiry = entryTime.Add(time.Minute * time.Duration(intDur))
+	case "h":
+		expiry = entryTime.Add(time.Hour * time.Duration(intDur))
+	default:
+		return false
+	}
+	return now.After(expiry)
+}
+
 func AppendBlocklist(blocklist []config_parser.BlocklistType, elements []map[string]string) []config_parser.BlocklistType{
 	for _, elem := range elements {
 		newElement := config_parser.BlocklistType{ Behavior: elem["Behavior"], Duration: elem["Duration"], Delay: elem["Delay"], Time: elem["Time"] }

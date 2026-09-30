@@ -3,7 +3,6 @@ package alert
 import (
   "fmt"
 	"math/rand"
-	"reflect"
 	"strconv"
 	"strings"
   "sundew/config_parser"
@@ -41,7 +40,7 @@ type Alert struct {
 	DecoyKey string // decoy name
   DecoyExpectedValue string // decoy value
 	DecoyInjectedValue string // received payload for decoy
-	Severity string // CRITICAL - HIGH - MEDIUM
+	Severity string // any non-empty alphabetic string; conventional values: HIGH, MEDIUM, LOW
 }
 
 func SendAlert(filter *config_parser.FilterType, logParameters map[string]string, headers map[string]string) error {
@@ -102,8 +101,6 @@ func SendAlert(filter *config_parser.FilterType, logParameters map[string]string
 
   jsonAlertContent, _ := json.Marshal(&alertContent)
   proxywasm.LogWarnf("{ \"type\": \"alert\", \"content\": %v }", string(jsonAlertContent))
-  beautifyAlert, _ := json.MarshalIndent(&alertContent, "", " ")
-  proxywasm.LogWarnf("%v", string(beautifyAlert))
   //proxywasm.LogWarn("Alert called")
   // alertMessage := "["+filter.Detect.Alert.Severity+"]"
   // for _, logPar := range logParameters {
@@ -303,8 +300,21 @@ func filterMapEle(m map[string]string, keys []string) map[string]string {
 }
 
 func doesNotContains(slice []config_parser.BlocklistType, element map[string]string) bool {
+	filtered := filterMapEle(element, []string{"Delay", "Duration", "Time", "RequestID"})
 	for _, a := range slice {
-    if reflect.DeepEqual(toMapFiltered(a), filterMapEle(element, []string{"Delay", "Duration", "Time", "RequestID"})) {
+		if mapsEqual(toMapFiltered(a), filtered) {
+			return false
+		}
+	}
+	return true
+}
+
+func mapsEqual(a, b map[string]string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, v := range a {
+		if b[k] != v {
 			return false
 		}
 	}

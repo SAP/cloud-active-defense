@@ -109,7 +109,7 @@ func (v *validator) validateUsername(username UsernameType) {
 		v.addError("username.value", "can not be empty for payload")
 	}
 	if invalidRegex(username.Value) {
-		v.addError("username.dynamicKey", "needs to be a valid regex")
+		v.addError("username.dynamicKey", "contains bounded quantifier {N,M}; use * or + instead")
 	}
 }
 
@@ -122,10 +122,10 @@ func (v *validator) validateDecoy(decoy DecoyType) {
 		v.addError(v.currentPlace+".key, dynamicKey and string", "can not all be empty ")
 	}
 	if invalidRegex(decoy.DynamicKey) {
-		v.addError(v.currentPlace+".dynamicKey", "needs to be valid regex")
+		v.addError(v.currentPlace+".dynamicKey", "contains bounded quantifier {N,M}; use * or + instead")
 	}
 	if invalidRegex(decoy.DynamicValue) {
-		v.addError(v.currentPlace+".dynamicValue", "needs to be valid regex")
+		v.addError(v.currentPlace+".dynamicValue", "contains bounded quantifier {N,M}; use * or + instead")
 	}
 }
 
@@ -146,10 +146,10 @@ func (v *validator) validateStore(obj StoreType) {
     return 
   }
 	if invalidRegex(obj.InResponse) {
-		v.addError(v.currentPlace+".inResponse", "needs to be valid regex")
+		v.addError(v.currentPlace+".inResponse", "contains bounded quantifier {N,M}; use * or + instead")
 	}
 	if invalidRegex(obj.InRequest)  {
-		v.addError(v.currentPlace+".forRequest", "needs to be valid regex")
+		v.addError(v.currentPlace+".forRequest", "contains bounded quantifier {N,M}; use * or + instead")
 	}
 	if !validHttpVerb(obj.WithVerb) && !breaksRequired(obj.WithVerb){
 		v.addError(v.currentPlace+".withVerb", "needs to be a valid HTTP verb or empty")
@@ -219,10 +219,10 @@ func (v *validator) validateSeek(obj SeekType) {
     return
   }
 	if invalidRegex(obj.InRequest) {
-		v.addError(v.currentPlace+".inRequest", "needs to be valid regex")
+		v.addError(v.currentPlace+".inRequest", "contains bounded quantifier {N,M}; use * or + instead")
 	}
 	if invalidRegex(obj.InResponse) {
-		v.addError(v.currentPlace+".inResponse", "needs to be valid regex")
+		v.addError(v.currentPlace+".inResponse", "contains bounded quantifier {N,M}; use * or + instead")
 	}
 	if !validHttpVerb(obj.WithVerb) && !breaksRequired(obj.WithVerb){
 		v.addError(v.currentPlace+".withVerb", "needs to be a valid HTTP verb or empty")
@@ -238,7 +238,7 @@ func (v *validator) validateAlert(obj AlertType) {
     return
   }
 	if !validSeverity(obj.Severity) {
-		v.addError(v.currentPlace+".severity", "needs to be HIGH, MEDIUM or LOW")
+		v.addError(v.currentPlace+".severity", "must not be empty")
 	}
 }
 
@@ -282,12 +282,15 @@ func (v *validator) validateRespondItem(obj RespondType) {
 /*** 						***/
 
 func validSeverity(s string) bool {
-	e := Severity(s)
-	switch e {
-	case HIGH, MEDIUM, LOW:
-		return true
+	if s == "" {
+		return false
 	}
-	return false
+	for _, c := range s {
+		if !((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+			return false
+		}
+	}
+	return true
 }
 
 func propertyMatchesInjectionMethod(property string, injectionMethod string) bool {
@@ -346,10 +349,26 @@ func breaksRequired(s string) bool {
 }
 
 func invalidRegex(s string) bool {
-	/*
-		_, err := regexp.Compile(s)
-		return err != nil && s != ""
-	*/
+	if s == "" {
+		return false
+	}
+	// Bounded quantifiers {N} or {N,M} cause deep recursion in regexp/syntax.compiler.compile
+	// which overflows the WASM call stack. Reject them at config-load time.
+	for i := 0; i < len(s); i++ {
+		if s[i] != '{' {
+			continue
+		}
+		j := i + 1
+		if j >= len(s) || s[j] < '0' || s[j] > '9' {
+			continue
+		}
+		for j < len(s) && s[j] >= '0' && s[j] <= '9' {
+			j++
+		}
+		if j < len(s) && (s[j] == ',' || s[j] == '}') {
+			return true
+		}
+	}
 	return false
 }
 

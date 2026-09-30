@@ -241,6 +241,9 @@ func (d *detectHeader) relevantRequest() (bool, error) {
   if d.curFilter.Detect.Seek.InRequest == "" {
     return false, nil
   }
+  if d.curFilter.Compiled.DetectInRequest != nil {
+    return d.curFilter.Compiled.DetectInRequest.MatchString(d.headers[":path"]), nil
+  }
   regEx, err := regexp.Compile(d.curFilter.Detect.Seek.InRequest)
   if err != nil {
     return false, err
@@ -257,6 +260,9 @@ func (d *detectHeader) relevantRequest() (bool, error) {
 func (d *detectHeader) relevantResponse() (bool, error) {
   if d.curFilter.Detect.Seek.InResponse == "" {
     return false, nil
+  }
+  if d.curFilter.Compiled.DetectInResponse != nil {
+    return d.curFilter.Compiled.DetectInResponse.MatchString(d.request.Headers[":path"]), nil
   }
   regEx, err := regexp.Compile(d.curFilter.Detect.Seek.InResponse)
   if err != nil {
@@ -418,7 +424,8 @@ func (d *detectHeader) detectUrl(alertInfos *map[string]string) (error, bool) {
   }
   if d.curFilter.Detect.Alert.WhenAbsent {
     if !keyMatch {
-      (*alertInfos)["alert"] += "KeySeen "
+      (*alertInfos)["alert"] += "KeyAbsent "
+      sendAlert = true
     }
   }
   return nil, sendAlert

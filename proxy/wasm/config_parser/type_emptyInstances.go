@@ -17,7 +17,7 @@ func EmptyConditions() []ConditionType{
 } 
 
 func EmptyFilter() FilterType {
-  return FilterType{ EmptyDecoy(), EmptyInject(), EmptyDetect() }
+  return FilterType{ EmptyDecoy(), EmptyInject(), EmptyDetect(), FilterCompiled{} }
 }
 
 func EmptyDecoy() DecoyType {

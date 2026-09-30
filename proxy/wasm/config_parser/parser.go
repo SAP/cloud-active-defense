@@ -3,6 +3,7 @@ package config_parser
 import (
 	"strconv"
 	"strings"
+	"regexp"
 
 	"github.com/valyala/fastjson"
 )
@@ -21,6 +22,10 @@ func ParseString(confString []byte) (error, *Config) {
 		return err, nil
 	}
 	// p.Config.Print()
+
+	for i := range p.Config.Decoys.Filters {
+		compileFilter(&p.Config.Decoys.Filters[i])
+	}
 
 	return nil, p.Config
 }
@@ -184,12 +189,7 @@ func (p *Parser) getString(v *fastjson.Value, keys ...string) string {
 }
 
 func unescapeNewlines(str string) string {
-  newline := strings.Index(str, "\n") 
-  for newline != -1 {
-    str = str[:newline] + "\n" + str[newline:]
-    newline = strings.Index(str, "\n") 
-  }
-  return str
+  return strings.ReplaceAll(str, `\n`, "\n")
 }
 
 func respondJsonToStruct(respondJs []*fastjson.Value) *[]RespondType {
@@ -207,4 +207,25 @@ func respondJsonToStruct(respondJs []*fastjson.Value) *[]RespondType {
 		}
 	}
 	return &respond
+}
+
+func tryCompile(pattern string) *regexp.Regexp {
+	if pattern == "" {
+		return nil
+	}
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return nil
+	}
+	return re
+}
+
+func compileFilter(f *FilterType) {
+	f.Compiled.InjectInRequest  = tryCompile(f.Inject.Store.InRequest)
+	f.Compiled.InjectInResponse = tryCompile(f.Inject.Store.InResponse)
+	f.Compiled.InjectAtProperty = tryCompile(f.Inject.Store.At.Property)
+	f.Compiled.DetectInRequest  = tryCompile(f.Detect.Seek.InRequest)
+	f.Compiled.DetectInResponse = tryCompile(f.Detect.Seek.InResponse)
+	f.Compiled.DecoyDynKey      = tryCompile(f.Decoy.DynamicKey)
+	f.Compiled.DecoyDynValue    = tryCompile(f.Decoy.DynamicValue)
 }

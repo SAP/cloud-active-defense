@@ -1,0 +1,52 @@
+{
+  "config": {
+    "configReload": 60
+  },
+  "decoys": [
+    {
+      "_comment": "Heartbeat — CAD presence indicator on all responses",
+      "decoy": {
+        "key": "x-cloud-active-defense",
+        "separator": "=",
+        "value": "ACTIVE"
+      },
+      "inject": {
+        "store": {
+          "inResponse": ".*",
+          "as": "header"
+        }
+      },
+      "detect": {}
+    },
+    {
+      "_comment": "Example: cookie tamper detection. Inject role=user cookie; alert HIGH if modified.",
+      "decoy": {
+        "key": "role",
+        "separator": "=",
+        "value": "user"
+      },
+      "inject": {
+        "store": {
+          "inResponse": ".*",
+          "as": "cookie",
+          "whenTrue": [
+            { "key": "SESSION", "value": ".*", "in": "cookie" }
+          ],
+          "whenFalse": [
+            { "key": "role", "value": ".*", "in": "cookie" }
+          ]
+        }
+      },
+      "detect": {
+        "seek": {
+          "inRequest": ".*",
+          "in": "cookie"
+        },
+        "alert": {
+          "severity": "HIGH",
+          "whenModified": true
+        }
+      }
+    }
+  ]
+}
