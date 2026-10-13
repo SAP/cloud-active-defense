@@ -28,7 +28,7 @@
   },
   "devDependencies": {
     "@angular/build": "^22.1.2",
-    "@angular/cli": "^21.2.4",
+    "@angular/cli": "^21.2.26",
     "@angular/compiler-cli": "^21.2.4",
     "@types/jasmine": "~5.1.0",
     "@types/keycloak-js": "^2.5.4",
